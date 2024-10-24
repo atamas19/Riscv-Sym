@@ -1,8 +1,10 @@
 #pragma once
 
-#include "Registers.h"
-
 #include <memory>
+#include <cstdint>
+
+#include "Registers.h"
+#include "Ram.h"
 
 class RiscvCpu
 {
@@ -18,8 +20,9 @@ private:
     RiscvCpu(RiscvCpu&&) = delete;
     RiscvCpu& operator=(RiscvCpu&&) = delete;
 private:
+    Ram ram{1024};
     Registers registers;
-    int32_t pc;
+    uint32_t pc;
 
     static std::unique_ptr<RiscvCpu> instance;
 };

@@ -5,13 +5,17 @@
 class Registers
 {
 public:
-    Registers();
+    Registers()
+    {
+        regs[0] = 0;
+    }
     ~Registers() = default;
 
-    const int8_t& checkRegisterId(const int8_t& registerId);
-
-    int32_t getRegister(const int8_t& registerId);
-    void setRegister(const int8_t& registerId, const int32_t& registerValue);
+    uint32_t getRegister(const uint8_t& registerId);
+    void setRegister(const uint8_t& registerId, const uint32_t& registerValue);
 private:
-    int32_t regs[32];
+    const uint8_t& checkRegisterId(const uint8_t& registerId);
+
+private:
+    uint32_t regs[32];
 };
