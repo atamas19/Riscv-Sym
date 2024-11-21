@@ -5,16 +5,19 @@
 
 #include "Registers.h"
 #include "Ram.h"
+#include "instruction/Instruction.h"
 
 class RiscvCpu
 {
 public:
     static RiscvCpu& getInstance();
 
-    ~RiscvCpu() = default;
+    void run();
+
 private:
     RiscvCpu() = default;
-
+    ~RiscvCpu() = default;
+        // fetch - decode - execute
     RiscvCpu(const RiscvCpu&) = delete;
     RiscvCpu& operator=(const RiscvCpu&) = delete;
     RiscvCpu(RiscvCpu&&) = delete;
@@ -23,6 +26,4 @@ private:
     Ram ram{1024};
     Registers registers;
     uint32_t pc;
-
-    static std::unique_ptr<RiscvCpu> instance;
 };

@@ -1,11 +1,19 @@
 #include "RiscvCpu.h"
 
-std::unique_ptr<RiscvCpu> RiscvCpu::instance = nullptr;
-
 RiscvCpu& RiscvCpu::getInstance()
 {
-    if (instance == nullptr)
-        instance.reset(new RiscvCpu);
-    
-    return *instance;
+    static RiscvCpu instance;
+
+    return instance;
+}
+
+void RiscvCpu::run()
+{
+    while(true) // something
+    {
+        // fetch
+        uint32_t instruction{ram.read32(pc)};
+        // decode
+        // execute
+    }
 }
