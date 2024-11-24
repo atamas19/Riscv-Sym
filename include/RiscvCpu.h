@@ -14,6 +14,11 @@ public:
 
     void run();
 
+    // Getters
+    Ram& getRam() { return ram; }
+    Registers& getRegisters() { return registers; }
+    uint32_t& getPc() { return pc; }
+
 private:
     RiscvCpu() = default;
     ~RiscvCpu() = default;
