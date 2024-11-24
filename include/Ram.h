@@ -7,10 +7,7 @@
 class Ram
 {
 public:
-    Ram(size_t size)
-    {
-        memory.resize(size, 0);
-    }
+    Ram(size_t size) { memory.resize(size, 0); }
 
     void write32(uint32_t address, uint32_t value);
     uint32_t read32(uint32_t address);

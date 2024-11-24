@@ -32,7 +32,7 @@ public:
     void setFunct3(uint8_t funct3) { this->funct3 = funct3; }
     void setFunct7(uint8_t funct7) { this->funct7 = funct7; }
 
-    // Overloading
+    // Operator overloading
     bool operator==(const InstructionDescriptor& other) const
     {
         return this->opcode == other.opcode &&
@@ -45,6 +45,7 @@ private:
     uint8_t funct3;
     uint8_t funct7;
 };
+
 class Instruction : public ::Instruction
 {
 public:

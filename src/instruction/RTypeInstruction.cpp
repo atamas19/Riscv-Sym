@@ -55,12 +55,6 @@ void ADD::execute(RiscvCpu& cpu)
 {
     try
     {
-        cpu.getRegisters().setRegister(2, 2);
-        cpu.getRegisters().setRegister(3, 2);
-        rd  = getBits(instruction, 7, 11);
-        rs1 = getBits(instruction, 15, 19);
-        rs2 = getBits(instruction, 20, 24);
-
         uint32_t rs1Value = cpu.getRegisters().getRegister(rs1);
         uint32_t rs2Value = cpu.getRegisters().getRegister(rs2);
 

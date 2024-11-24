@@ -5,16 +5,14 @@
 class Registers
 {
 public:
-    Registers()
-    {
-        regs[0] = 0;
-    }
+    Registers() = default;
     ~Registers() = default;
 
+    // Getters
     uint32_t getRegister(uint8_t registerId);
+
+    // Setters
     void setRegister(uint8_t registerId, uint32_t registerValue);
-private:
-    uint8_t checkRegisterId(uint8_t registerId);
 
 private:
     uint32_t regs[32];
