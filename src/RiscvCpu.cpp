@@ -22,7 +22,7 @@ void RiscvCpu::run()
     std::cout << "Instruction in binary: " << std::bitset<32>(instruction) << std::endl;
 
     // Create an instruction using the factory method
-    auto test = RType::InstructionFactory::create(instruction);
+    auto test = InstructionFactory::create(instruction);
 
     if (test)
         test->execute(RiscvCpu::getInstance());

@@ -1,10 +1,12 @@
 #pragma once
 
 #include <cstdint>
-
 #include <vector>
+#include <memory>
 
 class RiscvCpu;
+
+uint32_t getBits(uint32_t instruction, uint8_t x, uint8_t y);
 
 class Instruction
 {
@@ -17,4 +19,8 @@ protected:
     uint32_t instruction;
 };
 
-uint32_t getBits(uint32_t instruction, uint8_t x, uint8_t y);
+class InstructionFactory
+{
+public:
+    static std::unique_ptr<Instruction> create(uint32_t encodedInstruction);
+};

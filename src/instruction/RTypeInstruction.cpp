@@ -26,7 +26,8 @@ void Instruction::decode()
 std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruction)
 {
     static std::unordered_map<InstructionDescriptor, std::function<std::unique_ptr<Instruction>(uint32_t, InstructionDescriptor)>, InstructionDescriptor::InstructionDescriptorHash> instructionMap = {
-        { {0x33, 0x0, 0x0}, [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<ADD>(ins, descriptor); }}
+        { {0x33, 0x0, 0x0}, [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<ADD>(ins, descriptor); }},
+        { {0x33, 0x0, 0x20}, [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<SUB>(ins, descriptor); }}
     };
 
     uint8_t opcode = getBits(encodedInstruction, 0, 6);
