@@ -49,7 +49,7 @@ private:
 class Instruction : public ::Instruction
 {
 public:
-    Instruction(uint32_t instruction) { this->instruction = instruction; }
+    Instruction(uint32_t instruction, InstructionDescriptor descriptor) : descriptor(descriptor) { this->instruction = instruction; }
 
     virtual ~Instruction() = default;
 protected:
@@ -62,7 +62,14 @@ protected:
 class ADD : public Instruction
 {
 public:
-    ADD(uint32_t instruction) : Instruction(instruction) { decode(); }
+    ADD(uint32_t instruction, InstructionDescriptor descriptor) : Instruction(instruction, descriptor) { decode(); }
+    void execute(RiscvCpu& cpu) override;
+};
+
+class SUB : public Instruction
+{
+public:
+    SUB(uint32_t instruction, InstructionDescriptor descriptor) : Instruction(instruction, descriptor) { decode(); }
     void execute(RiscvCpu& cpu) override;
 };
 

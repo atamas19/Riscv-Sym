@@ -12,10 +12,6 @@ void Instruction::decode()
 {
     std::cout << "Encoded instruction: " << std::bitset<32>(instruction) << std::endl;
 
-    descriptor.setOpcode(getBits(instruction, 0, 6));
-    descriptor.setFunct3(getBits(instruction, 12, 14));
-    descriptor.setFunct7(getBits(instruction, 25, 31));
-
     rd  = getBits(instruction, 7, 11);
     rs1 = getBits(instruction, 15, 19);
     rs2 = getBits(instruction, 20, 24);
@@ -29,14 +25,13 @@ void Instruction::decode()
 
 std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruction)
 {
-    static std::unordered_map<InstructionDescriptor, std::function<std::unique_ptr<Instruction>(uint32_t)>, InstructionDescriptor::InstructionDescriptorHash> instructionMap = {
-        { {0x33, 0x0, 0x0}, [](uint32_t ins) { return std::make_unique<ADD>(ins); }}
+    static std::unordered_map<InstructionDescriptor, std::function<std::unique_ptr<Instruction>(uint32_t, InstructionDescriptor)>, InstructionDescriptor::InstructionDescriptorHash> instructionMap = {
+        { {0x33, 0x0, 0x0}, [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<ADD>(ins, descriptor); }}
     };
 
     uint8_t opcode = getBits(encodedInstruction, 0, 6);
     uint8_t funct3 = getBits(encodedInstruction, 12, 14);
     uint8_t funct7 = getBits(encodedInstruction, 25, 31);
-
     
     std::cout << "opcode: " << std::bitset<8>(opcode) << std::endl;
     std::cout << "funct3:  " << std::bitset<8>(funct3) << std::endl;
@@ -46,7 +41,7 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
 
     auto it = instructionMap.find(descriptor);
     if (it != instructionMap.end())
-        return it->second(encodedInstruction);
+        return it->second(encodedInstruction, descriptor);
 
     return nullptr;
 }
@@ -59,6 +54,23 @@ void ADD::execute(RiscvCpu& cpu)
         uint32_t rs2Value = cpu.getRegisters().getRegister(rs2);
 
         cpu.getRegisters().setRegister(rd, {rs1Value + rs2Value});
+
+        std::cout << cpu.getRegisters().getRegister(rd);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+}
+
+void SUB::execute(RiscvCpu& cpu)
+{
+    try
+    {
+        uint32_t rs1Value = cpu.getRegisters().getRegister(rs1);
+        uint32_t rs2Value = cpu.getRegisters().getRegister(rs2);
+
+        cpu.getRegisters().setRegister(rd, {rs2Value - rs1Value});
 
         std::cout << cpu.getRegisters().getRegister(rd);
     }
