@@ -24,9 +24,16 @@ void Instruction::decode()
 std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruction)
 {
     static std::unordered_map<InstructionDescriptor, std::function<std::unique_ptr<Instruction>(uint32_t, InstructionDescriptor)>, InstructionDescriptor::InstructionDescriptorHash> instructionMap = {
-        { ADD::getInstructionDescriptor(), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<ADD>(ins, descriptor); }},
-        { SUB::getInstructionDescriptor(), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<SUB>(ins, descriptor); }},
-        { SLL::getInstructionDescriptor(), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<SLL>(ins, descriptor); }}
+        { SLTU::getInstructionDescriptor(), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<SLTU>(ins, descriptor); }},
+        { ADD::getInstructionDescriptor (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<ADD> (ins, descriptor); }},
+        { SUB::getInstructionDescriptor (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<SUB> (ins, descriptor); }},
+        { SLL::getInstructionDescriptor (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<SLL> (ins, descriptor); }},
+        { SLT::getInstructionDescriptor (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<SLT> (ins, descriptor); }},
+        { XOR::getInstructionDescriptor (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<XOR> (ins, descriptor); }},
+        { SRL::getInstructionDescriptor (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<SRL> (ins, descriptor); }},
+        { SRA::getInstructionDescriptor (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<SRA> (ins, descriptor); }},
+        { AND::getInstructionDescriptor (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<AND> (ins, descriptor); }},
+        { OR::getInstructionDescriptor  (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<OR>  (ins, descriptor); }}
     };
 
     uint8_t opcode = getBits(encodedInstruction, 0, 6);
@@ -50,66 +57,158 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
 
 void ADD::execute(RiscvCpu& cpu)
 {
-    try
-    {
-        uint32_t rs1Value = cpu.getRegister(rs1);
-        uint32_t rs2Value = cpu.getRegister(rs2);
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t rs2Value = cpu.getRegister(rs2);
 
-        cpu.setRegister(rd, {rs1Value + rs2Value});
-        cpu.setPc(cpu.getPc() + 4);
+    int32_t result = rs2Value + rs1Value;
+
+    cpu.setRegister(rd, result);
+    cpu.setPc(cpu.getPc() + 4);
 
 #ifdef DEBUG
-        std::cout << cpu.getRegister(rd);
+    std::cout << cpu.getRegister(rd);
 #endif
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
 }
 
 void SUB::execute(RiscvCpu& cpu)
 {
-    try
-    {
-        uint32_t rs1Value = cpu.getRegister(rs1);
-        uint32_t rs2Value = cpu.getRegister(rs2);
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t rs2Value = cpu.getRegister(rs2);
 
-        cpu.setRegister(rd, {rs2Value - rs1Value});
-        cpu.setPc(cpu.getPc() + 4);
+    int32_t result = rs2Value - rs1Value;
+
+    cpu.setRegister(rd, result);
+    cpu.setPc(cpu.getPc() + 4);
 
 #ifdef DEBUG
-        std::cout << cpu.getRegister(rd);
+    std::cout << cpu.getRegister(rd);
 #endif
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
 }
 
 void SLL::execute(RiscvCpu& cpu)
 {
-    try
-    {
-        uint32_t rs1Value = cpu.getRegister(rs1);
-        uint32_t rs2Value = cpu.getRegister(rs2);
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t rs2Value = cpu.getRegister(rs2);
 
-        uint8_t shiftValue = getBits(rs2Value, 0, 5);
+    uint8_t shiftValue = getBits(rs2Value, 0, 5);
 
-        rs1Value = rs1Value << shiftValue;
+    int32_t result = rs1Value << shiftValue;
 
-        cpu.setRegister(rd, rs1Value);
-        cpu.setPc(cpu.getPc() + 4);
+    cpu.setRegister(rd, result);
+    cpu.setPc(cpu.getPc() + 4);
 
 #ifdef DEBUG
-        std::cout << cpu.getRegister(rd);
+    std::cout << cpu.getRegister(rd);
 #endif
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
+}
+
+void SLT::execute(RiscvCpu& cpu)
+{
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t rs2Value = cpu.getRegister(rs2);
+
+    uint8_t result = (rs1Value < rs2Value);
+
+    cpu.setRegister(rd, result);
+    cpu.setPc(cpu.getPc() + 4);
+
+#ifdef DEBUG
+    std::cout << cpu.getRegister(rd);
+#endif
+}
+
+void SLTU::execute(RiscvCpu& cpu)
+{
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t rs2Value = cpu.getRegister(rs2);
+
+    uint8_t result = (static_cast<uint32_t>(rs1Value) < static_cast<uint32_t>(rs2Value));
+
+    cpu.setRegister(rd, result);
+    cpu.setPc(cpu.getPc() + 4);
+
+#ifdef DEBUG
+    std::cout << cpu.getRegister(rd);
+#endif
+}
+
+void XOR::execute(RiscvCpu& cpu)
+{
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t rs2Value = cpu.getRegister(rs2);
+
+    int32_t result = (rs1Value ^ rs2Value);
+
+    cpu.setRegister(rd, result);
+    cpu.setPc(cpu.getPc() + 4);
+
+#ifdef DEBUG
+    std::cout << cpu.getRegister(rd);
+#endif
+}
+
+void SRL::execute(RiscvCpu& cpu)
+{
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t rs2Value = cpu.getRegister(rs2);
+
+    uint8_t shiftValue = getBits(rs2Value, 0, 5);
+
+    int32_t result = static_cast<uint32_t>(rs1Value) >> shiftValue;
+
+    cpu.setRegister(rd, result);
+    cpu.setPc(cpu.getPc() + 4);
+
+#ifdef DEBUG
+    std::cout << cpu.getRegister(rd);
+#endif   
+}
+
+void SRA::execute(RiscvCpu& cpu)
+{
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t rs2Value = cpu.getRegister(rs2);
+
+    uint8_t shiftValue = getBits(rs2Value, 0, 5);
+
+    int32_t result = rs1Value >> shiftValue;
+
+    cpu.setRegister(rd, result);
+    cpu.setPc(cpu.getPc() + 4);
+
+#ifdef DEBUG
+    std::cout << cpu.getRegister(rd);
+#endif   
+}
+
+void OR::execute(RiscvCpu& cpu)
+{
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t rs2Value = cpu.getRegister(rs2);
+
+    int32_t result = (rs1Value | rs2Value);
+
+    cpu.setRegister(rd, result);
+    cpu.setPc(cpu.getPc() + 4);
+
+#ifdef DEBUG
+    std::cout << cpu.getRegister(rd);
+#endif   
+}
+
+void AND::execute(RiscvCpu& cpu)
+{
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t rs2Value = cpu.getRegister(rs2);
+
+    int32_t result = (rs1Value & rs2Value);
+
+    cpu.setRegister(rd, result);
+    cpu.setPc(cpu.getPc() + 4);
+
+#ifdef DEBUG
+    std::cout << cpu.getRegister(rd);
+#endif   
 }
 
 } // namespace RType

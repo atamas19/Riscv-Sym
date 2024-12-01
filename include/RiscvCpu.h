@@ -18,11 +18,11 @@ public:
     // Getters
     Ram& getRam() { return ram; }
     const uint32_t getPc() const { return pc; }
-    const uint32_t getRegister(uint8_t registerIndex) const;
+    const int32_t getRegister(uint8_t registerIndex) const;
 
     // Setters
     void setPc(uint32_t pcValue) { pc = pcValue; }
-    void setRegister(uint8_t registerIndex, uint32_t registerValue);
+    void setRegister(uint8_t registerIndex, int32_t registerValue);
 
 private:
     RiscvCpu() = default;
@@ -34,6 +34,6 @@ private:
     RiscvCpu& operator=(RiscvCpu&&) = delete;
 private:
     Ram ram{1024};
-    uint32_t regs[32];
+    int32_t regs[32];
     uint32_t pc;
 };
