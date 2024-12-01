@@ -46,7 +46,7 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
     std::cout << "funct7: " << std::bitset<8>(funct7) << std::endl;
 #endif
 
-    InstructionDescriptor descriptor{opcode, funct3, funct7};
+    InstructionDescriptor descriptor{funct3, funct7};
 
     auto it = instructionMap.find(descriptor);
     if (it != instructionMap.end())

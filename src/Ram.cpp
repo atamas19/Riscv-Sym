@@ -3,7 +3,7 @@
 void Ram::write32(uint32_t address, uint32_t value)
 {
     memory[address]     = value & 0xFF;
-    memory[address + 1] = (value >> 8) & 0xFF;
+    memory[address + 1] = (value >>  8) & 0xFF;
     memory[address + 2] = (value >> 16) & 0xFF;
     memory[address + 3] = (value >> 24) & 0xFF;
 }
@@ -11,7 +11,7 @@ void Ram::write32(uint32_t address, uint32_t value)
 uint32_t Ram::read32(uint32_t address)
 {
     return memory[address] |
-            (memory[address + 1] << 8) |
+            (memory[address + 1] <<  8) |
             (memory[address + 2] << 16) |
             (memory[address + 3] << 24);
 }

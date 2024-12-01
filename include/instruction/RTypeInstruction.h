@@ -12,13 +12,13 @@ class InstructionDescriptor
 {
 public:
     InstructionDescriptor() = default;
-    InstructionDescriptor(uint8_t opcode, uint8_t funct3, uint8_t funct7): opcode(opcode), funct3(funct3), funct7(funct7) {}
+    InstructionDescriptor(uint8_t funct3, uint8_t funct7): funct3(funct3), funct7(funct7) {}
 
     struct InstructionDescriptorHash
     {
         std::size_t operator()(const InstructionDescriptor& desc) const
         {
-            return (desc.getOpcode() << 16) | (desc.getFunct3() << 8) | desc.getFunct7();
+            return (desc.getFunct3() << 8) | desc.getFunct7();
         }
     };
 
@@ -28,20 +28,17 @@ public:
     uint8_t getFunct7() const { return funct7; }
 
     // Setters
-    void setOpcode(uint8_t opcode) { this->opcode = opcode; }
     void setFunct3(uint8_t funct3) { this->funct3 = funct3; }
     void setFunct7(uint8_t funct7) { this->funct7 = funct7; }
 
     // Operator overloading
     bool operator==(const InstructionDescriptor& other) const
     {
-        return this->opcode == other.opcode &&
-               this->funct3 == other.funct3 &&
-               this->funct7 == other.funct7;
+        return this->funct3 == other.funct3 && this->funct7 == other.funct7;
     }
 
 private:
-    uint8_t opcode;
+    const uint8_t opcode = 0x33;
     uint8_t funct3;
     uint8_t funct7;
 };
@@ -65,7 +62,7 @@ public:
     ADD(uint32_t instruction, InstructionDescriptor descriptor) : Instruction(instruction, descriptor) { decode(); }
     void execute(RiscvCpu& cpu) override;
 
-    static const InstructionDescriptor getInstructionDescriptor() { return {0x33, 0x0, 0x0}; }
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x0, 0x0}; }
 };
 
 class SUB : public Instruction
@@ -74,7 +71,7 @@ public:
     SUB(uint32_t instruction, InstructionDescriptor descriptor) : Instruction(instruction, descriptor) { decode(); }
     void execute(RiscvCpu& cpu) override;
 
-    static const InstructionDescriptor getInstructionDescriptor() { return {0x33, 0x0, 0x20}; }
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x0, 0x20}; }
 };
 
 class SLL : public Instruction
@@ -83,7 +80,7 @@ public:
     SLL(uint32_t instruction, InstructionDescriptor descriptor) : Instruction(instruction, descriptor) { decode(); }
     void execute(RiscvCpu& cpu) override;
 
-    static const InstructionDescriptor getInstructionDescriptor() { return {0x33, 0x1, 0x0}; }
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x1, 0x0}; }
 };
 
 class SLT : public Instruction
@@ -92,7 +89,7 @@ public:
     SLT(uint32_t instruction, InstructionDescriptor descriptor) : Instruction(instruction, descriptor) { decode(); }
     void execute(RiscvCpu& cpu) override;
 
-    static const InstructionDescriptor getInstructionDescriptor() { return {0x33, 0x2, 0x0}; }
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x2, 0x0}; }
 };
 
 class SLTU : public Instruction
@@ -101,7 +98,7 @@ public:
     SLTU(uint32_t instruction, InstructionDescriptor descriptor) : Instruction(instruction, descriptor) { decode(); }
     void execute(RiscvCpu& cpu) override;
 
-    static const InstructionDescriptor getInstructionDescriptor() { return {0x33, 0x3, 0x0}; }
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x3, 0x0}; }
 };
 
 class XOR : public Instruction
@@ -110,7 +107,7 @@ public:
     XOR(uint32_t instruction, InstructionDescriptor descriptor) : Instruction(instruction, descriptor) { decode(); }
     void execute(RiscvCpu& cpu) override;
 
-    static const InstructionDescriptor getInstructionDescriptor() { return {0x33, 0x4, 0x0}; }
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x4, 0x0}; }
 };
 
 class SRL : public Instruction
@@ -119,7 +116,7 @@ public:
     SRL(uint32_t instruction, InstructionDescriptor descriptor) : Instruction(instruction, descriptor) { decode(); }
     void execute(RiscvCpu& cpu) override;
 
-    static const InstructionDescriptor getInstructionDescriptor() { return {0x33, 0x5, 0x0}; }
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x5, 0x0}; }
 };
 
 class SRA : public Instruction
@@ -128,7 +125,7 @@ public:
     SRA(uint32_t instruction, InstructionDescriptor descriptor) : Instruction(instruction, descriptor) { decode(); }
     void execute(RiscvCpu& cpu) override;
 
-    static const InstructionDescriptor getInstructionDescriptor() { return {0x33, 0x5, 0x20}; }
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x5, 0x20}; }
 };
 
 class OR : public Instruction
@@ -137,7 +134,7 @@ public:
     OR(uint32_t instruction, InstructionDescriptor descriptor) : Instruction(instruction, descriptor) { decode(); }
     void execute(RiscvCpu& cpu) override;
 
-    static const InstructionDescriptor getInstructionDescriptor() { return {0x33, 0x6, 0x0}; }
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x6, 0x0}; }
 };
 
 class AND : public Instruction
@@ -146,7 +143,7 @@ public:
     AND(uint32_t instruction, InstructionDescriptor descriptor) : Instruction(instruction, descriptor) { decode(); }
     void execute(RiscvCpu& cpu) override;
 
-    static const InstructionDescriptor getInstructionDescriptor() { return {0x33, 0x7, 0x0}; }
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x7, 0x0}; }
 };
 
 class InstructionFactory

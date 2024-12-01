@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/RiscV-Sym.dir/src/Ram.cpp.o CMakeFiles/RiscV-Sym.dir/src/RiscvCpu.cpp.o CMakeFiles/RiscV-Sym.dir/src/instruction/Instruction.cpp.o CMakeFiles/RiscV-Sym.dir/src/instruction/RTypeInstruction.cpp.o CMakeFiles/RiscV-Sym.dir/src/main.cpp.o -o RiscV-Sym 

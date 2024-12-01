@@ -1,0 +1,3 @@
+/home/atamas/licenta/Riscv-Sym/build/CMakeFiles/RiscV-Sym.dir
+/home/atamas/licenta/Riscv-Sym/build/CMakeFiles/edit_cache.dir
+/home/atamas/licenta/Riscv-Sym/build/CMakeFiles/rebuild_cache.dir
