@@ -64,6 +64,8 @@ class ADD : public Instruction
 public:
     ADD(uint32_t instruction, InstructionDescriptor descriptor) : Instruction(instruction, descriptor) { decode(); }
     void execute(RiscvCpu& cpu) override;
+
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x33, 0x0, 0x0}; }
 };
 
 class SUB : public Instruction
@@ -71,6 +73,17 @@ class SUB : public Instruction
 public:
     SUB(uint32_t instruction, InstructionDescriptor descriptor) : Instruction(instruction, descriptor) { decode(); }
     void execute(RiscvCpu& cpu) override;
+
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x33, 0x0, 0x20}; }
+};
+
+class SLL : public Instruction
+{
+public:
+    SLL(uint32_t instruction, InstructionDescriptor descriptor) : Instruction(instruction, descriptor) { decode(); }
+    void execute(RiscvCpu& cpu) override;
+
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x33, 0x1, 0x0}; }
 };
 
 class InstructionFactory

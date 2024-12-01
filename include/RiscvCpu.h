@@ -3,9 +3,10 @@
 #include <memory>
 #include <cstdint>
 
-#include "Registers.h"
 #include "Ram.h"
 #include "instruction/Instruction.h"
+
+#define DEBUG
 
 class RiscvCpu
 {
@@ -16,8 +17,12 @@ public:
 
     // Getters
     Ram& getRam() { return ram; }
-    Registers& getRegisters() { return registers; }
-    uint32_t& getPc() { return pc; }
+    const uint32_t getPc() const { return pc; }
+    const uint32_t getRegister(uint8_t registerIndex) const;
+
+    // Setters
+    void setPc(uint32_t pcValue) { pc = pcValue; }
+    void setRegister(uint8_t registerIndex, uint32_t registerValue);
 
 private:
     RiscvCpu() = default;
@@ -29,6 +34,6 @@ private:
     RiscvCpu& operator=(RiscvCpu&&) = delete;
 private:
     Ram ram{1024};
-    Registers registers;
+    uint32_t regs[32];
     uint32_t pc;
 };
