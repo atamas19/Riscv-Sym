@@ -150,6 +150,8 @@ class InstructionFactory
 {
 public:
     static std::unique_ptr<Instruction> create(uint32_t encodedInstruction);
+
+    static const uint32_t getInstructionDescription() { return 0x33; }
 };
 
 } // namespace RType

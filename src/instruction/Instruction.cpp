@@ -1,5 +1,6 @@
 #include "instruction/Instruction.h"
 #include "instruction/RTypeInstruction.h"
+#include "instruction/UTypeInstruction.h"
 
 #include <stdexcept>
 #include <unordered_map>
@@ -17,7 +18,8 @@ uint32_t getBits(uint32_t instruction, uint8_t x, uint8_t y)
 std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruction)
 {
     static std::unordered_map<uint8_t, std::function<std::unique_ptr<Instruction>(uint32_t)>> instructionMap = {
-        {0x33, [](uint32_t ins) { return RType::InstructionFactory::create(ins); }}
+        {RType::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return RType::InstructionFactory::create(ins); }},
+        {UType::LUI::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<UType::LUI>(ins); }}
     };
 
     uint8_t opcode = getBits(encodedInstruction, 0, 6);
