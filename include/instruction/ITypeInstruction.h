@@ -23,15 +23,6 @@ protected:
     int16_t imm;
 };
 
-class ADDI : public Instruction
-{
-public:
-    ADDI(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
-
-    static const uint8_t getInstructionDescriptor() { return 0x0; }
-};
-
 class ArithmeticInstructionFactory
 {
 public:
@@ -46,6 +37,60 @@ public:
     static std::unique_ptr<Instruction> create(uint32_t encodedInstruction);
 
     static const uint8_t getInstructionDescription() { return 0x3; }
+};
+
+class ADDI : public Instruction
+{
+public:
+    ADDI(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu) override;
+
+    static const uint8_t getInstructionDescriptor() { return 0x0; }
+};
+
+class SLTI : public Instruction
+{
+public:
+    SLTI(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu) override;
+
+    static const uint8_t getInstructionDescriptor() { return 0x2; }
+};
+
+class SLTIU : public Instruction
+{
+public:
+    SLTIU(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu) override;
+
+    static const uint8_t getInstructionDescriptor() { return 0x3; }
+};
+
+class XORI : public Instruction
+{
+public:
+    XORI(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu) override;
+
+    static const uint8_t getInstructionDescriptor() { return 0x4; }
+};
+
+class ORI : public Instruction
+{
+public:
+    ORI(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu) override;
+
+    static const uint8_t getInstructionDescriptor() { return 0x6; }
+};
+
+class ANDI : public Instruction
+{
+public:
+    ANDI(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu) override;
+
+    static const uint8_t getInstructionDescriptor() { return 0x7; }
 };
 
 } // namespace IType
