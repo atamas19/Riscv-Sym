@@ -19,7 +19,8 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
 {
     static std::unordered_map<uint8_t, std::function<std::unique_ptr<Instruction>(uint32_t)>> instructionMap = {
         {RType::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return RType::InstructionFactory::create(ins); }},
-        {UType::LUI::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<UType::LUI>(ins); }}
+        {UType::LUI::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<UType::LUI>(ins); }},
+        {UType::AUIPC::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<UType::AUIPC>(ins); }}
     };
 
     uint8_t opcode = getBits(encodedInstruction, 0, 6);

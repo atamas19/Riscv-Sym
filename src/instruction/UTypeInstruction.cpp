@@ -25,8 +25,19 @@ void LUI::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, imm_u);
     cpu.setPc(cpu.getPc() + 4);
 
-    if (cpu.getRegister(rd) == 0x12345000)
-        std::cout << "Success!\n";
+#ifdef DEBUG
+    std::cout << "rdValue: " << std::bitset<32>(cpu.getRegister(rd));
+#endif
+}
+
+void AUIPC::execute(RiscvCpu& cpu)
+{
+    cpu.setPc(0x800012f4);
+    int32_t imm_u = getImm_u();
+    int32_t resultValue = cpu.getPc() + imm_u;
+
+    cpu.setRegister(rd, resultValue);
+    cpu.setPc(cpu.getPc() + 4);
 
 #ifdef DEBUG
     std::cout << "rdValue: " << std::bitset<32>(cpu.getRegister(rd));

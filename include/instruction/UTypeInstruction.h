@@ -25,7 +25,16 @@ public:
     LUI(uint32_t instruction) : Instruction(instruction) { decode(); }
     void execute(RiscvCpu& cpu) override;
 
-    static const uint8_t getInstructionDescriptor() { return 0x37;}
+    static const uint8_t getInstructionDescriptor() { return 0x37; }
+};
+
+class AUIPC : public Instruction
+{
+public:
+    AUIPC(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu) override;
+
+    static const uint8_t getInstructionDescriptor() { return 0x17; }
 };
 
 } // namespace UType
