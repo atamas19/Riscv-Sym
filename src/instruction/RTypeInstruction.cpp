@@ -36,12 +36,10 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
         { OR::getInstructionDescriptor  (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<OR>  (ins, descriptor); }}
     };
 
-    uint8_t opcode = getBits(encodedInstruction, 0, 6);
     uint8_t funct3 = getBits(encodedInstruction, 12, 14);
     uint8_t funct7 = getBits(encodedInstruction, 25, 31);
 
 #ifdef DEBUG
-    std::cout << "opcode: " << std::bitset<8>(opcode) << std::endl;
     std::cout << "funct3: " << std::bitset<8>(funct3) << std::endl;
     std::cout << "funct7: " << std::bitset<8>(funct7) << std::endl;
 #endif

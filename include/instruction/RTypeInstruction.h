@@ -56,6 +56,14 @@ protected:
     InstructionDescriptor descriptor;
 };
 
+class InstructionFactory
+{
+public:
+    static std::unique_ptr<Instruction> create(uint32_t encodedInstruction);
+
+    static const uint8_t getInstructionDescription() { return 0x33; }
+};
+
 class ADD : public Instruction
 {
 public:
@@ -144,14 +152,6 @@ public:
     void execute(RiscvCpu& cpu) override;
 
     static const InstructionDescriptor getInstructionDescriptor() { return {0x7, 0x0}; }
-};
-
-class InstructionFactory
-{
-public:
-    static std::unique_ptr<Instruction> create(uint32_t encodedInstruction);
-
-    static const uint32_t getInstructionDescription() { return 0x33; }
 };
 
 } // namespace RType
