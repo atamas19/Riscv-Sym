@@ -8,6 +8,16 @@
 namespace IType
 {
 
+struct TupleHash
+{
+    std::size_t operator()(const std::tuple<uint8_t, uint8_t>& t) const
+    {
+        uint8_t first = std::get<0>(t);
+        uint8_t second = std::get<1>(t);
+        return (static_cast<std::size_t>(first) << 8) | second;
+    }
+};
+
 class Instruction : public ::Instruction
 {
 public:
@@ -16,7 +26,8 @@ public:
     virtual ~Instruction() = default;
 protected:
     void decode() override;
-    const int32_t getImm_i() const; 
+    const int32_t getImm_i() const;
+    const int8_t getShamt_i() const;
 
     uint8_t rd;
     uint8_t rs1;
@@ -91,6 +102,36 @@ public:
     void execute(RiscvCpu& cpu) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x7; }
+};
+
+class SLLI : public Instruction
+{
+public:
+    SLLI(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu) override;
+
+                        // funct3, specialBit
+    static const std::tuple<uint8_t, uint8_t> getInstructionDescriptor() { return {0x1, 0x0}; }
+};
+
+class SRLI : public Instruction
+{
+public:
+    SRLI(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu) override;
+
+                        // funct3, specialBit
+    static const std::tuple<uint8_t, uint8_t> getInstructionDescriptor() { return {0x5, 0x0}; }
+};
+
+class SRAI : public Instruction
+{
+public:
+    SRAI(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu) override;
+
+                        // funct3, specialBit
+    static const std::tuple<uint8_t, uint8_t> getInstructionDescriptor() { return {0x5, 0x1}; }
 };
 
 } // namespace IType

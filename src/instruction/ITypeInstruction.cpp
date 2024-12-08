@@ -31,6 +31,11 @@ const int32_t Instruction::getImm_i() const
     return imm_i;
 }
 
+const int8_t Instruction::getShamt_i() const
+{
+    return getBits(imm, 0, 4);
+}
+
 // This create function will handle the IType instructions that have the 0x13 opcode
 std::unique_ptr<Instruction> ArithmeticInstructionFactory::create(uint32_t encodedInstruction)
 {
@@ -43,11 +48,27 @@ std::unique_ptr<Instruction> ArithmeticInstructionFactory::create(uint32_t encod
         { ANDI::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<ANDI> (ins); }}
     };
 
+                                    // funct3, specialBit
+    static std::unordered_map<std::tuple<uint8_t, uint8_t>, std::function<std::unique_ptr<Instruction>(uint32_t)>, TupleHash> specialInstructionMap = {
+        { SLLI::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<SLLI>(ins); }},
+        { SRLI::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<SRLI>(ins); }},
+        { SRAI::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<SRAI>(ins); }}
+    };
+
     uint8_t funct3 = getBits(encodedInstruction, 12, 14);
 
     auto it = instructionMap.find(funct3);
     if (it != instructionMap.end())
         return it->second(encodedInstruction);
+    else
+    {
+        uint8_t specialBit = getBits(encodedInstruction, 30, 30);
+        std::tuple<uint8_t, uint8_t> specialInstructionDescriptor{funct3, specialBit};
+
+        auto specialIt = specialInstructionMap.find(specialInstructionDescriptor);
+        if (specialIt != specialInstructionMap.end())
+            return specialIt->second(encodedInstruction);
+    }
 
     return nullptr;
 }
@@ -151,6 +172,51 @@ void ANDI::execute(RiscvCpu& cpu)
     int32_t imm_i = getImm_i();
 
     int32_t result = (rs1Value & imm_i);
+
+    cpu.setRegister(rd, result);
+    cpu.setPc(cpu.getPc() + 4);
+
+#ifdef DEBUG
+    std::cout << cpu.getRegister(rd);
+#endif
+}
+
+void SLLI::execute(RiscvCpu& cpu)
+{
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t shamt_i = getShamt_i();
+
+    int32_t result = (rs1Value << shamt_i);
+
+    cpu.setRegister(rd, result);
+    cpu.setPc(cpu.getPc() + 4);
+
+#ifdef DEBUG
+    std::cout << cpu.getRegister(rd);
+#endif
+}
+
+void SRLI::execute(RiscvCpu& cpu)
+{
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t shamt_i = getShamt_i();
+
+    int32_t result = (static_cast<uint32_t>(rs1Value) >> shamt_i);
+
+    cpu.setRegister(rd, result);
+    cpu.setPc(cpu.getPc() + 4);
+
+#ifdef DEBUG
+    std::cout << cpu.getRegister(rd);
+#endif
+}
+
+void SRAI::execute(RiscvCpu& cpu)
+{
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t shamt_i = getShamt_i();
+
+    int32_t result = (rs1Value >> shamt_i);
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
