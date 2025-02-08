@@ -42,6 +42,7 @@ public:
     static const uint8_t getInstructionDescription() { return 0x13; }
 };
 
+// Add Immediate
 class ADDI : public Instruction
 {
 public:
@@ -51,6 +52,7 @@ public:
     static const uint8_t getInstructionDescriptor() { return 0x0; }
 };
 
+// Set Less Than Immediate
 class SLTI : public Instruction
 {
 public:
@@ -60,6 +62,7 @@ public:
     static const uint8_t getInstructionDescriptor() { return 0x2; }
 };
 
+// Set Less Than Immediate Unsigned
 class SLTIU : public Instruction
 {
 public:
@@ -69,6 +72,7 @@ public:
     static const uint8_t getInstructionDescriptor() { return 0x3; }
 };
 
+// Exclusive Or Immediate
 class XORI : public Instruction
 {
 public:
@@ -78,6 +82,7 @@ public:
     static const uint8_t getInstructionDescriptor() { return 0x4; }
 };
 
+// Or Immediate
 class ORI : public Instruction
 {
 public:
@@ -87,6 +92,7 @@ public:
     static const uint8_t getInstructionDescriptor() { return 0x6; }
 };
 
+// And Immediate
 class ANDI : public Instruction
 {
 public:
@@ -96,6 +102,7 @@ public:
     static const uint8_t getInstructionDescriptor() { return 0x7; }
 };
 
+// Shift Left Logical Immediate
 class SLLI : public Instruction
 {
 public:
@@ -106,6 +113,7 @@ public:
     static const std::tuple<uint8_t, uint8_t> getInstructionDescriptor() { return {0x1, 0x0}; }
 };
 
+// Shit Right Logical Immediate
 class SRLI : public Instruction
 {
 public:
@@ -116,6 +124,7 @@ public:
     static const std::tuple<uint8_t, uint8_t> getInstructionDescriptor() { return {0x5, 0x0}; }
 };
 
+// Shift Right Arithmetic Immediate
 class SRAI : public Instruction
 {
 public:
@@ -134,6 +143,7 @@ public:
     static const uint8_t getInstructionDescription() { return 0x3; }
 };
 
+// Load Byte
 class LB : public Instruction
 {
 public:
@@ -143,6 +153,7 @@ public:
     static const uint8_t getInstructionDescriptor() { return 0x0; }
 };
 
+// Load Halfword
 class LH : public Instruction
 {
 public:
@@ -152,6 +163,7 @@ public:
     static const uint8_t getInstructionDescriptor() { return 0x1; }
 };
 
+// Load Word
 class LW : public Instruction
 {
 public:
@@ -161,6 +173,7 @@ public:
     static const uint8_t getInstructionDescriptor() { return 0x2; }
 };
 
+// Load Byte Unsigned
 class LBU : public Instruction
 {
 public:
@@ -170,6 +183,7 @@ public:
     static const uint8_t getInstructionDescriptor() { return 0x4; }
 };
 
+// Load Halfword Unsigned
 class LHU : public Instruction
 {
 public:

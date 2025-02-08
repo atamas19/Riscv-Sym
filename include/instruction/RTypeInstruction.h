@@ -64,6 +64,7 @@ public:
     static const uint8_t getInstructionDescription() { return 0x33; }
 };
 
+// Add
 class ADD : public Instruction
 {
 public:
@@ -73,6 +74,7 @@ public:
     static const InstructionDescriptor getInstructionDescriptor() { return {0x0, 0x0}; }
 };
 
+// Substract
 class SUB : public Instruction
 {
 public:
@@ -82,6 +84,7 @@ public:
     static const InstructionDescriptor getInstructionDescriptor() { return {0x0, 0x20}; }
 };
 
+// Shift Left Logical
 class SLL : public Instruction
 {
 public:
@@ -91,6 +94,7 @@ public:
     static const InstructionDescriptor getInstructionDescriptor() { return {0x1, 0x0}; }
 };
 
+// Set Less Than
 class SLT : public Instruction
 {
 public:
@@ -100,6 +104,7 @@ public:
     static const InstructionDescriptor getInstructionDescriptor() { return {0x2, 0x0}; }
 };
 
+// Set Less Than Unsigned
 class SLTU : public Instruction
 {
 public:
@@ -109,6 +114,7 @@ public:
     static const InstructionDescriptor getInstructionDescriptor() { return {0x3, 0x0}; }
 };
 
+// Exclusive Or
 class XOR : public Instruction
 {
 public:
@@ -118,6 +124,7 @@ public:
     static const InstructionDescriptor getInstructionDescriptor() { return {0x4, 0x0}; }
 };
 
+// Shit Right Logical
 class SRL : public Instruction
 {
 public:
@@ -127,6 +134,7 @@ public:
     static const InstructionDescriptor getInstructionDescriptor() { return {0x5, 0x0}; }
 };
 
+// Shift Right Arithmetic
 class SRA : public Instruction
 {
 public:
@@ -136,6 +144,7 @@ public:
     static const InstructionDescriptor getInstructionDescriptor() { return {0x5, 0x20}; }
 };
 
+// Or
 class OR : public Instruction
 {
 public:
@@ -145,6 +154,7 @@ public:
     static const InstructionDescriptor getInstructionDescriptor() { return {0x6, 0x0}; }
 };
 
+// And
 class AND : public Instruction
 {
 public:

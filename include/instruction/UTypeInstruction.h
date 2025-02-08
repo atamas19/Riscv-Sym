@@ -19,6 +19,7 @@ protected:
     int32_t imm;
 };
 
+// Load Upper Immediate
 class LUI : public Instruction
 {
 public:
@@ -28,6 +29,7 @@ public:
     static const uint8_t getInstructionDescriptor() { return 0x37; }
 };
 
+// Add Upper Immediate to Program Counter
 class AUIPC : public Instruction
 {
 public:
