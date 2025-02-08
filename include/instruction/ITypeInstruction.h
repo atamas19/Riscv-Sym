@@ -42,14 +42,6 @@ public:
     static const uint8_t getInstructionDescription() { return 0x13; }
 };
 
-class LoadInstructionFactory
-{
-public:
-    static std::unique_ptr<Instruction> create(uint32_t encodedInstruction);
-
-    static const uint8_t getInstructionDescription() { return 0x3; }
-};
-
 class ADDI : public Instruction
 {
 public:
@@ -132,6 +124,59 @@ public:
 
                         // funct3, specialBit
     static const std::tuple<uint8_t, uint8_t> getInstructionDescriptor() { return {0x5, 0x1}; }
+};
+
+class LoadInstructionFactory
+{
+public:
+    static std::unique_ptr<Instruction> create(uint32_t encodedInstruction);
+
+    static const uint8_t getInstructionDescription() { return 0x3; }
+};
+
+class LB : public Instruction
+{
+public:
+    LB(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu) override;
+
+    static const uint8_t getInstructionDescriptor() { return 0x0; }
+};
+
+class LH : public Instruction
+{
+public:
+    LH(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu) override;
+
+    static const uint8_t getInstructionDescriptor() { return 0x1; }
+};
+
+class LW : public Instruction
+{
+public:
+    LW(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu) override;
+
+    static const uint8_t getInstructionDescriptor() { return 0x2; }
+};
+
+class LBU : public Instruction
+{
+public:
+    LBU(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu) override;
+
+    static const uint8_t getInstructionDescriptor() { return 0x4; }
+};
+
+class LHU : public Instruction
+{
+public:
+    LHU(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu) override;
+
+    static const uint8_t getInstructionDescriptor() { return 0x5; }
 };
 
 } // namespace IType

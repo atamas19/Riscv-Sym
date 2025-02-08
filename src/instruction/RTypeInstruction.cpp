@@ -17,7 +17,7 @@ void Instruction::decode()
 #ifdef DEBUG
     std::cout << "rs1: " << std::bitset<8>(rs1) << std::endl;
     std::cout << "rs2: " << std::bitset<8>(rs2) << std::endl;
-    std::cout << "rd: "  << std::bitset<8>(rd) << std::endl;
+    std::cout << "rd: "  << std::bitset<8>(rd)  << std::endl;
 #endif
 }
 

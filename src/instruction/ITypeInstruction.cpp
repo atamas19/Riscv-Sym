@@ -73,23 +73,7 @@ std::unique_ptr<Instruction> ArithmeticInstructionFactory::create(uint32_t encod
     return nullptr;
 }
 
-// This create function will handle the IType instructions that have the 0x3 opcode
-std::unique_ptr<Instruction> LoadInstructionFactory::create(uint32_t encodedInstruction)
-{
-    static std::unordered_map<uint8_t, std::function<std::unique_ptr<Instruction>(uint32_t)>> instructionMap = {
-        // { ADDI::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<ADDI>(ins); }}
-    };
-
-    uint8_t funct3 = getBits(encodedInstruction, 12, 14);
-
-    auto it = instructionMap.find(funct3);
-    if (it != instructionMap.end())
-        return it->second(encodedInstruction);
-
-    return nullptr;
-}
-
-// Functions that have the opcode 0x13:
+// Arithmetic instructions
 
 void ADDI::execute(RiscvCpu& cpu)
 {
@@ -225,5 +209,111 @@ void SRAI::execute(RiscvCpu& cpu)
     std::cout << cpu.getRegister(rd);
 #endif
 }
+
+// This create function will handle the IType instructions that are meant for loading memory, they have the 0x3 opcode
+std::unique_ptr<Instruction> LoadInstructionFactory::create(uint32_t encodedInstruction)
+{
+    static std::unordered_map<uint8_t, std::function<std::unique_ptr<Instruction>(uint32_t)>> instructionMap = {
+        { LB::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<LB> (ins); }},
+        { LH::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<LH> (ins); }},
+        { LW::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<LW> (ins); }},
+        { LBU::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<LBU>(ins); }},
+        { LHU::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<LHU>(ins); }}
+    };
+
+    uint8_t funct3 = getBits(encodedInstruction, 12, 14);
+
+    auto it = instructionMap.find(funct3);
+    if (it != instructionMap.end())
+        return it->second(encodedInstruction);
+
+    return nullptr;
+}
+
+void LB::execute(RiscvCpu& cpu)
+{
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t imm_i = getImm_i();
+
+    uint32_t addr = rs1Value + imm_i;
+    uint32_t memoryValue = cpu.getRam().read8(addr);
+
+    cpu.setRegister(rd, memoryValue);
+    cpu.setPc(cpu.getPc() + 4);
+
+#ifdef DEBUG
+    std::cout << "Address: " << addr << "\n";
+    std::cout << cpu.getRegister(rd);
+#endif
+}
+
+void LH::execute(RiscvCpu& cpu)
+{
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t imm_i = getImm_i();
+
+    uint32_t addr = rs1Value + imm_i;
+    uint32_t memoryValue = cpu.getRam().read16(addr);
+
+    cpu.setRegister(rd, memoryValue);
+    cpu.setPc(cpu.getPc() + 4);
+
+#ifdef DEBUG
+    std::cout << "Address: " << addr << "\n";
+    std::cout << cpu.getRegister(rd);
+#endif
+}
+
+void LW::execute(RiscvCpu& cpu)
+{
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t imm_i = getImm_i();
+
+    uint32_t addr = rs1Value + imm_i;
+    uint32_t memoryValue = cpu.getRam().read32(addr);
+
+    cpu.setRegister(rd, memoryValue);
+    cpu.setPc(cpu.getPc() + 4);
+
+#ifdef DEBUG
+    std::cout << "Address: " << addr << "\n";
+    std::cout << cpu.getRegister(rd);
+#endif
+}
+
+void LBU::execute(RiscvCpu& cpu)
+{
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t imm_i = getImm_i();
+
+    uint32_t addr = rs1Value + imm_i;
+    uint32_t memoryValue = (cpu.getRam().read8(addr) & 0x000000ff);
+
+    cpu.setRegister(rd, memoryValue);
+    cpu.setPc(cpu.getPc() + 4);
+
+#ifdef DEBUG
+    std::cout << "Address: " << addr << "\n";
+    std::cout << cpu.getRegister(rd);
+#endif
+}
+
+void LHU::execute(RiscvCpu& cpu)
+{
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t imm_i = getImm_i();
+
+    uint32_t addr = rs1Value + imm_i;
+    uint32_t memoryValue = (cpu.getRam().read16(addr) & 0x0000ffff);
+
+    cpu.setRegister(rd, memoryValue);
+    cpu.setPc(cpu.getPc() + 4);
+
+#ifdef DEBUG
+    std::cout << "Address: " << addr << "\n";
+    std::cout << cpu.getRegister(rd);
+#endif
+}
+
 
 } // namespace IType

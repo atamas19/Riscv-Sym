@@ -22,7 +22,8 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
         {RType::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return RType::InstructionFactory::create(ins); }},
         {UType::LUI::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<UType::LUI>(ins); }},
         {UType::AUIPC::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<UType::AUIPC>(ins); }},
-        {IType::ArithmeticInstructionFactory::getInstructionDescription(), [](uint32_t ins) { return IType::ArithmeticInstructionFactory::create(ins); }}
+        {IType::ArithmeticInstructionFactory::getInstructionDescription(), [](uint32_t ins) { return IType::ArithmeticInstructionFactory::create(ins); }},
+        {IType::LoadInstructionFactory::getInstructionDescription(), [](uint32_t ins) { return IType::LoadInstructionFactory::create(ins); }}
     };
 
     uint8_t opcode = getBits(encodedInstruction, 0, 6);
