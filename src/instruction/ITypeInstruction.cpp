@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <unordered_map>
-#include <bitset>
 
 namespace IType
 {
@@ -14,24 +13,18 @@ void Instruction::decode()
     rs1 = getBits(instruction, 15, 19);
     imm = getBits(instruction, 20, 31);
 
+    if (getBits(imm, 11, 11) == 1)
+        imm = (imm | 0xfffff000);
+    else
+        imm = (imm & 0xfff);
+
 #ifdef DEBUG
     std::cout << "rd: "   << std::bitset<8>(rd)  << std::endl;
     std::cout << "imm: "  << std::bitset<8>(imm) << std::endl;
 #endif
 }
 
-const int32_t Instruction::getImm_i() const
-{
-    int32_t imm_i{imm};
-
-    if (getBits(imm_i, 11, 11) == 1)
-        imm_i = (imm_i | 0xfffff000);
-    else
-        imm_i = (imm_i & 0xfff);
-    return imm_i;
-}
-
-const int8_t Instruction::getShamt_i() const
+const int8_t Instruction::getShamt() const
 {
     return getBits(imm, 0, 4);
 }
@@ -78,9 +71,8 @@ std::unique_ptr<Instruction> ArithmeticInstructionFactory::create(uint32_t encod
 void ADDI::execute(RiscvCpu& cpu)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t imm_i = getImm_i();
 
-    int32_t result = rs1Value + imm_i;
+    int32_t result = rs1Value + imm;
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -93,9 +85,8 @@ void ADDI::execute(RiscvCpu& cpu)
 void SLTI::execute(RiscvCpu& cpu)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t imm_i = getImm_i();
 
-    int8_t result = (rs1Value < imm_i);
+    int8_t result = (rs1Value < imm);
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -108,9 +99,8 @@ void SLTI::execute(RiscvCpu& cpu)
 void SLTIU::execute(RiscvCpu& cpu)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t imm_i = getImm_i();
 
-    int8_t result = (static_cast<uint32_t>(rs1Value) < static_cast<uint32_t>(imm_i));
+    int8_t result = (static_cast<uint32_t>(rs1Value) < static_cast<uint32_t>(imm));
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -123,9 +113,8 @@ void SLTIU::execute(RiscvCpu& cpu)
 void XORI::execute(RiscvCpu& cpu)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t imm_i = getImm_i();
 
-    int32_t result = (rs1Value ^ imm_i);
+    int32_t result = (rs1Value ^ imm);
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -138,9 +127,8 @@ void XORI::execute(RiscvCpu& cpu)
 void ORI::execute(RiscvCpu& cpu)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t imm_i = getImm_i();
 
-    int32_t result = (rs1Value | imm_i);
+    int32_t result = (rs1Value | imm);
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -153,9 +141,8 @@ void ORI::execute(RiscvCpu& cpu)
 void ANDI::execute(RiscvCpu& cpu)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t imm_i = getImm_i();
 
-    int32_t result = (rs1Value & imm_i);
+    int32_t result = (rs1Value & imm);
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -168,7 +155,7 @@ void ANDI::execute(RiscvCpu& cpu)
 void SLLI::execute(RiscvCpu& cpu)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t shamt_i = getShamt_i();
+    int32_t shamt_i = getShamt();
 
     int32_t result = (rs1Value << shamt_i);
 
@@ -183,7 +170,7 @@ void SLLI::execute(RiscvCpu& cpu)
 void SRLI::execute(RiscvCpu& cpu)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t shamt_i = getShamt_i();
+    int32_t shamt_i = getShamt();
 
     int32_t result = (static_cast<uint32_t>(rs1Value) >> shamt_i);
 
@@ -198,7 +185,7 @@ void SRLI::execute(RiscvCpu& cpu)
 void SRAI::execute(RiscvCpu& cpu)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t shamt_i = getShamt_i();
+    int32_t shamt_i = getShamt();
 
     int32_t result = (rs1Value >> shamt_i);
 
@@ -233,9 +220,8 @@ std::unique_ptr<Instruction> LoadInstructionFactory::create(uint32_t encodedInst
 void LB::execute(RiscvCpu& cpu)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t imm_i = getImm_i();
 
-    uint32_t addr = rs1Value + imm_i;
+    uint32_t addr = rs1Value + imm;
     uint32_t memoryValue = cpu.getRam().read8(addr);
 
     cpu.setRegister(rd, memoryValue);
@@ -250,9 +236,8 @@ void LB::execute(RiscvCpu& cpu)
 void LH::execute(RiscvCpu& cpu)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t imm_i = getImm_i();
 
-    uint32_t addr = rs1Value + imm_i;
+    uint32_t addr = rs1Value + imm;
     uint32_t memoryValue = cpu.getRam().read16(addr);
 
     cpu.setRegister(rd, memoryValue);
@@ -267,9 +252,8 @@ void LH::execute(RiscvCpu& cpu)
 void LW::execute(RiscvCpu& cpu)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t imm_i = getImm_i();
 
-    uint32_t addr = rs1Value + imm_i;
+    uint32_t addr = rs1Value + imm;
     uint32_t memoryValue = cpu.getRam().read32(addr);
 
     cpu.setRegister(rd, memoryValue);
@@ -284,9 +268,8 @@ void LW::execute(RiscvCpu& cpu)
 void LBU::execute(RiscvCpu& cpu)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t imm_i = getImm_i();
 
-    uint32_t addr = rs1Value + imm_i;
+    uint32_t addr = rs1Value + imm;
     uint32_t memoryValue = (cpu.getRam().read8(addr) & 0x000000ff);
 
     cpu.setRegister(rd, memoryValue);
@@ -301,9 +284,8 @@ void LBU::execute(RiscvCpu& cpu)
 void LHU::execute(RiscvCpu& cpu)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t imm_i = getImm_i();
 
-    uint32_t addr = rs1Value + imm_i;
+    uint32_t addr = rs1Value + imm;
     uint32_t memoryValue = (cpu.getRam().read16(addr) & 0x0000ffff);
 
     cpu.setRegister(rd, memoryValue);
@@ -314,6 +296,5 @@ void LHU::execute(RiscvCpu& cpu)
     std::cout << cpu.getRegister(rd);
 #endif
 }
-
 
 } // namespace IType

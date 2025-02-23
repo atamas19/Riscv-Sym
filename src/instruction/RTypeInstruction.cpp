@@ -3,7 +3,6 @@
 
 #include <unordered_map>
 #include <iostream>
-#include <bitset>
 
 namespace RType
 {

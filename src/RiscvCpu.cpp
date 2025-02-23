@@ -29,11 +29,13 @@ void RiscvCpu::setRegister(uint8_t registerIndex, int32_t registerValue)
 void RiscvCpu::run()
 {
 #ifdef DEBUG // this whole run function is just for checking implemented instructions for now
-    uint32_t instruction{0b00000000001101101000011000000011};
+    uint32_t instruction{0b00000000110001101010000010100011};
     // 00000000101101100000011010110011
     // 00000000000101101000011000000011
+    
 
     regs[13] = 0x00002650;
+    regs[12] = 0x12345678;
 
     std::cout << "Instruction in binary: " << std::bitset<32>(instruction) << std::endl;
 

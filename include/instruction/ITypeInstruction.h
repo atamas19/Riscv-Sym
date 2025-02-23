@@ -26,12 +26,11 @@ public:
     virtual ~Instruction() = default;
 protected:
     void decode() override;
-    const int32_t getImm_i() const;
-    const int8_t getShamt_i() const;
+    const int8_t getShamt() const;
 
     uint8_t rd;
     uint8_t rs1;
-    int16_t imm;
+    int32_t imm;
 };
 
 class ArithmeticInstructionFactory

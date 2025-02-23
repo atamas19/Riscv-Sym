@@ -2,6 +2,7 @@
 #include "instruction/RTypeInstruction.h"
 #include "instruction/UTypeInstruction.h"
 #include "instruction/ITypeInstruction.h"
+#include "instruction/STypeInstruction.h"
 
 #include <stdexcept>
 #include <unordered_map>
@@ -23,7 +24,8 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
         {UType::LUI::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<UType::LUI>(ins); }},
         {UType::AUIPC::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<UType::AUIPC>(ins); }},
         {IType::ArithmeticInstructionFactory::getInstructionDescription(), [](uint32_t ins) { return IType::ArithmeticInstructionFactory::create(ins); }},
-        {IType::LoadInstructionFactory::getInstructionDescription(), [](uint32_t ins) { return IType::LoadInstructionFactory::create(ins); }}
+        {IType::LoadInstructionFactory::getInstructionDescription(), [](uint32_t ins) { return IType::LoadInstructionFactory::create(ins); }},
+        {SType::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return SType::InstructionFactory::create(ins); }}
     };
 
     uint8_t opcode = getBits(encodedInstruction, 0, 6);

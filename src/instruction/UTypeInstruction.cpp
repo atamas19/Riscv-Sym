@@ -2,7 +2,6 @@
 #include "RiscvCpu.h"
 
 #include <iostream>
-#include <bitset>
 
 namespace UType
 {
