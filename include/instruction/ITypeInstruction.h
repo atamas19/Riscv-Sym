@@ -2,7 +2,6 @@
 
 #include "Instruction.h"
 
-#include <memory>
 #include <functional>
 
 namespace IType

@@ -16,7 +16,7 @@ protected:
 
     uint8_t rs1;
     uint8_t rs2;
-    int16_t imm;
+    int32_t imm;
 };
 
 class InstructionFactory

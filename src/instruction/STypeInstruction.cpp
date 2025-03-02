@@ -1,5 +1,6 @@
 #include "instruction/STypeInstruction.h"
 #include "RiscvCpu.h"
+#include "Memory.h"
 
 #include <unordered_map>
 #include <iostream>
@@ -51,12 +52,12 @@ void SB::execute(RiscvCpu& cpu)
     uint32_t addr = rs1Value + imm;
     uint32_t result = getBits(rs2Value, 0, 8);
 
-    cpu.getRam().write8(addr, result);
+    Memory::getInstance().write8(addr, result);
 
     cpu.setPc(cpu.getPc() + 4);
 
 #ifdef DEBUG
-    std::cout << "Rezultat: " << cpu.getRam().read8(addr);
+    std::cout << "Rezultat: " << Memory::getInstance().read8(addr);
 #endif
 }
 
@@ -68,14 +69,14 @@ void SH::execute(RiscvCpu& cpu)
     uint32_t addr = rs1Value + imm;
     uint32_t result = getBits(rs2Value, 0, 16);
 
-    std::cout << "Rezultat inainte: " << cpu.getRam().read16(addr);
+    std::cout << "Rezultat inainte: " << Memory::getInstance().read16(addr);
     std::cout << "\nRezultat: " << result << "\n";
 
-    cpu.getRam().write16(addr, result);
+    Memory::getInstance().write16(addr, result);
     cpu.setPc(cpu.getPc() + 4);
 
 #ifdef DEBUG
-    std::cout << "Rezultat: " << cpu.getRam().read16(addr);
+    std::cout << "Rezultat: " << Memory::getInstance().read16(addr);
 #endif
 }
 
@@ -86,14 +87,14 @@ void SW::execute(RiscvCpu& cpu)
 
     uint32_t addr = rs1Value + imm;
 
-    std::cout << "Rezultat inainte: " << cpu.getRam().read32(addr);
+    std::cout << "Rezultat inainte: " << Memory::getInstance().read32(addr);
     std::cout << "\nRezultat: " << rs2Value << "\n";
 
-    cpu.getRam().write32(addr, rs2Value);
+    Memory::getInstance().write32(addr, rs2Value);
     cpu.setPc(cpu.getPc() + 4);
 
 #ifdef DEBUG
-    std::cout << "Rezultat: " << cpu.getRam().read32(addr);
+    std::cout << "Rezultat: " << Memory::getInstance().read32(addr);
 #endif
 }
 

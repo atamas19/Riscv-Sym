@@ -1,5 +1,6 @@
 #include "instruction/ITypeInstruction.h"
 #include "RiscvCpu.h"
+#include "Memory.h"
 
 #include <iostream>
 #include <unordered_map>
@@ -222,7 +223,7 @@ void LB::execute(RiscvCpu& cpu)
     int32_t rs1Value = cpu.getRegister(rs1);
 
     uint32_t addr = rs1Value + imm;
-    uint32_t memoryValue = cpu.getRam().read8(addr);
+    uint32_t memoryValue = Memory::getInstance().read8(addr);
 
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);
@@ -238,7 +239,7 @@ void LH::execute(RiscvCpu& cpu)
     int32_t rs1Value = cpu.getRegister(rs1);
 
     uint32_t addr = rs1Value + imm;
-    uint32_t memoryValue = cpu.getRam().read16(addr);
+    uint32_t memoryValue = Memory::getInstance().read16(addr);
 
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);
@@ -254,7 +255,7 @@ void LW::execute(RiscvCpu& cpu)
     int32_t rs1Value = cpu.getRegister(rs1);
 
     uint32_t addr = rs1Value + imm;
-    uint32_t memoryValue = cpu.getRam().read32(addr);
+    uint32_t memoryValue = Memory::getInstance().read32(addr);
 
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);
@@ -270,7 +271,7 @@ void LBU::execute(RiscvCpu& cpu)
     int32_t rs1Value = cpu.getRegister(rs1);
 
     uint32_t addr = rs1Value + imm;
-    uint32_t memoryValue = (cpu.getRam().read8(addr) & 0x000000ff);
+    uint32_t memoryValue = (Memory::getInstance().read8(addr) & 0x000000ff);
 
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);
@@ -286,7 +287,7 @@ void LHU::execute(RiscvCpu& cpu)
     int32_t rs1Value = cpu.getRegister(rs1);
 
     uint32_t addr = rs1Value + imm;
-    uint32_t memoryValue = (cpu.getRam().read16(addr) & 0x0000ffff);
+    uint32_t memoryValue = (Memory::getInstance().read16(addr) & 0x0000ffff);
 
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);

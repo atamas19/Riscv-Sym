@@ -4,10 +4,12 @@
 #include <cstddef>
 #include <vector>
 
-class Ram
+#define MEMORY_SIZE 1024
+
+class Memory
 {
 public:
-    Ram(size_t size) { memory.resize(size, 0); }
+    static Memory& getInstance();
 
     void write32(uint32_t address, uint32_t value);
     uint32_t read32(uint32_t address);
@@ -18,5 +20,7 @@ public:
     void write8(uint32_t address, uint8_t value);
     uint8_t read8(uint32_t address);
 private:
+    Memory() { memory.resize(MEMORY_SIZE, 0); }
+
     std::vector<uint8_t> memory;
 };

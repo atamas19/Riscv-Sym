@@ -1,5 +1,7 @@
 #include "RiscvCpu.h"
 
+#include "instruction/Instruction.h"
+
 #include <iostream>
 #include <bitset>
 #include <cassert>
