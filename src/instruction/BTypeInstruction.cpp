@@ -33,14 +33,19 @@ void Instruction::decode()
 #ifdef DEBUG
     std::cout << "rs1: "  << std::bitset<8>(rs1) << std::endl;
     std::cout << "rs2: "  << std::bitset<8>(rs2) << std::endl;
-    std::cout << "imm: "  << std::bitset<8>(imm) << std::endl;
+    std::cout << "imm: "  << std::bitset<32>(imm) << std::endl;
 #endif
 }
 
 std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruction)
 {
     static std::unordered_map<uint8_t, std::function<std::unique_ptr<Instruction>(uint32_t)>> instructionMap = {
-        // { SB::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<SB>(ins); }}
+        { BEQ::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<BEQ> (ins); }},
+        { BNE::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<BNE> (ins); }},
+        { BLT::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<BLT> (ins); }},
+        { BGE::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<BGE> (ins); }},
+        { BLTU::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<BLTU>(ins); }},
+        { BGEU::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<BGEU>(ins); }}
     };
 
     uint8_t funct3 = getBits(encodedInstruction, 12, 14);
@@ -52,21 +57,88 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
     return nullptr;
 }
 
-// void SB::execute(RiscvCpu& cpu)
-// {
-//     int32_t rs1Value = cpu.getRegister(rs1);
-//     int32_t rs2Value = cpu.getRegister(rs2);
+void BEQ::execute(RiscvCpu& cpu)
+{
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t rs2Value = cpu.getRegister(rs2);
 
-//     uint32_t addr = rs1Value + imm;
-//     uint32_t result = getBits(rs2Value, 0, 8);
+    int32_t pcIncrement = (rs1Value == rs2Value) ? imm : 4;
 
-//     Memory::getInstance().write8(addr, result);
+    cpu.setPc(cpu.getPc() + pcIncrement);
 
-//     cpu.setPc(cpu.getPc() + 4);
+#ifdef DEBUG
+    std::cout << "PC increment: " << pcIncrement << std::endl;
+#endif
+}
 
-// #ifdef DEBUG
-//     std::cout << "Rezultat: " << Memory::getInstance().read8(addr);
-// #endif
-// }
+void BNE::execute(RiscvCpu& cpu)
+{
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t rs2Value = cpu.getRegister(rs2);
+
+    int32_t pcIncrement = (rs1Value != rs2Value) ? imm : 4;
+
+    cpu.setPc(cpu.getPc() + pcIncrement);
+
+#ifdef DEBUG
+    std::cout << "PC increment: " << pcIncrement << std::endl;
+#endif
+}
+
+void BLT::execute(RiscvCpu& cpu)
+{
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t rs2Value = cpu.getRegister(rs2);
+
+    int32_t pcIncrement = (rs1Value < rs2Value) ? imm : 4;
+
+    cpu.setPc(cpu.getPc() + pcIncrement);
+
+#ifdef DEBUG
+    std::cout << "PC increment: " << pcIncrement << std::endl;
+#endif
+}
+
+void BGE::execute(RiscvCpu& cpu)
+{
+    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t rs2Value = cpu.getRegister(rs2);
+
+    int32_t pcIncrement = (rs1Value >= rs2Value) ? imm : 4;
+
+    cpu.setPc(cpu.getPc() + pcIncrement);
+
+#ifdef DEBUG
+    std::cout << "PC increment: " << pcIncrement << std::endl;
+#endif
+}
+
+void BLTU::execute(RiscvCpu& cpu)
+{
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
+
+    int32_t pcIncrement = (rs1Value < rs2Value) ? imm : 4;
+
+    cpu.setPc(cpu.getPc() + pcIncrement);
+
+#ifdef DEBUG
+    std::cout << "PC increment: " << pcIncrement << std::endl;
+#endif
+}
+
+void BGEU::execute(RiscvCpu& cpu)
+{
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
+
+    int32_t pcIncrement = (rs1Value >= rs2Value) ? imm : 4;
+
+    cpu.setPc(cpu.getPc() + pcIncrement);
+
+#ifdef DEBUG
+    std::cout << "PC increment: " << pcIncrement << std::endl;
+#endif
+}
 
 } // namespace BType
