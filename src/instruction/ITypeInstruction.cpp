@@ -298,4 +298,21 @@ void LHU::execute(RiscvCpu& cpu)
 #endif
 }
 
+void JALR::execute(RiscvCpu& cpu)
+{
+    int32_t rs1Value = cpu.getRegister(rs1);
+
+    uint32_t targetAddress = (rs1Value + imm) & ~1;
+
+    if (rd != 0)
+        cpu.setRegister(rd, cpu.getPc() + 4);
+
+    cpu.setPc(targetAddress);
+
+#ifdef DEBUG
+    std::cout << "Address: " << targetAddress << "\n";
+    std::cout << cpu.getRegister(rd);
+#endif
+}
+
 } // namespace IType

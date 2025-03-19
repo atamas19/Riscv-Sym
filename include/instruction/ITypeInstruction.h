@@ -191,4 +191,15 @@ public:
     static const uint8_t getInstructionDescriptor() { return 0x5; }
 };
 
+// Special case for JALR
+// Jump And Link Register
+class JALR : public Instruction
+{
+public:
+    JALR(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu) override;
+
+    static const uint8_t getInstructionDescriptor() { return 0x67; }
+};
+
 } // namespace IType

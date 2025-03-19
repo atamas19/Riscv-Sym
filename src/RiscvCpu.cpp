@@ -44,5 +44,7 @@ void RiscvCpu::run()
         test->execute(*this);
     else [[unlikely]]
         std::cout << "Failed to create instruction" << std::endl;
+
+    test.reset();
 #endif
 }
