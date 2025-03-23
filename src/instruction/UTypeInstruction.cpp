@@ -11,7 +11,7 @@ void Instruction::decode()
     rd  = getBits(instruction, 7, 11);
     imm = getBits(instruction, 12, 31);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "rd: "   << std::bitset<8>(rd)  << std::endl;
     std::cout << "imm: "  << std::bitset<8>(imm) << std::endl;
 #endif
@@ -24,7 +24,7 @@ void LUI::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, imm_u);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "rdValue: " << std::bitset<32>(cpu.getRegister(rd));
 #endif
 }
@@ -38,7 +38,7 @@ void AUIPC::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, resultValue);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "rdValue: " << std::bitset<32>(cpu.getRegister(rd));
 #endif
 }

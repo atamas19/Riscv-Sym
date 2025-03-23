@@ -30,7 +30,7 @@ void RiscvCpu::setRegister(uint8_t registerIndex, int32_t registerValue)
 
 void RiscvCpu::run()
 {
-#ifdef DEBUG // this whole run function is just for checking implemented instructions for now
+#if DEBUG // this whole run function is just for checking implemented instructions for now
     uint32_t instruction{0b10000000011000101000000101100011};
 
     regs[5] = 0x1;

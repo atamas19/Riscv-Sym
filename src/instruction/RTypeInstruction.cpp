@@ -13,7 +13,7 @@ void Instruction::decode()
     rs1 = getBits(instruction, 15, 19);
     rs2 = getBits(instruction, 20, 24);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "rs1: " << std::bitset<8>(rs1) << std::endl;
     std::cout << "rs2: " << std::bitset<8>(rs2) << std::endl;
     std::cout << "rd: "  << std::bitset<8>(rd)  << std::endl;
@@ -38,7 +38,7 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
     uint8_t funct3 = getBits(encodedInstruction, 12, 14);
     uint8_t funct7 = getBits(encodedInstruction, 25, 31);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "funct3: " << std::bitset<8>(funct3) << std::endl;
     std::cout << "funct7: " << std::bitset<8>(funct7) << std::endl;
 #endif
@@ -62,7 +62,7 @@ void ADD::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif
 }
@@ -77,7 +77,7 @@ void SUB::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif
 }
@@ -94,7 +94,7 @@ void SLL::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif
 }
@@ -109,7 +109,7 @@ void SLT::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif
 }
@@ -124,7 +124,7 @@ void SLTU::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif
 }
@@ -139,7 +139,7 @@ void XOR::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif
 }
@@ -156,7 +156,7 @@ void SRL::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif   
 }
@@ -173,7 +173,7 @@ void SRA::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif   
 }
@@ -188,7 +188,7 @@ void OR::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif   
 }
@@ -203,7 +203,7 @@ void AND::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif   
 }

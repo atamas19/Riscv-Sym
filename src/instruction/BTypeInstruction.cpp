@@ -30,7 +30,7 @@ void Instruction::decode()
     rs2 = getBits(instruction, 20, 24);
     imm = getImm();
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "rs1: "  << std::bitset<8>(rs1) << std::endl;
     std::cout << "rs2: "  << std::bitset<8>(rs2) << std::endl;
     std::cout << "imm: "  << std::bitset<32>(imm) << std::endl;
@@ -66,7 +66,7 @@ void BEQ::execute(RiscvCpu& cpu)
 
     cpu.setPc(cpu.getPc() + pcIncrement);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "PC increment: " << pcIncrement << std::endl;
 #endif
 }
@@ -80,7 +80,7 @@ void BNE::execute(RiscvCpu& cpu)
 
     cpu.setPc(cpu.getPc() + pcIncrement);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "PC increment: " << pcIncrement << std::endl;
 #endif
 }
@@ -94,7 +94,7 @@ void BLT::execute(RiscvCpu& cpu)
 
     cpu.setPc(cpu.getPc() + pcIncrement);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "PC increment: " << pcIncrement << std::endl;
 #endif
 }
@@ -108,7 +108,7 @@ void BGE::execute(RiscvCpu& cpu)
 
     cpu.setPc(cpu.getPc() + pcIncrement);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "PC increment: " << pcIncrement << std::endl;
 #endif
 }
@@ -122,7 +122,7 @@ void BLTU::execute(RiscvCpu& cpu)
 
     cpu.setPc(cpu.getPc() + pcIncrement);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "PC increment: " << pcIncrement << std::endl;
 #endif
 }
@@ -136,7 +136,7 @@ void BGEU::execute(RiscvCpu& cpu)
 
     cpu.setPc(cpu.getPc() + pcIncrement);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "PC increment: " << pcIncrement << std::endl;
 #endif
 }

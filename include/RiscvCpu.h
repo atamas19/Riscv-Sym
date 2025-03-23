@@ -3,7 +3,7 @@
 #include <memory>
 #include <cstdint>
 
-#define DEBUG
+#define DEBUG 1
 
 class RiscvCpu
 {

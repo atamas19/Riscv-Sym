@@ -19,7 +19,7 @@ void Instruction::decode()
     else
         imm = (imm & 0xfff);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "rd: "   << std::bitset<8>(rd)  << std::endl;
     std::cout << "imm: "  << std::bitset<8>(imm) << std::endl;
 #endif
@@ -78,7 +78,7 @@ void ADDI::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif
 }
@@ -92,7 +92,7 @@ void SLTI::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif
 }
@@ -106,7 +106,7 @@ void SLTIU::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif
 }
@@ -120,7 +120,7 @@ void XORI::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif
 }
@@ -134,7 +134,7 @@ void ORI::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif
 }
@@ -148,7 +148,7 @@ void ANDI::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif
 }
@@ -163,7 +163,7 @@ void SLLI::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif
 }
@@ -178,7 +178,7 @@ void SRLI::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif
 }
@@ -193,7 +193,7 @@ void SRAI::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif
 }
@@ -228,7 +228,7 @@ void LB::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "Address: " << addr << "\n";
     std::cout << cpu.getRegister(rd);
 #endif
@@ -244,7 +244,7 @@ void LH::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "Address: " << addr << "\n";
     std::cout << cpu.getRegister(rd);
 #endif
@@ -260,7 +260,7 @@ void LW::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "Address: " << addr << "\n";
     std::cout << cpu.getRegister(rd);
 #endif
@@ -276,7 +276,7 @@ void LBU::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "Address: " << addr << "\n";
     std::cout << cpu.getRegister(rd);
 #endif
@@ -292,7 +292,7 @@ void LHU::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "Address: " << addr << "\n";
     std::cout << cpu.getRegister(rd);
 #endif
@@ -309,7 +309,7 @@ void JALR::execute(RiscvCpu& cpu)
 
     cpu.setPc(targetAddress);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "Address: " << targetAddress << "\n";
     std::cout << cpu.getRegister(rd);
 #endif

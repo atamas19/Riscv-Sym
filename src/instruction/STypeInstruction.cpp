@@ -20,7 +20,7 @@ void Instruction::decode()
     else
         imm = (imm & 0xfff);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "rs1: "  << std::bitset<8>(rs1) << std::endl;
     std::cout << "rs2: "  << std::bitset<8>(rs2) << std::endl;
     std::cout << "imm: "  << std::bitset<8>(imm) << std::endl;
@@ -56,7 +56,7 @@ void SB::execute(RiscvCpu& cpu)
 
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "Rezultat: " << Memory::getInstance().read8(addr);
 #endif
 }
@@ -75,7 +75,7 @@ void SH::execute(RiscvCpu& cpu)
     Memory::getInstance().write16(addr, result);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "Rezultat: " << Memory::getInstance().read16(addr);
 #endif
 }
@@ -93,7 +93,7 @@ void SW::execute(RiscvCpu& cpu)
     Memory::getInstance().write32(addr, rs2Value);
     cpu.setPc(cpu.getPc() + 4);
 
-#ifdef DEBUG
+#if DEBUG
     std::cout << "Rezultat: " << Memory::getInstance().read32(addr);
 #endif
 }
