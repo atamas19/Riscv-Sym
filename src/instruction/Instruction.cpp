@@ -4,6 +4,7 @@
 #include "instruction/ITypeInstruction.h"
 #include "instruction/STypeInstruction.h"
 #include "instruction/BTypeInstruction.h"
+#include "instruction/JTypeInstruction.h"
 
 #include <stdexcept>
 #include <unordered_map>
@@ -28,7 +29,8 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
         { BType::InstructionFactory::getInstructionDescription          (), [](uint32_t ins) { return BType::InstructionFactory          ::create(ins); }},
         { UType::LUI::getInstructionDescriptor  (), [](uint32_t ins) { return std::make_unique<UType::LUI>  (ins); }},
         { UType::AUIPC::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<UType::AUIPC>(ins); }},
-        { IType::JALR::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<IType::JALR> (ins); }}
+        { IType::JALR::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<IType::JALR> (ins); }},
+        { JType::JAL::getInstructionDescriptor  (), [](uint32_t ins) { return std::make_unique<JType::JAL>  (ins); }}
     };
 
     uint8_t opcode = getBits(encodedInstruction, 0, 6);

@@ -15,9 +15,9 @@ void Instruction::decode()
     imm = getBits(instruction, 20, 31);
 
     if (getBits(imm, 11, 11) == 1)
-        imm = (imm | 0xfffff000);
+        imm |= 0xfffff000;
     else
-        imm = (imm & 0xfff);
+        imm &= 0xfff;
 
 #if DEBUG
     std::cout << "rd: "   << std::bitset<8>(rd)  << std::endl;

@@ -17,9 +17,9 @@ int32_t Instruction::getImm()
                          (getBits(instruction, 8, 11) << 1));
 
     if (getBits(tempValue, 12, 12) == 1)
-        tempValue = (tempValue | 0xfffff000);
+        tempValue |= 0xfffff000;
     else
-        tempValue = (tempValue & 0xfff);
+        tempValue &= 0xfff;
 
     return tempValue;
 }

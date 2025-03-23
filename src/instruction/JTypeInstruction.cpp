@@ -33,4 +33,20 @@ void Instruction::decode()
 #endif
 }
 
+void JAL::execute(RiscvCpu& cpu)
+{
+    uint32_t targetAddress = cpu.getPc() + imm;
+
+    if (rd != 0)
+        cpu.setRegister(rd, cpu.getPc() + 4);
+
+    cpu.setPc(targetAddress);
+
+#if DEBUG
+    std::cout << "Address: " << targetAddress << "\n";
+    std::cout << "Modified register value: " << cpu.getRegister(rd) << "\n";
+    std::cout << "PC: " << cpu.getPc() << "\n";
+#endif
+}
+
 } // namespace JType

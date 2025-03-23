@@ -25,9 +25,9 @@ class JAL : public Instruction
 {
 public:
     JAL(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override {}
+    void execute(RiscvCpu& cpu) override;
 
-    // static const InstructionDescriptor getInstructionDescriptor() { return {0x7, 0x0}; }
+    static const uint8_t getInstructionDescriptor() { return 0x6f; }
 };
 
 } // namespace JType
