@@ -21,7 +21,7 @@ uint32_t getBits(uint32_t instruction, uint8_t x, uint8_t y)
 
 std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruction)
 {
-    static std::unordered_map<uint8_t, std::function<std::unique_ptr<Instruction>(uint32_t)>> instructionMap = {
+    static const std::unordered_map<uint8_t, std::function<std::unique_ptr<Instruction>(uint32_t)>> instructionMap = {
         { IType::ArithmeticInstructionFactory::getInstructionDescription(), [](uint32_t ins) { return IType::ArithmeticInstructionFactory::create(ins); }},
         { IType::LoadInstructionFactory::getInstructionDescription      (), [](uint32_t ins) { return IType::LoadInstructionFactory      ::create(ins); }},
         { RType::InstructionFactory::getInstructionDescription          (), [](uint32_t ins) { return RType::InstructionFactory          ::create(ins); }},

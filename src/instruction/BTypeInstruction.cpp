@@ -39,7 +39,7 @@ void Instruction::decode()
 
 std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruction)
 {
-    static std::unordered_map<uint8_t, std::function<std::unique_ptr<Instruction>(uint32_t)>> instructionMap = {
+    static const std::unordered_map<uint8_t, std::function<std::unique_ptr<Instruction>(uint32_t)>> instructionMap = {
         { BEQ::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<BEQ> (ins); }},
         { BNE::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<BNE> (ins); }},
         { BLT::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<BLT> (ins); }},

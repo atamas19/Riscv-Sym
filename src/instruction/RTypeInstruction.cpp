@@ -22,7 +22,7 @@ void Instruction::decode()
 
 std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruction)
 {
-    static std::unordered_map<InstructionDescriptor, std::function<std::unique_ptr<Instruction>(uint32_t, InstructionDescriptor)>, InstructionDescriptor::InstructionDescriptorHash> instructionMap = {
+    static const std::unordered_map<InstructionDescriptor, std::function<std::unique_ptr<Instruction>(uint32_t, InstructionDescriptor)>, InstructionDescriptor::InstructionDescriptorHash> instructionMap = {
         { SLTU::getInstructionDescriptor(), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<SLTU>(ins, descriptor); }},
         { ADD::getInstructionDescriptor (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<ADD> (ins, descriptor); }},
         { SUB::getInstructionDescriptor (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<SUB> (ins, descriptor); }},
