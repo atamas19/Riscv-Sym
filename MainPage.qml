@@ -20,6 +20,12 @@ Item {
     function highlightNextLine() {
         var lines = assemblyEditor.text.split('\n')
 
+        if (lines.length === 1 && lines[0].trim() === "") {
+            isRunning = false
+            highlightTimer.stop()
+            return
+        }
+
         if (currentHighlightedLine + 1 >= lines.length) {
             currentHighlightedLine = -1
             isRunning = false
@@ -45,41 +51,47 @@ Item {
             highlightTimer.stop()
         }
 
-        isRunning = true
-
-        // If it's never run or finished already, reset to the beginning
         var text = assemblyEditor.text
         var lines = text.split('\n')
-        if (currentHighlightedLine === -1 || currentHighlightedLine >= lines.length) {
-            currentHighlightedLine = -1
+        if (lines.length === 1 && lines[0].trim() === "") {
+            highlightTimer.stop()
+            return
         }
-
+        isRunning = true
         highlightTimer.start()
     }
 
 
     function stepExecution() {
-        var lines = assemblyEditor.text.split('\n')
+        if (!highlightTimer.running) {
+            var lines = assemblyEditor.text.split('\n')
+            if (lines.length === 1 && lines[0].trim() === "") {
+                isRunning = false
+                return
+            }
 
-        if (currentHighlightedLine === -1) {
-            currentHighlightedLine = 0
-            isRunning = true
-        } else if (currentHighlightedLine + 1 >= lines.length) {
-            consoleLog.append("End of program")
-            return
-        } else {
-            currentHighlightedLine++
+            if (currentHighlightedLine === -1) {
+                currentHighlightedLine = 0
+                isRunning = true
+            } else if (currentHighlightedLine + 1 >= lines.length) {
+                consoleLog.append("End of program")
+                currentHighlightedLine = -1
+                isRunning = false
+                return
+            } else {
+                currentHighlightedLine++
+            }
+
+            // Update cursor position to scroll
+            var pos = 0
+            for (var i = 0; i < currentHighlightedLine; i++) {
+                pos += lines[i].length + 1 // newline
+            }
+            assemblyEditor.cursorPosition = pos
+
+            // Move highlight
+            editorContainer.currentLineY = currentHighlightedLine * editorContainer.lineHeight
         }
-
-        // Update cursor position to scroll
-        var pos = 0
-        for (var i = 0; i < currentHighlightedLine; i++) {
-            pos += lines[i].length + 1 // newline
-        }
-        assemblyEditor.cursorPosition = pos
-
-        // Move highlight
-        editorContainer.currentLineY = currentHighlightedLine * editorContainer.lineHeight
     }
 
 
