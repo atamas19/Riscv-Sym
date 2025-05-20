@@ -1,7 +1,5 @@
 #include "RiscvCpu.h"
 
-#include "instruction/Instruction.h"
-
 #include <iostream>
 #include <bitset>
 #include <cassert>
@@ -48,3 +46,13 @@ void RiscvCpu::run()
     test.reset();
 #endif
 }
+
+std::unique_ptr<Instruction> getInstructionFromAsmCommand(const std::string& asmCommand)
+{
+    // uint32_t binaryInstruction = AssemblyCompiler::compile(asmCommand);
+
+    auto instruction = InstructionFactory::create(123);
+
+    return instruction;
+}
+

@@ -1,14 +1,26 @@
-#include <iostream>
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
 
-#include "RiscvCpu.h"
+#include "cpuwrapper.h"
 
-#include "instruction/JTypeInstruction.h"
-
-int main()
+int main(int argc, char *argv[])
 {
-    RiscvCpu& riscv = RiscvCpu::getInstance();
+    QGuiApplication app(argc, argv);
 
-    riscv.run();
+    QQmlApplicationEngine engine;
 
-    return 0;
+    CpuWrapper cpuWrapper;
+    engine.rootContext()->setContextProperty("cpuWrapper", &cpuWrapper);
+
+    QObject::connect(
+        &engine,
+        &QQmlApplicationEngine::objectCreationFailed,
+        &app,
+        []() { QCoreApplication::exit(-1); },
+        Qt::QueuedConnection);
+
+    engine.loadFromModule("RiscvSim", "Main");
+
+    return app.exec();
 }

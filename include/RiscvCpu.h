@@ -3,12 +3,16 @@
 #include <memory>
 #include <cstdint>
 
+#include "instruction/Instruction.h"
+
 #define DEBUG 1
 
 class RiscvCpu
 {
 public:
     static RiscvCpu& getInstance();
+
+    std::unique_ptr<Instruction> getInstructionFromAsmCommand(const std::string& asmCommand);
 
     void run();
 

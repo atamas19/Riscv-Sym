@@ -1,0 +1,3 @@
+set(__QT_DEPLOY_TARGET_appRiscvSim_FILE C:/Users/atamas/school/testeQt/RiscvSim/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/appRiscvSim.exe)
+set(__QT_DEPLOY_TARGET_appRiscvSim_TYPE EXECUTABLE)
+set(__QT_DEPLOY_TARGET_appRiscvSim_RUNTIME_DLLS C:/Users/atamas/school/Qt/6.9.0/mingw_64/bin/Qt6Quick.dll;C:/Users/atamas/school/Qt/6.9.0/mingw_64/bin/Qt6QmlMeta.dll;C:/Users/atamas/school/Qt/6.9.0/mingw_64/bin/Qt6QmlWorkerScript.dll;C:/Users/atamas/school/Qt/6.9.0/mingw_64/bin/Qt6QmlModels.dll;C:/Users/atamas/school/Qt/6.9.0/mingw_64/bin/Qt6Qml.dll;C:/Users/atamas/school/Qt/6.9.0/mingw_64/bin/Qt6Network.dll;C:/Users/atamas/school/Qt/6.9.0/mingw_64/bin/Qt6OpenGL.dll;C:/Users/atamas/school/Qt/6.9.0/mingw_64/bin/Qt6Gui.dll;C:/Users/atamas/school/Qt/6.9.0/mingw_64/bin/Qt6Core.dll)

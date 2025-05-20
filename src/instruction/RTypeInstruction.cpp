@@ -19,7 +19,7 @@ void Instruction::decode()
     std::cout << "rd: "  << std::bitset<8>(rd)  << std::endl;
 #endif
 }
-
+// TODO: remove the InstructionDescriptor from the constructor of every RType instruction
 std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruction)
 {
     static const std::unordered_map<InstructionDescriptor, std::function<std::unique_ptr<Instruction>(uint32_t, InstructionDescriptor)>, InstructionDescriptor::InstructionDescriptorHash> instructionMap = {

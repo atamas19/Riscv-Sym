@@ -1,24 +1,57 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 
-project(RiscV-Sym VERSION 1.0)
+project(RiscvSim VERSION 0.1 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+
+find_package(Qt6 REQUIRED COMPONENTS Quick)
+
+qt_standard_project_setup(REQUIRES 6.8)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE INSTRUCTION_SOURCES "${PROJECT_SOURCE_DIR}/src/instruction/*.cpp")
 
-add_executable(${PROJECT_NAME} ${SOURCES} ${INSTRUCTION_SOURCES})
+qt_add_executable(appRiscvSim
+    ${SOURCES} 
+    ${INSTRUCTION_SOURCES}
+)
 
-# # Add the executable
-# add_executable(${PROJECT_NAME}
-#     src/Registers.cpp
-#     src/RiscvCpu.cpp
-#     src/main.cpp
-#     # Add other source files here
-# )
+qt_add_qml_module(appRiscvSim
+    URI RiscvSim
+    VERSION 1.0
+    QML_FILES
+        Main.qml
+        RESOURCES main.qrc
+        MainPage.qml
+        InstructionsPage.qml
+        AboutPage.qml
+        WelcomePage.qml
+        InstructionCard.qml
+)
 
-# Optionally, you can specify additional properties or link libraries here
-# target_link_libraries(${PROJECT_NAME} some_library)
+# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
+# If you are developing for iOS or macOS you should consider setting an
+# explicit, fixed bundle identifier manually though.
+set_target_properties(appRiscvSim PROPERTIES
+#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.appRiscvSim
+    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+    MACOSX_BUNDLE TRUE
+    WIN32_EXECUTABLE TRUE
+)
+
+target_link_libraries(appRiscvSim
+    PRIVATE Qt6::Quick
+)
+
+include(GNUInstallDirs)
+install(TARGETS appRiscvSim
+    BUNDLE DESTINATION .
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)

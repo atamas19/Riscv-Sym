@@ -1,0 +1,14 @@
+-rootPath
+C:/Users/atamas/school/testeQt/RiscvSim
+-cmake-output
+-output-file
+C:/Users/atamas/school/testeQt/RiscvSim/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/.qt/qml_imports/appRiscvSim_conf.cmake
+-importPath
+C:/Users/atamas/school/testeQt/RiscvSim/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/RiscvSim
+-importPath
+C:/Users/atamas/school/testeQt/RiscvSim/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug
+-importPath
+C:/Users/atamas/school/Qt/6.9.0/mingw_64/qml
+-qrcFiles
+C:/Users/atamas/school/testeQt/RiscvSim/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/.qt/rcc/qmake_RiscvSim.qrc
+C:/Users/atamas/school/testeQt/RiscvSim/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/.qt/rcc/appRiscvSim_raw_qml_0.qrc

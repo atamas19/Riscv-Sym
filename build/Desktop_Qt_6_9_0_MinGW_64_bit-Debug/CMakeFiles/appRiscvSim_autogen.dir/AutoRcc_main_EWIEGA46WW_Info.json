@@ -1,0 +1,30 @@
+{
+	"BUILD_DIR" : "C:/Users/atamas/school/testeQt/RiscvSim/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/appRiscvSim_autogen",
+	"CMAKE_BINARY_DIR" : "C:/Users/atamas/school/testeQt/RiscvSim/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug",
+	"CMAKE_CURRENT_BINARY_DIR" : "C:/Users/atamas/school/testeQt/RiscvSim/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug",
+	"CMAKE_CURRENT_SOURCE_DIR" : "C:/Users/atamas/school/testeQt/RiscvSim",
+	"CMAKE_SOURCE_DIR" : "C:/Users/atamas/school/testeQt/RiscvSim",
+	"CROSS_CONFIG" : false,
+	"GENERATOR" : "Ninja",
+	"INCLUDE_DIR" : "C:/Users/atamas/school/testeQt/RiscvSim/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/appRiscvSim_autogen/include",
+	"INPUTS" : 
+	[
+		"C:/Users/atamas/school/testeQt/RiscvSim/MainPage.qml",
+		"C:/Users/atamas/school/testeQt/RiscvSim/InstructionsPage.qml",
+		"C:/Users/atamas/school/testeQt/RiscvSim/AboutPage.qml",
+		"C:/Users/atamas/school/testeQt/RiscvSim/InstructionCard.qml",
+		"C:/Users/atamas/school/testeQt/RiscvSim/WelcomePage.qml",
+		"C:/Users/atamas/school/testeQt/RiscvSim/images/homeBackgroundPhoto.jpg"
+	],
+	"LOCK_FILE" : "C:/Users/atamas/school/testeQt/RiscvSim/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/CMakeFiles/appRiscvSim_autogen.dir/AutoRcc_main_EWIEGA46WW_Lock.lock",
+	"MULTI_CONFIG" : false,
+	"OPTIONS" : [ "--no-zstd", "-name", "main" ],
+	"OUTPUT_CHECKSUM" : "EWIEGA46WW",
+	"OUTPUT_NAME" : "qrc_main.cpp",
+	"RCC_EXECUTABLE" : "C:/Users/atamas/school/Qt/6.9.0/mingw_64/bin/rcc.exe",
+	"RCC_LIST_OPTIONS" : [ "--list" ],
+	"SETTINGS_FILE" : "C:/Users/atamas/school/testeQt/RiscvSim/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/CMakeFiles/appRiscvSim_autogen.dir/AutoRcc_main_EWIEGA46WW_Used.txt",
+	"SOURCE" : "C:/Users/atamas/school/testeQt/RiscvSim/main.qrc",
+	"USE_BETTER_GRAPH" : true,
+	"VERBOSITY" : 0
+}

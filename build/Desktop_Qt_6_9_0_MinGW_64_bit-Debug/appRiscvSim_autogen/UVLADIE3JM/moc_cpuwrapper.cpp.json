@@ -1,0 +1,46 @@
+{
+    "classes": [
+        {
+            "className": "CpuWrapper",
+            "lineNumber": 10,
+            "object": true,
+            "qualifiedClassName": "CpuWrapper",
+            "signals": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "reg",
+                            "type": "QVariant"
+                        }
+                    ],
+                    "index": 0,
+                    "name": "registerEmitted",
+                    "returnType": "void"
+                }
+            ],
+            "slots": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "index",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 1,
+                    "name": "getRegister",
+                    "returnType": "QVariant"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "cpuwrapper.h",
+    "outputRevision": 69
+}

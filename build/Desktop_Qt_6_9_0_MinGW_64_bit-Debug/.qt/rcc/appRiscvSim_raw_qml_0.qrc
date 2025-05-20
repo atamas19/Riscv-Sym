@@ -1,0 +1,12 @@
+<RCC>
+  <qresource prefix="/qt/qml/RiscvSim/">
+    <file alias="Main.qml">C:/Users/atamas/school/testeQt/RiscvSim/Main.qml</file>
+    <file alias="main.qrc">C:/Users/atamas/school/testeQt/RiscvSim/main.qrc</file>
+    <file alias="MainPage.qml">C:/Users/atamas/school/testeQt/RiscvSim/MainPage.qml</file>
+    <file alias="InstructionsPage.qml">C:/Users/atamas/school/testeQt/RiscvSim/InstructionsPage.qml</file>
+    <file alias="AboutPage.qml">C:/Users/atamas/school/testeQt/RiscvSim/AboutPage.qml</file>
+    <file alias="WelcomePage.qml">C:/Users/atamas/school/testeQt/RiscvSim/WelcomePage.qml</file>
+    <file alias="InstructionCard.qml">C:/Users/atamas/school/testeQt/RiscvSim/InstructionCard.qml</file>
+  </qresource>
+</RCC>
+
