@@ -1,5 +1,0 @@
-module RiscvSim
-typeinfo appRiscvSim.qmltypes
-prefer :/qt/qml/RiscvSim/
-Main 1.0 Main.qml
-
