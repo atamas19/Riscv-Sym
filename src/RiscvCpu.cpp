@@ -47,7 +47,19 @@ void RiscvCpu::run()
 #endif
 }
 
-std::unique_ptr<Instruction> getInstructionFromAsmCommand(const std::string& asmCommand)
+int RiscvCpu::executeAsmCommand(const std::string& command)
+{
+    auto instruction = getInstructionFromAsmCommand(command);
+
+    if (instruction == nullptr)
+        return 1;
+
+    instruction->execute(*this);
+
+    return 0;
+}
+
+std::unique_ptr<Instruction> RiscvCpu::getInstructionFromAsmCommand(const std::string& asmCommand)
 {
     // uint32_t binaryInstruction = AssemblyCompiler::compile(asmCommand);
 

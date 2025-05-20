@@ -17,6 +17,13 @@ Item {
         onTriggered: highlightNextLine()
     }
 
+    function sendCommandToCPU(lines) {
+        var currentLineText = lines[currentHighlightedLine].trim()
+        if (currentLineText.length > 0) {
+            cpuWrapper.sendCommand(currentLineText)
+        }
+    }
+
     function highlightNextLine() {
         var lines = assemblyEditor.text.split('\n')
 
@@ -44,6 +51,8 @@ Item {
 
         // Position highlight
         editorContainer.currentLineY = currentHighlightedLine * editorContainer.lineHeight
+
+        sendCommandToCPU(lines)
     }
 
     function startExecution() {
@@ -91,6 +100,8 @@ Item {
 
             // Move highlight
             editorContainer.currentLineY = currentHighlightedLine * editorContainer.lineHeight
+
+            sendCommandToCPU(lines)
         }
     }
 

@@ -12,9 +12,9 @@ class RiscvCpu
 public:
     static RiscvCpu& getInstance();
 
-    std::unique_ptr<Instruction> getInstructionFromAsmCommand(const std::string& asmCommand);
-
     void run();
+
+    int executeAsmCommand(const std::string& command);
 
     // Getters
     const uint32_t getPc() const { return pc; }
@@ -32,6 +32,10 @@ private:
     RiscvCpu& operator=(const RiscvCpu&) = delete;
     RiscvCpu(RiscvCpu&&) = delete;
     RiscvCpu& operator=(RiscvCpu&&) = delete;
+
+private:
+    std::unique_ptr<Instruction> getInstructionFromAsmCommand(const std::string& asmCommand);
+
 private:
     int32_t regs[32];
     uint32_t pc;

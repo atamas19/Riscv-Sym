@@ -1,5 +1,4 @@
-#ifndef CPUWRAPPER_H
-#define CPUWRAPPER_H
+#pragma once
 
 #include <QObject>
 #include <QVariant>
@@ -20,9 +19,8 @@ signals:
 
 public slots:
     Q_INVOKABLE QVariant getRegister(int index);
+    Q_INVOKABLE void sendCommand(const QString& command);
 
 private:
     RiscvCpu& cpu;
 };
-
-#endif // CPUWRAPPER_H

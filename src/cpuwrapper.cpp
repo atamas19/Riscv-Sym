@@ -17,3 +17,10 @@ Q_INVOKABLE QVariant CpuWrapper::getRegister(int index)
 {
     return QVariant(cpu.getRegister(index));
 }
+
+void CpuWrapper::sendCommand(const QString &command)
+{
+    qDebug() << "Executing command:" << command;
+
+    // cpu.executeAsmCommand(command.toStdString());
+}
