@@ -6,6 +6,100 @@ Item {
     id: root
     anchors.fill: parent
 
+    property int currentHighlightedLine: -1
+    property var linePositions: []
+    property bool isRunning: false
+
+    Timer {
+        id: highlightTimer
+        interval: 500 // 0.5 seconds per line (adjust as needed)
+        repeat: true
+        onTriggered: highlightNextLine()
+    }
+
+    function highlightNextLine() {
+        var lines = assemblyEditor.text.split('\n')
+
+        if (currentHighlightedLine + 1 >= lines.length) {
+            currentHighlightedLine = -1
+            isRunning = false
+            highlightTimer.stop()
+            return
+        }
+
+        currentHighlightedLine++
+
+        // Scroll to line
+        var pos = 0
+        for (var i = 0; i < currentHighlightedLine; i++) {
+            pos += lines[i].length + 1
+        }
+        assemblyEditor.cursorPosition = pos
+
+        // Position highlight
+        editorContainer.currentLineY = currentHighlightedLine * editorContainer.lineHeight
+    }
+
+    function startExecution() {
+        if (isRunning) {
+            highlightTimer.stop()
+        }
+
+        isRunning = true
+
+        // If it's never run or finished already, reset to the beginning
+        var text = assemblyEditor.text
+        var lines = text.split('\n')
+        if (currentHighlightedLine === -1 || currentHighlightedLine >= lines.length) {
+            currentHighlightedLine = -1
+        }
+
+        highlightTimer.start()
+    }
+
+
+    function stepExecution() {
+        var lines = assemblyEditor.text.split('\n')
+
+        if (currentHighlightedLine === -1) {
+            currentHighlightedLine = 0
+            isRunning = true
+        } else if (currentHighlightedLine + 1 >= lines.length) {
+            consoleLog.append("End of program")
+            return
+        } else {
+            currentHighlightedLine++
+        }
+
+        // Update cursor position to scroll
+        var pos = 0
+        for (var i = 0; i < currentHighlightedLine; i++) {
+            pos += lines[i].length + 1 // newline
+        }
+        assemblyEditor.cursorPosition = pos
+
+        // Move highlight
+        editorContainer.currentLineY = currentHighlightedLine * editorContainer.lineHeight
+    }
+
+
+    function pauseExecution() {
+        if (isRunning) {
+            highlightTimer.stop()
+            // isRunning = false
+            consoleLog.append("Execution stopped at line " + (currentHighlightedLine + 1))
+        }
+    }
+
+    function stopExecution() {
+        if (isRunning) {
+            highlightTimer.stop()
+            isRunning = false
+            currentHighlightedLine = -1
+            consoleLog.append("Execution stopped at line " + (currentHighlightedLine + 1))
+        }
+    }
+
     Rectangle {
         anchors.fill: parent
         color: "#121212" // dark background
@@ -44,19 +138,41 @@ Item {
                             font.pointSize: 14
                         }
 
-                        TextArea {
-                            id: assemblyEditor
+                        Item {
+                            id: editorContainer
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            wrapMode: TextEdit.NoWrap
-                            font.family: "Courier New"
-                            font.pixelSize: 12
-                            color: "#ffffff"
-                            selectionColor: "#555555"
-                            background: Rectangle { color: "#2b2b2b"; radius: 4 }
+
+                            property int currentLineY: 0
+                            property int lineHeight: 14 // Magic number
+
+                            // Highlight Rectangle UNDER the text
+                            Rectangle {
+                                id: highlightBar
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                height: editorContainer.lineHeight
+                                y: editorContainer.currentLineY
+                                color: "#2a4d7d"
+                                visible: currentHighlightedLine >= 0
+                                z: 0
+                            }
+
+                            TextArea {
+                                id: assemblyEditor
+                                anchors.fill: parent
+                                wrapMode: TextEdit.NoWrap
+                                font.family: "Courier New"
+                                font.pixelSize: 12
+                                color: "#ffffff"
+                                selectionColor: "#555555"
+                                background: Rectangle { color: isRunning ? "transparent" : "#2b2b2b"; radius: 4 }
+                                z: 1
+                            }
                         }
                     }
                 }
+
 
                 // Controls
                 Frame {
@@ -79,7 +195,10 @@ Item {
                             background: Rectangle { color: "#3a3f4b"; radius: 4 }
                             font.bold: true
                             font.pixelSize: 15
-                            onClicked: consoleLog.append("Run clicked")
+                            onClicked: {
+                                consoleLog.append("Run clicked")
+                                startExecution()
+                            }
                         }
 
                         Button {
@@ -87,7 +206,10 @@ Item {
                             background: Rectangle { color: "#3a3f4b"; radius: 4 }
                             font.bold: true
                             font.pixelSize: 15
-                            onClicked: consoleLog.append("Step clicked")
+                            onClicked: {
+                                consoleLog.append("Step clicked")
+                                stepExecution()
+                            }
                         }
 
                         Button {
@@ -95,7 +217,14 @@ Item {
                             background: Rectangle { color: "#3a3f4b"; radius: 4 }
                             font.bold: true
                             font.pixelSize: 15
-                            onClicked: consoleLog.append("Stop clicked")
+                            onClicked: {
+                                consoleLog.append("Paused execution")
+                                pauseExecution()
+                            }
+                            onDoubleClicked: {
+                                consoleLog.append("Stopped execution")
+                                stopExecution()
+                            }
                         }
                     }
                 }
