@@ -46,8 +46,10 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
     InstructionDescriptor descriptor{funct3, funct7};
 
     auto it = instructionMap.find(descriptor);
-    if (it != instructionMap.end())
+    if (it != instructionMap.end()) {
+        std::cout << "Aici se blocheaza\n";
         return it->second(encodedInstruction, descriptor);
+    }
 
     return nullptr;
 }

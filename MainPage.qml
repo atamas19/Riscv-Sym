@@ -351,11 +351,20 @@ Item {
                                     spacing: 4
                                     Label { text: "x" + index; width: 30; color: "#cccccc" }
                                     Label {
-                                        text: cpuWrapper.getRegister(index)
+                                        id: regLabel
+                                        text: cpuWrapper ? cpuWrapper.getRegister(index) : "N/A"
                                         font.family: "Courier New"
                                         width: 80
                                         color: "#eeeeee"
+
+                                        Connections {
+                                            target: cpuWrapper
+                                            onRegistersUpdated: {
+                                                regLabel.text = cpuWrapper ? cpuWrapper.getRegister(index) : "N/A"
+                                            }
+                                        }
                                     }
+
                                 }
                             }
 

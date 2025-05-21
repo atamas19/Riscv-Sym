@@ -22,5 +22,7 @@ void CpuWrapper::sendCommand(const QString &command)
 {
     qDebug() << "Executing command:" << command;
 
-    // cpu.executeAsmCommand(command.toStdString());
+    cpu.executeAsmCommand(command.toStdString());
+
+    emit registersUpdated();
 }

@@ -1,4 +1,5 @@
 #include "RiscvCpu.h"
+#include "AssemblyCompiler.h"
 
 #include <iostream>
 #include <bitset>
@@ -47,6 +48,9 @@ void RiscvCpu::run()
 #endif
 }
 
+// TODO: replace int with a custom output, with an exit code, an output message, maybe a list of the affected registers, pc, ram, or I will put an observer
+// on the RiscvCpu class that will be notified when registers or pc will be modified
+// a sepparate observer would be needed for the Memory class
 int RiscvCpu::executeAsmCommand(const std::string& command)
 {
     auto instruction = getInstructionFromAsmCommand(command);
@@ -56,14 +60,20 @@ int RiscvCpu::executeAsmCommand(const std::string& command)
 
     instruction->execute(*this);
 
+    instruction.reset();
+
     return 0;
 }
 
 std::unique_ptr<Instruction> RiscvCpu::getInstructionFromAsmCommand(const std::string& asmCommand)
 {
-    // uint32_t binaryInstruction = AssemblyCompiler::compile(asmCommand);
+    uint32_t binaryInstruction = AssemblyCompiler::compile(asmCommand);
 
-    auto instruction = InstructionFactory::create(123);
+    if (binaryInstruction == 0)
+        // means stuff is not right
+        return nullptr;
+
+    auto instruction = InstructionFactory::create(binaryInstruction);
 
     return instruction;
 }

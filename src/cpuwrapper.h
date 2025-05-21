@@ -5,6 +5,7 @@
 #include <QDebug>
 
 #include "RiscvCpu.h"
+#include "AssemblyCompiler.h"
 
 class CpuWrapper : public QObject
 {
@@ -16,6 +17,7 @@ public:
 
 signals:
     void registerEmitted(QVariant reg);
+    void registersUpdated();
 
 public slots:
     Q_INVOKABLE QVariant getRegister(int index);

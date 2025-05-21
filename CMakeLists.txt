@@ -16,6 +16,9 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE INSTRUCTION_SOURCES "${PROJECT_SOURCE_DIR}/src/instruction/*.cpp")
 
+message(STATUS "SOURCES: ${SOURCES}")
+message(STATUS "INSTRUCTION_SOURCES: ${INSTRUCTION_SOURCES}")
+
 qt_add_executable(appRiscvSim
     ${SOURCES} 
     ${INSTRUCTION_SOURCES}
