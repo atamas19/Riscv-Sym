@@ -17,6 +17,10 @@ Item {
         onTriggered: highlightNextLine()
     }
 
+    function appendToConsole(message) {
+        consoleLog.text = message + "\n" + consoleLog.text // Prepend new messages
+    }
+
     function sendCommandToCPU(lines) {
         var currentLineText = lines[currentHighlightedLine].trim()
         if (currentLineText.length > 0) {
@@ -83,7 +87,7 @@ Item {
                 currentHighlightedLine = 0
                 isRunning = true
             } else if (currentHighlightedLine + 1 >= lines.length) {
-                consoleLog.append("End of program")
+                appendToConsole("End of program")
                 currentHighlightedLine = -1
                 isRunning = false
                 return
@@ -110,7 +114,7 @@ Item {
         if (isRunning) {
             highlightTimer.stop()
             // isRunning = false
-            consoleLog.append("Execution stopped at line " + (currentHighlightedLine + 1))
+            appendToConsole("Execution stopped at line " + (currentHighlightedLine + 1))
         }
     }
 
@@ -119,7 +123,7 @@ Item {
             highlightTimer.stop()
             isRunning = false
             currentHighlightedLine = -1
-            consoleLog.append("Execution stopped at line " + (currentHighlightedLine + 1))
+            appendToConsole("Execution stopped at line " + (currentHighlightedLine + 1))
         }
     }
 
@@ -219,7 +223,7 @@ Item {
                             font.bold: true
                             font.pixelSize: 15
                             onClicked: {
-                                consoleLog.append("Run clicked")
+                                appendToConsole("Run clicked")
                                 startExecution()
                             }
                         }
@@ -230,7 +234,7 @@ Item {
                             font.bold: true
                             font.pixelSize: 15
                             onClicked: {
-                                consoleLog.append("Step clicked")
+                                appendToConsole("Step clicked")
                                 stepExecution()
                             }
                         }
@@ -241,11 +245,11 @@ Item {
                             font.bold: true
                             font.pixelSize: 15
                             onClicked: {
-                                consoleLog.append("Paused execution")
+                                appendToConsole("Paused execution")
                                 pauseExecution()
                             }
                             onDoubleClicked: {
-                                consoleLog.append("Stopped execution")
+                                appendToConsole("Stopped execution")
                                 stopExecution()
                             }
                         }
@@ -272,18 +276,35 @@ Item {
                             font.bold: true
                             font.pointSize: 14
                         }
-
-                        TextArea {
-                            id: consoleLog
-                            readOnly: true
-                            wrapMode: TextEdit.Wrap
-                            font.pixelSize: 12
-                            font.family: "Courier New"
-                            color: "#ffffff"
-                            selectionColor: "#555555"
-                            background: Rectangle { color: "#2b2b2b"; radius: 4 }
+                        ScrollView {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
+
+                            ScrollBar.vertical: ScrollBar { // TODO: fix the scrollbar not showing
+                                policy: ScrollBar.AlwaysOn
+                                width: 6
+                                contentItem: Rectangle {
+                                    implicitWidth: 6
+                                    radius: 3
+                                    color: "#555"
+                                }
+                                background: Rectangle {
+                                    color: "#2b2b2b"
+                                }
+                            }
+
+                            TextArea {
+                                id: consoleLog
+                                readOnly: true
+                                wrapMode: TextEdit.Wrap
+                                font.pixelSize: 12
+                                font.family: "Courier New"
+                                color: "#ffffff"
+                                selectionColor: "#555555"
+                                background: Rectangle { color: "#2b2b2b"; radius: 4 }
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                            }
                         }
                     }
                 }
