@@ -14,7 +14,7 @@ public:
 
     void run();
 
-    int executeAsmCommand(const std::string& command);
+    int executeAsmCommand(const std::string& command, InstructionOutput& instructionOutput);
 
     // Getters
     const uint32_t getPc() const { return pc; }
@@ -34,7 +34,7 @@ private:
     RiscvCpu& operator=(RiscvCpu&&) = delete;
 
 private:
-    std::unique_ptr<Instruction> getInstructionFromAsmCommand(const std::string& asmCommand);
+    std::unique_ptr<Instruction> getInstructionFromAsmCommand(const std::string& asmCommand, InstructionOutput& instructionOutput);
 
 private:
     int32_t regs[32];

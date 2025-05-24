@@ -41,3 +41,13 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
 
     return nullptr;
 }
+
+void InstructionOutput::setRegisters(std::initializer_list<uint8_t> regs)
+{
+    modifiedRegisters.assign(regs.begin(), regs.end());
+}
+
+void InstructionOutput::setRamAddresses(std::initializer_list<uint32_t> addresses)
+{
+    modifiedRamAddresses.assign(addresses.begin(), addresses.end());
+}

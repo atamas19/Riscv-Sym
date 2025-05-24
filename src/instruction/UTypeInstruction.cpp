@@ -17,7 +17,7 @@ void Instruction::decode()
 #endif
 }
 
-void LUI::execute(RiscvCpu& cpu)
+void LUI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t imm_u = getImm_u();
 
@@ -29,7 +29,7 @@ void LUI::execute(RiscvCpu& cpu)
 #endif
 }
 
-void AUIPC::execute(RiscvCpu& cpu)
+void AUIPC::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     cpu.setPc(0x800012f4); // TODO: delete this, it was just for testing porpuses
     int32_t imm_u = getImm_u();

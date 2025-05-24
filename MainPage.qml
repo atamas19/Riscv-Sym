@@ -304,6 +304,13 @@ Item {
                                 background: Rectangle { color: "#2b2b2b"; radius: 4 }
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
+
+                                Connections {
+                                    target: cpuWrapper
+                                    onLogMessage: {
+                                        appendToConsole(message)
+                                    }
+                                }
                             }
                         }
                     }
@@ -350,20 +357,44 @@ Item {
                                 delegate: Row {
                                     spacing: 4
                                     Label { text: "x" + index; width: 30; color: "#cccccc" }
-                                    Label {
-                                        id: regLabel
-                                        text: cpuWrapper ? cpuWrapper.getRegister(index) : "N/A"
-                                        font.family: "Courier New"
+                                    Rectangle {
+                                        id: regBackground
                                         width: 80
-                                        color: "#eeeeee"
+                                        height: 20
+                                        radius: 4
+
+                                        property bool isHighlighted: false
+
+                                        color: isHighlighted ? "#2a4d7d" : "#2b2b2b"  // highlighted vs normal bg colors
+
+                                        Behavior on color {
+                                            ColorAnimation {
+                                                duration: 400
+                                                easing.type: Easing.InOutQuad
+                                            }
+                                        }
+
+                                        Label {
+                                            id: regLabel
+                                            anchors.fill: parent
+                                            text: cpuWrapper ? cpuWrapper.getRegister(index) : "N/A"
+                                            font.family: "Courier New"
+                                            color: "#eeeeee"
+                                            horizontalAlignment: Text.AlignHCenter
+                                            verticalAlignment: Text.AlignVCenter
+                                        }
 
                                         Connections {
                                             target: cpuWrapper
-                                            onRegistersUpdated: {
-                                                regLabel.text = cpuWrapper ? cpuWrapper.getRegister(index) : "N/A"
+                                            onRegisterChanged: function(regIndex) {
+                                                if (regIndex === index) {
+                                                    regLabel.text = cpuWrapper.getRegister(regIndex)
+                                                    regBackground.isHighlighted = true
+                                                }
                                             }
                                         }
                                     }
+
 
                                 }
                             }

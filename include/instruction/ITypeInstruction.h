@@ -45,7 +45,7 @@ class ADDI : public Instruction
 {
 public:
     ADDI(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x0; }
 };
@@ -55,7 +55,7 @@ class SLTI : public Instruction
 {
 public:
     SLTI(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x2; }
 };
@@ -65,7 +65,7 @@ class SLTIU : public Instruction
 {
 public:
     SLTIU(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x3; }
 };
@@ -75,7 +75,7 @@ class XORI : public Instruction
 {
 public:
     XORI(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x4; }
 };
@@ -85,7 +85,7 @@ class ORI : public Instruction
 {
 public:
     ORI(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x6; }
 };
@@ -95,7 +95,7 @@ class ANDI : public Instruction
 {
 public:
     ANDI(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x7; }
 };
@@ -105,7 +105,7 @@ class SLLI : public Instruction
 {
 public:
     SLLI(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
                         // funct3, specialBit
     static const std::tuple<uint8_t, uint8_t> getInstructionDescriptor() { return {0x1, 0x0}; }
@@ -116,7 +116,7 @@ class SRLI : public Instruction
 {
 public:
     SRLI(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
                         // funct3, specialBit
     static const std::tuple<uint8_t, uint8_t> getInstructionDescriptor() { return {0x5, 0x0}; }
@@ -127,7 +127,7 @@ class SRAI : public Instruction
 {
 public:
     SRAI(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
                         // funct3, specialBit
     static const std::tuple<uint8_t, uint8_t> getInstructionDescriptor() { return {0x5, 0x1}; }
@@ -146,7 +146,7 @@ class LB : public Instruction
 {
 public:
     LB(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x0; }
 };
@@ -156,7 +156,7 @@ class LH : public Instruction
 {
 public:
     LH(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x1; }
 };
@@ -166,7 +166,7 @@ class LW : public Instruction
 {
 public:
     LW(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x2; }
 };
@@ -176,7 +176,7 @@ class LBU : public Instruction
 {
 public:
     LBU(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x4; }
 };
@@ -186,7 +186,7 @@ class LHU : public Instruction
 {
 public:
     LHU(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x5; }
 };
@@ -197,7 +197,7 @@ class JALR : public Instruction
 {
 public:
     JALR(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x67; }
 };

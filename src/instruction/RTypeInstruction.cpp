@@ -46,15 +46,13 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
     InstructionDescriptor descriptor{funct3, funct7};
 
     auto it = instructionMap.find(descriptor);
-    if (it != instructionMap.end()) {
-        std::cout << "Aici se blocheaza\n";
+    if (it != instructionMap.end())
         return it->second(encodedInstruction, descriptor);
-    }
 
     return nullptr;
 }
 
-void ADD::execute(RiscvCpu& cpu)
+void ADD::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
@@ -64,12 +62,15 @@ void ADD::execute(RiscvCpu& cpu)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
+    instructionOutput.consoleLog = "Adding the value of x" + std::to_string(rs1) + " and x" + std::to_string(rs2) + " into x" + std::to_string(rd);
+    instructionOutput.setRegisters({rs1, rs2, rd});
+
 #if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif
 }
 
-void SUB::execute(RiscvCpu& cpu)
+void SUB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
@@ -84,7 +85,7 @@ void SUB::execute(RiscvCpu& cpu)
 #endif
 }
 
-void SLL::execute(RiscvCpu& cpu)
+void SLL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
@@ -101,7 +102,7 @@ void SLL::execute(RiscvCpu& cpu)
 #endif
 }
 
-void SLT::execute(RiscvCpu& cpu)
+void SLT::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
@@ -116,7 +117,7 @@ void SLT::execute(RiscvCpu& cpu)
 #endif
 }
 
-void SLTU::execute(RiscvCpu& cpu)
+void SLTU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
@@ -131,7 +132,7 @@ void SLTU::execute(RiscvCpu& cpu)
 #endif
 }
 
-void XOR::execute(RiscvCpu& cpu)
+void XOR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
@@ -146,7 +147,7 @@ void XOR::execute(RiscvCpu& cpu)
 #endif
 }
 
-void SRL::execute(RiscvCpu& cpu)
+void SRL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
@@ -163,7 +164,7 @@ void SRL::execute(RiscvCpu& cpu)
 #endif   
 }
 
-void SRA::execute(RiscvCpu& cpu)
+void SRA::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
@@ -180,7 +181,7 @@ void SRA::execute(RiscvCpu& cpu)
 #endif   
 }
 
-void OR::execute(RiscvCpu& cpu)
+void OR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
@@ -195,7 +196,7 @@ void OR::execute(RiscvCpu& cpu)
 #endif   
 }
 
-void AND::execute(RiscvCpu& cpu)
+void AND::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);

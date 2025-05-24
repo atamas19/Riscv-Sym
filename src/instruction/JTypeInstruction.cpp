@@ -33,7 +33,7 @@ void Instruction::decode()
 #endif
 }
 
-void JAL::execute(RiscvCpu& cpu)
+void JAL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     uint32_t targetAddress = cpu.getPc() + imm;
 

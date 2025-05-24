@@ -44,7 +44,7 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
     return nullptr;
 }
 
-void SB::execute(RiscvCpu& cpu)
+void SB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
@@ -61,7 +61,7 @@ void SB::execute(RiscvCpu& cpu)
 #endif
 }
 
-void SH::execute(RiscvCpu& cpu)
+void SH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
@@ -80,7 +80,7 @@ void SH::execute(RiscvCpu& cpu)
 #endif
 }
 
-void SW::execute(RiscvCpu& cpu)
+void SW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);

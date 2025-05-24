@@ -32,7 +32,7 @@ class SB : public Instruction
 {
 public:
     SB(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x0; }
 };
@@ -42,7 +42,7 @@ class SH : public Instruction
 {
 public:
     SH(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x1; }
 };
@@ -52,7 +52,7 @@ class SW : public Instruction
 {
 public:
     SW(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x2; }
 };

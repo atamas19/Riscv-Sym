@@ -35,7 +35,7 @@ class BEQ : public Instruction
 {
 public:
     BEQ(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x0; }
 };
@@ -45,7 +45,7 @@ class BNE : public Instruction
 {
 public:
     BNE(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x1; }
 };
@@ -55,7 +55,7 @@ class BLT : public Instruction
 {
 public:
     BLT(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x4; }
 };
@@ -65,7 +65,7 @@ class BGE : public Instruction
 {
 public:
     BGE(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x5; }
 };
@@ -75,7 +75,7 @@ class BLTU : public Instruction
 {
 public:
     BLTU(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x6; }
 };
@@ -85,7 +85,7 @@ class BGEU : public Instruction
 {
 public:
     BGEU(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu) override;
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x7; }
 };

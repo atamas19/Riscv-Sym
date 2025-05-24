@@ -57,7 +57,7 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
     return nullptr;
 }
 
-void BEQ::execute(RiscvCpu& cpu)
+void BEQ::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
@@ -71,7 +71,7 @@ void BEQ::execute(RiscvCpu& cpu)
 #endif
 }
 
-void BNE::execute(RiscvCpu& cpu)
+void BNE::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
@@ -85,7 +85,7 @@ void BNE::execute(RiscvCpu& cpu)
 #endif
 }
 
-void BLT::execute(RiscvCpu& cpu)
+void BLT::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
@@ -99,7 +99,7 @@ void BLT::execute(RiscvCpu& cpu)
 #endif
 }
 
-void BGE::execute(RiscvCpu& cpu)
+void BGE::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
@@ -113,7 +113,7 @@ void BGE::execute(RiscvCpu& cpu)
 #endif
 }
 
-void BLTU::execute(RiscvCpu& cpu)
+void BLTU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     uint32_t rs1Value = cpu.getRegister(rs1);
     uint32_t rs2Value = cpu.getRegister(rs2);
@@ -127,7 +127,7 @@ void BLTU::execute(RiscvCpu& cpu)
 #endif
 }
 
-void BGEU::execute(RiscvCpu& cpu)
+void BGEU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     uint32_t rs1Value = cpu.getRegister(rs1);
     uint32_t rs2Value = cpu.getRegister(rs2);

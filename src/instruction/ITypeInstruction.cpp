@@ -69,7 +69,7 @@ std::unique_ptr<Instruction> ArithmeticInstructionFactory::create(uint32_t encod
 
 // Arithmetic instructions
 
-void ADDI::execute(RiscvCpu& cpu)
+void ADDI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
 
@@ -83,7 +83,7 @@ void ADDI::execute(RiscvCpu& cpu)
 #endif
 }
 
-void SLTI::execute(RiscvCpu& cpu)
+void SLTI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
 
@@ -97,7 +97,7 @@ void SLTI::execute(RiscvCpu& cpu)
 #endif
 }
 
-void SLTIU::execute(RiscvCpu& cpu)
+void SLTIU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
 
@@ -111,7 +111,7 @@ void SLTIU::execute(RiscvCpu& cpu)
 #endif
 }
 
-void XORI::execute(RiscvCpu& cpu)
+void XORI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
 
@@ -125,7 +125,7 @@ void XORI::execute(RiscvCpu& cpu)
 #endif
 }
 
-void ORI::execute(RiscvCpu& cpu)
+void ORI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
 
@@ -139,7 +139,7 @@ void ORI::execute(RiscvCpu& cpu)
 #endif
 }
 
-void ANDI::execute(RiscvCpu& cpu)
+void ANDI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
 
@@ -153,7 +153,7 @@ void ANDI::execute(RiscvCpu& cpu)
 #endif
 }
 
-void SLLI::execute(RiscvCpu& cpu)
+void SLLI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t shamt_i = getShamt();
@@ -168,7 +168,7 @@ void SLLI::execute(RiscvCpu& cpu)
 #endif
 }
 
-void SRLI::execute(RiscvCpu& cpu)
+void SRLI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t shamt_i = getShamt();
@@ -183,7 +183,7 @@ void SRLI::execute(RiscvCpu& cpu)
 #endif
 }
 
-void SRAI::execute(RiscvCpu& cpu)
+void SRAI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t shamt_i = getShamt();
@@ -218,7 +218,7 @@ std::unique_ptr<Instruction> LoadInstructionFactory::create(uint32_t encodedInst
     return nullptr;
 }
 
-void LB::execute(RiscvCpu& cpu)
+void LB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
 
@@ -234,7 +234,7 @@ void LB::execute(RiscvCpu& cpu)
 #endif
 }
 
-void LH::execute(RiscvCpu& cpu)
+void LH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
 
@@ -250,7 +250,7 @@ void LH::execute(RiscvCpu& cpu)
 #endif
 }
 
-void LW::execute(RiscvCpu& cpu)
+void LW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
 
@@ -266,7 +266,7 @@ void LW::execute(RiscvCpu& cpu)
 #endif
 }
 
-void LBU::execute(RiscvCpu& cpu)
+void LBU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
 
@@ -282,7 +282,7 @@ void LBU::execute(RiscvCpu& cpu)
 #endif
 }
 
-void LHU::execute(RiscvCpu& cpu)
+void LHU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
 
@@ -298,7 +298,7 @@ void LHU::execute(RiscvCpu& cpu)
 #endif
 }
 
-void JALR::execute(RiscvCpu& cpu)
+void JALR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
 

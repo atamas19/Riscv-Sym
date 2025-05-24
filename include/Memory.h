@@ -6,6 +6,8 @@
 
 #define MEMORY_SIZE 1024
 
+// TODO: review all this Memory class, find out if it's right to be this way
+
 class Memory
 {
 public:

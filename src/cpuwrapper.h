@@ -16,8 +16,10 @@ public:
     int test1();
 
 signals:
-    void registerEmitted(QVariant reg);
+    void registerChanged(int regIndex);
     void registersUpdated();
+    void logMessage(const QString &message);
+    void clearRegistersHighlights();
 
 public slots:
     Q_INVOKABLE QVariant getRegister(int index);

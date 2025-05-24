@@ -40,7 +40,8 @@ void RiscvCpu::run()
     auto test = InstructionFactory::create(instruction);
 
     if (test) [[likely]]
-        test->execute(*this);
+        // test->execute(*this);
+        ;
     else [[unlikely]]
         std::cout << "Failed to create instruction" << std::endl;
 
@@ -48,32 +49,39 @@ void RiscvCpu::run()
 #endif
 }
 
-// TODO: replace int with a custom output, with an exit code, an output message, maybe a list of the affected registers, pc, ram, or I will put an observer
-// on the RiscvCpu class that will be notified when registers or pc will be modified
-// a sepparate observer would be needed for the Memory class
-int RiscvCpu::executeAsmCommand(const std::string& command)
+int RiscvCpu::executeAsmCommand(const std::string& command, InstructionOutput& instructionOutput)
 {
-    auto instruction = getInstructionFromAsmCommand(command);
+    auto instruction = getInstructionFromAsmCommand(command, instructionOutput);
 
     if (instruction == nullptr)
+    {
+        instructionOutput.exitCode = -1;
         return 1;
+    }
 
-    instruction->execute(*this);
+    instruction->execute(*this, instructionOutput);
+
+    instructionOutput.exitCode = 0;
 
     instruction.reset();
 
     return 0;
 }
 
-std::unique_ptr<Instruction> RiscvCpu::getInstructionFromAsmCommand(const std::string& asmCommand)
+std::unique_ptr<Instruction> RiscvCpu::getInstructionFromAsmCommand(const std::string& asmCommand, InstructionOutput& instructionOutput)
 {
     uint32_t binaryInstruction = AssemblyCompiler::compile(asmCommand);
 
     if (binaryInstruction == 0)
-        // means stuff is not right
+    {
+        instructionOutput.consoleLog = asmCommand + " couldn't be converted to binary";
         return nullptr;
+    }
 
     auto instruction = InstructionFactory::create(binaryInstruction);
+
+    if (instruction == nullptr)
+        instructionOutput.consoleLog = asmCommand + " doesn't exist"; // TODO: find better wording
 
     return instruction;
 }
