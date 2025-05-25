@@ -3,18 +3,22 @@
 #include <unordered_map>
 #include <cassert>
 #include <functional>
+#include <optional>
 #include <iostream>
 
-static uint8_t registerNameToNumber(const std::string& reg)
+static std::optional<uint8_t> registerNameToNumber(const std::string& reg)
 {
-    if (reg.size() >= 2 && reg[0] == 'x') {
+    if (reg.size() >= 2 && reg[0] == 'x')
+    {
         try {
-            return std::stoi(reg.substr(1));
+            unsigned long val = std::stoul(reg.substr(1));
+            if (val <= 31)
+                return static_cast<uint8_t>(val);
         } catch (...) {
-            return -1;
+            // Parsing failed
         }
     }
-    return -1;
+    return std::nullopt;
 }
 
 AssemblyCompiler& AssemblyCompiler::getInstance()
@@ -24,9 +28,16 @@ AssemblyCompiler& AssemblyCompiler::getInstance()
     return instance;
 }
 
-uint32_t AssemblyCompiler::compile(const std::string& asmCode)
+void AssemblyCompiler::setInstructionOutput(InstructionOutput& instructionOutput)
+{
+    this->instructionOutput = &instructionOutput;
+}
+
+uint32_t AssemblyCompiler::compile(const std::string& asmCode, InstructionOutput& instructionOutput)
 {
     auto& assemblyCompiler = AssemblyCompiler::getInstance();
+
+    assemblyCompiler.setInstructionOutput(instructionOutput);
 
     uint32_t encodedInstruction = assemblyCompiler.getInstruction(asmCode);
 
@@ -39,7 +50,9 @@ uint32_t AssemblyCompiler::compile(const std::string& asmCode)
 uint32_t AssemblyCompiler::getInstruction(const std::string& instructionString)
 {
     static const std::unordered_map<std::string, std::function<uint32_t(const AssemblyInstruction&)>> instructionMap = {
-        {"add", [this](const AssemblyInstruction& ins) { return assembleAdd(ins); }}
+        {"add", [this](const AssemblyInstruction& ins) { return assembleAdd(ins); }},
+        {"sub", [this](const AssemblyInstruction& ins) { return assembleSub(ins); }},
+        {"sll", [this](const AssemblyInstruction& ins) { return assembleSll(ins); }}
     };
     AssemblyInstruction instruction{instructionString};
 
@@ -47,16 +60,16 @@ uint32_t AssemblyCompiler::getInstruction(const std::string& instructionString)
     if (it != instructionMap.end())
         return it->second(instruction);
     else
+    {
+        instructionOutput->consoleLog = "Instruction is invalid or not implemented.";
         return 0;
+    }
 }
 
 uint32_t AssemblyCompiler::encodeRType(uint8_t funct7, uint8_t rs2, uint8_t rs1, uint8_t funct3, uint8_t rd, uint8_t opcode)
 {
     assert(funct7 <= 0x7F && "funct7 must be 7 bits");
-    assert(rs2    <= 0x1F && "rs2 must be 5 bits");
-    assert(rs1    <= 0x1F && "rs1 must be 5 bits");
     assert(funct3 <= 0x07 && "funct3 must be 3 bits");
-    assert(rd     <= 0x1F && "rd must be 5 bits");
     assert(opcode <= 0x7F && "opcode must be 7 bits");
 
     uint32_t encoded = 0;
@@ -70,19 +83,56 @@ uint32_t AssemblyCompiler::encodeRType(uint8_t funct7, uint8_t rs2, uint8_t rs1,
     return encoded;
 }
 
-uint32_t AssemblyCompiler::assembleAdd(const AssemblyInstruction& instruction)
+uint32_t AssemblyCompiler::assembleRType(const AssemblyInstruction& instruction, uint8_t funct3, uint8_t funct7)
 {
     auto& operands = instruction.getOperands();
     if (operands.size() != 3)
     {
-        // Not the right number of operands
+        instructionOutput->consoleLog = "Not the right number of operands, should be exactly 3!";
+        instructionOutput->exitCode = -1;
         return 0;
     }
-    uint8_t rd = registerNameToNumber(operands.at(0));
-    uint8_t rs1 = registerNameToNumber(operands.at(1));
-    uint8_t rs2 = registerNameToNumber(operands.at(2));
+    auto validateRegister = [&](const std::optional<uint8_t>& reg, const std::string& name) -> bool {
+    if (!reg)
+        {
+            instructionOutput->consoleLog = name + " is not a valid register.";
+            instructionOutput->exitCode = -1;
+            return false;
+        }
+        return true;
+    };
 
-    return encodeRType(0x0,rs2,rs1,0x0,rd,0x33);
+    auto rd = registerNameToNumber(operands.at(0));
+    auto rs1 = registerNameToNumber(operands.at(1));
+    auto rs2 = registerNameToNumber(operands.at(2));
+    if (!validateRegister(rd, operands.at(0)) || !validateRegister(rs1, operands.at(1)) || !validateRegister(rs2, operands.at(2)))
+        return 0;
+
+    return encodeRType(funct7, *rs2, *rs1, funct3, *rd, 0x33);
+}
+
+uint32_t AssemblyCompiler::assembleAdd(const AssemblyInstruction& instruction)
+{
+    uint8_t funct3 = 0x0;
+    uint8_t funct7 = 0x0;
+
+    return assembleRType(instruction, funct3, funct7);
+}
+
+uint32_t AssemblyCompiler::assembleSub(const AssemblyInstruction& instruction)
+{
+    uint8_t funct3 = 0x0;
+    uint8_t funct7 = 0x20;
+
+    return assembleRType(instruction, funct3, funct7);
+}
+
+uint32_t AssemblyCompiler::assembleSll(const AssemblyInstruction& instruction)
+{
+    uint8_t funct3 = 0x1;
+    uint8_t funct7 = 0x0;
+
+    return assembleRType(instruction, funct3, funct7);
 }
 
 void AssemblyInstruction::parse(const std::string& line)

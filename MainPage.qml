@@ -244,7 +244,6 @@ Item {
                             font.bold: true
                             font.pixelSize: 15
                             onClicked: {
-                                appendToConsole("Run clicked")
                                 startExecution()
                             }
                         }
@@ -255,7 +254,6 @@ Item {
                             font.bold: true
                             font.pixelSize: 15
                             onClicked: {
-                                appendToConsole("Step clicked")
                                 stepExecution()
                             }
                         }
@@ -266,11 +264,9 @@ Item {
                             font.bold: true
                             font.pixelSize: 15
                             onClicked: {
-                                appendToConsole("Paused execution")
                                 pauseExecution()
                             }
                             onDoubleClicked: {
-                                appendToConsole("Stopped execution")
                                 stopExecution()
                             }
                         }
@@ -376,7 +372,7 @@ Item {
                             Repeater {
                                 id: registerRepeater
                                 model: 32
-                                delegate: Row {
+                                delegate: Row { // TODO: Change the layout so the registers are ordered vertically not horizontally
                                     spacing: 4
                                     property Rectangle regBackgroundRect: regBackground
 

@@ -25,10 +25,13 @@ void CpuWrapper::sendCommand(const QString &command)
     InstructionOutput commandOutput;
     qDebug() << "Executing command:" << command;
 
-    cpu.executeAsmCommand(command.toStdString(), commandOutput);
+    int executionResult = cpu.executeAsmCommand(command.toStdString(), commandOutput);
+    if (executionResult == -1)
+    {
 
-    emit logMessage(QString::fromStdString(commandOutput.consoleLog));
-    commandOutput.exitCode = 0;
+    }
+    if (!commandOutput.consoleLog.empty())
+        emit logMessage(QString::fromStdString(commandOutput.consoleLog));
     if (commandOutput.exitCode == 0)
     {
         if (!commandOutput.modifiedRegisters.empty())

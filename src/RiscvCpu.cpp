@@ -14,15 +14,20 @@ RiscvCpu& RiscvCpu::getInstance()
 
 const int32_t RiscvCpu::getRegister(uint8_t registerIndex) const
 {
-    assert(registerIndex < 32);
+    if (registerIndex >= 32)
+        throw std::out_of_range("Register index out of range: x" + std::to_string(registerIndex));
 
     return regs[registerIndex];
 }
 
 void RiscvCpu::setRegister(uint8_t registerIndex, int32_t registerValue)
 {
-    assert(registerIndex < 32);
-    assert(registerIndex > 0);
+    if (registerIndex == 0 && registerValue != 0) {
+        throw std::invalid_argument("Cannot modify x0 (zero register).");
+    }
+    if (registerIndex >= 32) {
+        throw std::out_of_range("Register index out of range: x" + std::to_string(registerIndex));
+    }
 
     regs[registerIndex] = registerValue;
 }
@@ -59,9 +64,16 @@ int RiscvCpu::executeAsmCommand(const std::string& command, InstructionOutput& i
         return 1;
     }
 
-    instruction->execute(*this, instructionOutput);
-
-    instructionOutput.exitCode = 0;
+    try
+    {
+        instruction->execute(*this, instructionOutput);
+        instructionOutput.exitCode = 0;
+    }
+    catch(const std::exception& e)
+    {
+        instructionOutput.consoleLog = "Error executing `" + command + "`: " + std::string{e.what()};
+        instructionOutput.exitCode = -1;
+    }
 
     instruction.reset();
 
@@ -70,11 +82,11 @@ int RiscvCpu::executeAsmCommand(const std::string& command, InstructionOutput& i
 
 std::unique_ptr<Instruction> RiscvCpu::getInstructionFromAsmCommand(const std::string& asmCommand, InstructionOutput& instructionOutput)
 {
-    uint32_t binaryInstruction = AssemblyCompiler::compile(asmCommand);
+    uint32_t binaryInstruction = AssemblyCompiler::compile(asmCommand, instructionOutput);
 
     if (binaryInstruction == 0)
     {
-        instructionOutput.consoleLog = asmCommand + " couldn't be converted to binary";
+        instructionOutput.consoleLog = "Error converting `" + asmCommand + "` to binary: " + instructionOutput.consoleLog;
         return nullptr;
     }
 
@@ -82,6 +94,7 @@ std::unique_ptr<Instruction> RiscvCpu::getInstructionFromAsmCommand(const std::s
 
     if (instruction == nullptr)
         instructionOutput.consoleLog = asmCommand + " doesn't exist"; // TODO: find better wording
+        // Should never come into this if statement
 
     return instruction;
 }

@@ -62,7 +62,9 @@ void ADD::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
-    instructionOutput.consoleLog = "Adding the value of x" + std::to_string(rs1) + " and x" + std::to_string(rs2) + " into x" + std::to_string(rd);
+    instructionOutput.consoleLog = "Performed ADD: x" + std::to_string(rd) +
+                                    " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
+                                    ") + x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) + ").";
     instructionOutput.setRegisters({rs1, rs2, rd});
 
 #if DEBUG
@@ -75,10 +77,16 @@ void SUB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
 
-    int32_t result = rs2Value - rs1Value;
+    int32_t result = rs1Value - rs2Value;
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
+
+    instructionOutput.consoleLog = "Performed SUB: x" + std::to_string(rd) +
+                                    " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
+                                    ") - x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) + ").";
+
+    instructionOutput.setRegisters({rs1, rs2, rd});
 
 #if DEBUG
     std::cout << cpu.getRegister(rd);
@@ -96,6 +104,11 @@ void SLL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
+
+    instructionOutput.consoleLog = "Performed SLL: x" + std::to_string(rd) +
+                                    " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
+                                    ") << x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) + " bits).";
+    instructionOutput.setRegisters({rs1, rs2, rd});
 
 #if DEBUG
     std::cout << cpu.getRegister(rd);
