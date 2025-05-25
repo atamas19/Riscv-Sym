@@ -1,6 +1,9 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+// import QtQuick.Controls.Material // this gets rid of a lot of errors but
+// certain elements are not alligned properly and features don't work as expected.
+// unless the errors will be a problem in the future, I will leave it as is
 
 Item {
     id: root
@@ -10,12 +13,20 @@ Item {
     property var linePositions: []
     property bool isRunning: false
     property var highlightedRegisters: []
+    property int highlighTime: 1500
 
     Timer {
         id: highlightTimer
-        interval: 1500 // 0.5 seconds per line (adjust as needed)
+        interval: highlighTime
         repeat: true
         onTriggered: highlightAndExecuteNextLine()
+    }
+
+    Timer {
+        id: highlightClearTimer
+        interval: highlighTime
+        repeat: false
+        onTriggered: clearRegisterHighlights()
     }
 
     function appendToConsole(message) {
@@ -35,6 +46,9 @@ Item {
         highlightedRegisters = []
     }
 
+    function clearConsoleLog() {
+        consoleLog.text = ""
+    }
 
     function sendCommandToCPU(lines) {
         clearRegisterHighlights()
@@ -127,7 +141,6 @@ Item {
         }
     }
 
-
     function pauseExecution() {
         if (isRunning) {
             highlightTimer.stop()
@@ -144,6 +157,12 @@ Item {
             appendToConsole("Execution stopped at line " + (currentHighlightedLine + 1))
             clearRegisterHighlights()
         }
+    }
+
+    function reset() {
+        cpuWrapper.reset()
+        clearConsoleLog()
+        highlightClearTimer.start()
     }
 
     Rectangle {
@@ -270,6 +289,15 @@ Item {
                                 stopExecution()
                             }
                         }
+                        Button {
+                            text: "Reset"
+                            background: Rectangle { color: "#3a3f4b"; radius: 4 }
+                            font.bold: true
+                            font.pixelSize: 15
+                            onClicked: {
+                                reset()
+                            }
+                        }
                     }
                 }
 
@@ -324,7 +352,7 @@ Item {
 
                                 Connections {
                                     target: cpuWrapper
-                                    onLogMessage: {
+                                    function onLogMessage(message) {
                                         appendToConsole(message)
                                     }
                                 }
@@ -406,7 +434,7 @@ Item {
 
                                         Connections {
                                             target: cpuWrapper
-                                            onRegistersChanged: function(regIndices) {
+                                            function onRegistersChanged(regIndices) {
                                                 for (let i = 0; i < regIndices.length; i++) {
                                                     let idx = regIndices[i]
                                                     let item = registerRepeater.itemAt(idx)
