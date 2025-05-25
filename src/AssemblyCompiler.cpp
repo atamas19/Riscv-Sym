@@ -30,16 +30,7 @@ uint32_t AssemblyCompiler::compile(const std::string& asmCode)
 
     uint32_t encodedInstruction = assemblyCompiler.getInstruction(asmCode);
 
-    if (encodedInstruction != 0)
-    {
-        // means stuff is right
-        return encodedInstruction;
-    }
-    else
-    {
-        // means stuff is not right
-        return 0;
-    }
+    return encodedInstruction;
 }
  // add x1, x2, x3 -> 01101110111011
  // addi x1, x2, 191
@@ -81,9 +72,6 @@ uint32_t AssemblyCompiler::encodeRType(uint8_t funct7, uint8_t rs2, uint8_t rs1,
 
 uint32_t AssemblyCompiler::assembleAdd(const AssemblyInstruction& instruction)
 {
-    // TODO
-    // Check if istringstream& is really the right type here, I should decode xy, xz, xw into real register numbers then pass everything into encodeRType
-    // something like this
     auto& operands = instruction.getOperands();
     if (operands.size() != 3)
     {

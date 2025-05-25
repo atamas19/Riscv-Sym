@@ -16,7 +16,7 @@ public:
     int test1();
 
 signals:
-    void registerChanged(int regIndex);
+    void registersChanged(const QList<int>& regIndices);
     void registersUpdated();
     void logMessage(const QString &message);
     void clearRegistersHighlights();

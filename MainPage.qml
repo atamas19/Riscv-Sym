@@ -9,26 +9,42 @@ Item {
     property int currentHighlightedLine: -1
     property var linePositions: []
     property bool isRunning: false
+    property var highlightedRegisters: []
 
     Timer {
         id: highlightTimer
-        interval: 500 // 0.5 seconds per line (adjust as needed)
+        interval: 1500 // 0.5 seconds per line (adjust as needed)
         repeat: true
-        onTriggered: highlightNextLine()
+        onTriggered: highlightAndExecuteNextLine()
     }
 
     function appendToConsole(message) {
         consoleLog.text = message + "\n" + consoleLog.text // Prepend new messages
     }
 
+    function clearRegisterHighlights() {
+        for (let i = 0; i < highlightedRegisters.length; i++) {
+            let index = highlightedRegisters[i]
+            let item = registerRepeater.itemAt(index);
+            if (item && item.regBackgroundRect) {
+                item.regBackgroundRect.isHighlighted = false;
+            } else {
+                appendToConsole("No item or regBackground at index " + index)
+            }
+        }
+        highlightedRegisters = []
+    }
+
+
     function sendCommandToCPU(lines) {
+        clearRegisterHighlights()
         var currentLineText = lines[currentHighlightedLine].trim()
         if (currentLineText.length > 0) {
             cpuWrapper.sendCommand(currentLineText)
         }
     }
 
-    function highlightNextLine() {
+    function highlightAndExecuteNextLine() {
         var lines = assemblyEditor.text.split('\n')
 
         if (lines.length === 1 && lines[0].trim() === "") {
@@ -40,6 +56,7 @@ Item {
         if (currentHighlightedLine + 1 >= lines.length) {
             currentHighlightedLine = -1
             isRunning = false
+            clearRegisterHighlights()
             highlightTimer.stop()
             return
         }
@@ -71,9 +88,9 @@ Item {
             return
         }
         isRunning = true
+        highlightAndExecuteNextLine()
         highlightTimer.start()
     }
-
 
     function stepExecution() {
         if (!highlightTimer.running) {
@@ -90,6 +107,7 @@ Item {
                 appendToConsole("End of program")
                 currentHighlightedLine = -1
                 isRunning = false
+                clearRegisterHighlights()
                 return
             } else {
                 currentHighlightedLine++
@@ -124,6 +142,7 @@ Item {
             isRunning = false
             currentHighlightedLine = -1
             appendToConsole("Execution stopped at line " + (currentHighlightedLine + 1))
+            clearRegisterHighlights()
         }
     }
 
@@ -193,13 +212,15 @@ Item {
                                 font.pixelSize: 12
                                 color: "#ffffff"
                                 selectionColor: "#555555"
-                                background: Rectangle { color: isRunning ? "transparent" : "#2b2b2b"; radius: 4 }
+                                background: Rectangle {
+                                    color: isRunning ? "transparent" : "#2b2b2b"
+                                    radius: 4
+                                }
                                 z: 1
                             }
                         }
                     }
                 }
-
 
                 // Controls
                 Frame {
@@ -353,9 +374,12 @@ Item {
                             Layout.fillWidth: true
 
                             Repeater {
+                                id: registerRepeater
                                 model: 32
                                 delegate: Row {
                                     spacing: 4
+                                    property Rectangle regBackgroundRect: regBackground
+
                                     Label { text: "x" + index; width: 30; color: "#cccccc" }
                                     Rectangle {
                                         id: regBackground
@@ -386,16 +410,19 @@ Item {
 
                                         Connections {
                                             target: cpuWrapper
-                                            onRegisterChanged: function(regIndex) {
-                                                if (regIndex === index) {
-                                                    regLabel.text = cpuWrapper.getRegister(regIndex)
-                                                    regBackground.isHighlighted = true
+                                            onRegistersChanged: function(regIndices) {
+                                                for (let i = 0; i < regIndices.length; i++) {
+                                                    let idx = regIndices[i]
+                                                    let item = registerRepeater.itemAt(idx)
+                                                    if (item && item.children[1]) {
+                                                        item.children[1].isHighlighted = true
+                                                        item.children[1].children[0].text = cpuWrapper.getRegister(idx)
+                                                        highlightedRegisters.push(idx)
+                                                    }
                                                 }
                                             }
                                         }
                                     }
-
-
                                 }
                             }
 

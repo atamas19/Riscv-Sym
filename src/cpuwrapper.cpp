@@ -18,7 +18,7 @@ Q_INVOKABLE QVariant CpuWrapper::getRegister(int index)
 {
     return QVariant(cpu.getRegister(index));
 }
-#include <iostream>
+
 void CpuWrapper::sendCommand(const QString &command)
 {
     emit clearRegistersHighlights();
@@ -32,8 +32,10 @@ void CpuWrapper::sendCommand(const QString &command)
     if (commandOutput.exitCode == 0)
     {
         if (!commandOutput.modifiedRegisters.empty())
-            for (const auto &reg : commandOutput.modifiedRegisters)
-                emit registerChanged(reg);
+        {
+            QList<int> qList(commandOutput.modifiedRegisters.begin(), commandOutput.modifiedRegisters.end());
+            emit registersChanged(qList);
+        }
         // if (!commandOutput.)
     }
 }
