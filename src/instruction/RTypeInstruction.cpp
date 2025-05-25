@@ -125,6 +125,12 @@ void SLT::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
+    instructionOutput.consoleLog = "Performed SLT: x" + std::to_string(rd) +
+                                " = (x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
+                                ") < x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) +
+                                ")) → " + std::to_string(result) + ".";
+    instructionOutput.setRegisters({rs1, rs2, rd});
+
 #if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif
@@ -140,6 +146,12 @@ void SLTU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
+    instructionOutput.consoleLog = "Performed SLTU: x" + std::to_string(rd) +
+                                " = (unsigned)x" + std::to_string(rs1) + " (" + std::to_string(static_cast<uint32_t>(rs1Value)) +
+                                ") < (unsigned)x" + std::to_string(rs2) + " (" + std::to_string(static_cast<uint32_t>(rs2Value)) +
+                                ")) → " + std::to_string(result) + ".";
+    instructionOutput.setRegisters({rs1, rs2, rd});
+
 #if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif
@@ -154,6 +166,11 @@ void XOR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
+
+    instructionOutput.consoleLog = "Performed XOR: x" + std::to_string(rd) +
+                               " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
+                               ") ^ x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) + ").";
+    instructionOutput.setRegisters({rs1, rs2, rd});
 
 #if DEBUG
     std::cout << cpu.getRegister(rd);
@@ -172,6 +189,11 @@ void SRL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
+    instructionOutput.consoleLog = "Performed SRL: x" + std::to_string(rd) +
+                               " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
+                               ") >> x" + std::to_string(rs2) + " (" + std::to_string(shiftValue) + " bits) (logical shift).";
+    instructionOutput.setRegisters({rs1, rs2, rd});
+
 #if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif   
@@ -189,6 +211,11 @@ void SRA::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
+    instructionOutput.consoleLog = "Performed SRA: x" + std::to_string(rd) +
+                               " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
+                               ") >> x" + std::to_string(rs2) + " (" + std::to_string(shiftValue) + " bits) (arithmetic shift).";
+    instructionOutput.setRegisters({rs1, rs2, rd});
+
 #if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif   
@@ -204,6 +231,11 @@ void OR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
+    instructionOutput.consoleLog = "Performed OR: x" + std::to_string(rd) +
+                               " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
+                               ") | x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) + ").";
+    instructionOutput.setRegisters({rs1, rs2, rd});
+
 #if DEBUG
     std::cout << cpu.getRegister(rd);
 #endif   
@@ -218,6 +250,11 @@ void AND::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
+
+    instructionOutput.consoleLog = "Performed AND: x" + std::to_string(rd) +
+                               " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
+                               ") & x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) + ").";
+    instructionOutput.setRegisters({rs1, rs2, rd});
 
 #if DEBUG
     std::cout << cpu.getRegister(rd);

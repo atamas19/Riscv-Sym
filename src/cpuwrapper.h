@@ -13,8 +13,6 @@ class CpuWrapper : public QObject
 public:
     explicit CpuWrapper(QObject *parent = nullptr);
 
-    int test1();
-
 signals:
     void registersChanged(const QList<int>& regIndices);
     void registersUpdated();
@@ -24,6 +22,7 @@ signals:
 public slots:
     Q_INVOKABLE QVariant getRegister(int index);
     Q_INVOKABLE void sendCommand(const QString& command);
+    Q_INVOKABLE void reset();
 
 private:
     RiscvCpu& cpu;

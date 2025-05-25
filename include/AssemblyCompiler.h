@@ -30,9 +30,16 @@ private:
 private:
     uint32_t assembleRType(const AssemblyInstruction& instruction, uint8_t funct3, uint8_t funct7);
 
-    uint32_t assembleAdd(const AssemblyInstruction& instruction);
-    uint32_t assembleSub(const AssemblyInstruction& instruction);
-    uint32_t assembleSll(const AssemblyInstruction& instruction);
+    uint32_t assembleADD(const AssemblyInstruction& instruction);
+    uint32_t assembleSUB(const AssemblyInstruction& instruction);
+    uint32_t assembleSLL(const AssemblyInstruction& instruction);
+    uint32_t assembleSLT(const AssemblyInstruction& instruction);
+    uint32_t assembleSLTU(const AssemblyInstruction& instruction);
+    uint32_t assembleXOR(const AssemblyInstruction& instruction);
+    uint32_t assembleSRL(const AssemblyInstruction& instruction);
+    uint32_t assembleSRA(const AssemblyInstruction& instruction);
+    uint32_t assembleOR(const AssemblyInstruction& instruction);
+    uint32_t assembleAND(const AssemblyInstruction& instruction);
 
 private:
     InstructionOutput* instructionOutput;

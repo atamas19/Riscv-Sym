@@ -1,5 +1,7 @@
 #include "Memory.h"
 
+#include <algorithm>
+
 Memory& Memory::getInstance()
 {
     static Memory instance;
@@ -43,4 +45,9 @@ void Memory::write8(uint32_t address, uint8_t value)
 uint8_t Memory::read8(uint32_t address)
 {
     return memory[address];
+}
+
+void Memory::reset()
+{
+    std::fill(memory.begin(), memory.end(), 0);
 }

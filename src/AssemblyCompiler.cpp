@@ -50,9 +50,17 @@ uint32_t AssemblyCompiler::compile(const std::string& asmCode, InstructionOutput
 uint32_t AssemblyCompiler::getInstruction(const std::string& instructionString)
 {
     static const std::unordered_map<std::string, std::function<uint32_t(const AssemblyInstruction&)>> instructionMap = {
-        {"add", [this](const AssemblyInstruction& ins) { return assembleAdd(ins); }},
-        {"sub", [this](const AssemblyInstruction& ins) { return assembleSub(ins); }},
-        {"sll", [this](const AssemblyInstruction& ins) { return assembleSll(ins); }}
+        // RType instructions
+        {"add",  [this](const AssemblyInstruction& ins) { return assembleADD(ins);  }},
+        {"sub",  [this](const AssemblyInstruction& ins) { return assembleSUB(ins);  }},
+        {"sll",  [this](const AssemblyInstruction& ins) { return assembleSLL(ins);  }},
+        {"slt",  [this](const AssemblyInstruction& ins) { return assembleSLT(ins);  }},
+        {"sltu", [this](const AssemblyInstruction& ins) { return assembleSLTU(ins); }},
+        {"xor",  [this](const AssemblyInstruction& ins) { return assembleXOR(ins);  }},
+        {"srl",  [this](const AssemblyInstruction& ins) { return assembleSRL(ins);  }},
+        {"sra",  [this](const AssemblyInstruction& ins) { return assembleSRA(ins);  }},
+        {"or",   [this](const AssemblyInstruction& ins) { return assembleOR(ins);   }},
+        {"and",  [this](const AssemblyInstruction& ins) { return assembleAND(ins);  }}
     };
     AssemblyInstruction instruction{instructionString};
 
@@ -92,6 +100,7 @@ uint32_t AssemblyCompiler::assembleRType(const AssemblyInstruction& instruction,
         instructionOutput->exitCode = -1;
         return 0;
     }
+
     auto validateRegister = [&](const std::optional<uint8_t>& reg, const std::string& name) -> bool {
     if (!reg)
         {
@@ -111,7 +120,7 @@ uint32_t AssemblyCompiler::assembleRType(const AssemblyInstruction& instruction,
     return encodeRType(funct7, *rs2, *rs1, funct3, *rd, 0x33);
 }
 
-uint32_t AssemblyCompiler::assembleAdd(const AssemblyInstruction& instruction)
+uint32_t AssemblyCompiler::assembleADD(const AssemblyInstruction& instruction)
 {
     uint8_t funct3 = 0x0;
     uint8_t funct7 = 0x0;
@@ -119,7 +128,7 @@ uint32_t AssemblyCompiler::assembleAdd(const AssemblyInstruction& instruction)
     return assembleRType(instruction, funct3, funct7);
 }
 
-uint32_t AssemblyCompiler::assembleSub(const AssemblyInstruction& instruction)
+uint32_t AssemblyCompiler::assembleSUB(const AssemblyInstruction& instruction)
 {
     uint8_t funct3 = 0x0;
     uint8_t funct7 = 0x20;
@@ -127,9 +136,65 @@ uint32_t AssemblyCompiler::assembleSub(const AssemblyInstruction& instruction)
     return assembleRType(instruction, funct3, funct7);
 }
 
-uint32_t AssemblyCompiler::assembleSll(const AssemblyInstruction& instruction)
+uint32_t AssemblyCompiler::assembleSLL(const AssemblyInstruction& instruction)
 {
     uint8_t funct3 = 0x1;
+    uint8_t funct7 = 0x0;
+
+    return assembleRType(instruction, funct3, funct7);
+}
+
+uint32_t AssemblyCompiler::assembleSLT(const AssemblyInstruction& instruction)
+{
+    uint8_t funct3 = 0x2;
+    uint8_t funct7 = 0x0;
+
+    return assembleRType(instruction, funct3, funct7);
+}
+
+uint32_t AssemblyCompiler::assembleSLTU(const AssemblyInstruction& instruction)
+{
+    uint8_t funct3 = 0x3;
+    uint8_t funct7 = 0x0;
+
+    return assembleRType(instruction, funct3, funct7);
+}
+
+uint32_t AssemblyCompiler::assembleXOR(const AssemblyInstruction& instruction)
+{
+    uint8_t funct3 = 0x4;
+    uint8_t funct7 = 0x0;
+
+    return assembleRType(instruction, funct3, funct7);
+}
+
+uint32_t AssemblyCompiler::assembleSRL(const AssemblyInstruction& instruction)
+{
+    uint8_t funct3 = 0x5;
+    uint8_t funct7 = 0x0;
+
+    return assembleRType(instruction, funct3, funct7);
+}
+
+uint32_t AssemblyCompiler::assembleSRA(const AssemblyInstruction& instruction)
+{
+    uint8_t funct3 = 0x5;
+    uint8_t funct7 = 0x20;
+
+    return assembleRType(instruction, funct3, funct7);
+}
+
+uint32_t AssemblyCompiler::assembleOR(const AssemblyInstruction& instruction)
+{
+    uint8_t funct3 = 0x6;
+    uint8_t funct7 = 0x0;
+
+    return assembleRType(instruction, funct3, funct7);
+}
+
+uint32_t AssemblyCompiler::assembleAND(const AssemblyInstruction& instruction)
+{
+    uint8_t funct3 = 0x7;
     uint8_t funct7 = 0x0;
 
     return assembleRType(instruction, funct3, funct7);

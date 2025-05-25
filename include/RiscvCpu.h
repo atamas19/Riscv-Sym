@@ -16,6 +16,8 @@ public:
 
     int executeAsmCommand(const std::string& command, InstructionOutput& instructionOutput);
 
+    void reset();
+
     // Getters
     const uint32_t getPc() const { return pc; }
     const int32_t getRegister(uint8_t registerIndex) const;
