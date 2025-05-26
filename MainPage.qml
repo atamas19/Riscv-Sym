@@ -43,6 +43,7 @@ Item {
                 appendToConsole("No item or regBackground at index " + index)
             }
         }
+        pcBackground.isHighlighted = false
         highlightedRegisters = []
     }
 
@@ -449,23 +450,55 @@ Item {
                                 }
                             }
 
-                            Label { text: "PC"; Layout.columnSpan: 1; color: "#cccccc" }
-                            Label {
-                                id: pcDisplay
-                                property int currentPC: 0
-                                text: currentPC
-                                font.family: "Courier New"
-                                width: 100
-                                Layout.columnSpan: 3
-                                color: "#eeeeee"
+                            RowLayout {
+                                Layout.columnSpan: 4
+                                spacing: 19 // magic number
 
-                                Connections {
-                                    target: cpuWrapper
-                                    function onPcChanged(newPc) {
-                                        pcDisplay.currentPC = newPc
+                                Label {
+                                    text: "PC"
+                                    color: "#cccccc"
+                                    font.bold: true
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+
+                                Rectangle {
+                                    id: pcBackground
+                                    width: 80
+                                    height: 20
+                                    radius: 4
+
+                                    property bool isHighlighted: false
+
+                                    color: isHighlighted ? "#2a4d7d" : "#2b2b2b"
+
+                                    Behavior on color {
+                                        ColorAnimation {
+                                            duration: 400
+                                            easing.type: Easing.InOutQuad
+                                        }
+                                    }
+
+                                    Label {
+                                        id: pcDisplay
+                                        anchors.fill: parent
+                                        property int currentPC: 0
+                                        text: currentPC
+                                        font.family: "Courier New"
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                        color: "#eeeeee"
+                                    }
+
+                                    Connections {
+                                        target: cpuWrapper
+                                        function onPcChanged(newPc) {
+                                            pcDisplay.currentPC = newPc
+                                            pcBackground.isHighlighted = true
+                                        }
                                     }
                                 }
                             }
+
                         }
                     }
                 }
