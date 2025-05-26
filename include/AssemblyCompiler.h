@@ -60,6 +60,12 @@ private:
 
     uint32_t assembleJAL(const AssemblyInstruction& instruction);
 
+private:
+    uint32_t encodeUType(uint32_t imm, uint8_t rd, uint8_t opcode);
+    uint32_t assembleUType(const AssemblyInstruction& instruction, uint8_t opcode);
+
+    uint32_t assembleLUI(const AssemblyInstruction& instruction);
+    uint32_t assembleAUIPC(const AssemblyInstruction& instruction);
 
 private:
     InstructionOutput* instructionOutput;

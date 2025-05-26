@@ -115,7 +115,10 @@ uint32_t AssemblyCompiler::getInstruction(const std::string& instructionString)
         {"bltu", [this](const AssemblyInstruction& ins) { return assembleBLTU(ins); }},
         {"bgeu", [this](const AssemblyInstruction& ins) { return assembleBGEU(ins); }},
         // JType instructions
-        {"jal",  [this](const AssemblyInstruction& ins) { return assembleJAL(ins);  }}
+        {"jal",  [this](const AssemblyInstruction& ins) { return assembleJAL(ins);  }},
+        // UType instructions
+        {"lui",  [this](const AssemblyInstruction& ins) { return assembleLUI(ins);  }},
+        {"auipc",[this](const AssemblyInstruction& ins) { return assembleAUIPC(ins);}}
 
     };
     AssemblyInstruction instruction{instructionString};
@@ -396,4 +399,55 @@ uint32_t AssemblyCompiler::assembleJType(const AssemblyInstruction& instruction)
 uint32_t AssemblyCompiler::assembleJAL(const AssemblyInstruction& instruction)
 {
     return assembleJType(instruction);
+}
+
+uint32_t AssemblyCompiler::encodeUType(uint32_t imm, uint8_t rd, uint8_t opcode)
+{
+    uint32_t encoded = 0;
+    encoded |= (imm & 0xFFFFF000);
+    encoded |= (rd & 0x1F) << 7;
+    encoded |= (opcode & 0x7F);
+
+    return encoded;
+}
+
+uint32_t AssemblyCompiler::assembleUType(const AssemblyInstruction& instruction, uint8_t opcode)
+{
+    const auto& operands = instruction.getOperands();
+    if (operands.size() != 2)
+    {
+        instructionOutput->consoleLog = "U-type instruction requires exactly 2 operands.";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    auto rd = registerNameToNumber(operands[0]);
+    if (!validateRegister(rd, operands[0]))
+        return 0;
+
+    uint32_t imm;
+    try {
+        imm = std::stoul(operands[1], nullptr, 0);
+    } catch (...) {
+        instructionOutput->consoleLog = "Invalid immediate value.";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    if (imm > 0xFFFFF)
+        imm &= 0xFFFFF;
+
+    imm = (imm << 12); // Shifts by 12 bits so the lower 3 bytes are 0
+
+    return encodeUType(imm, *rd, opcode);
+}
+
+uint32_t AssemblyCompiler::assembleLUI(const AssemblyInstruction& instruction)
+{
+    return assembleUType(instruction, 0x37);
+}
+
+uint32_t AssemblyCompiler::assembleAUIPC(const AssemblyInstruction& instruction)
+{
+    return assembleUType(instruction, 0x17);
 }
