@@ -113,7 +113,10 @@ uint32_t AssemblyCompiler::getInstruction(const std::string& instructionString)
         {"blt",  [this](const AssemblyInstruction& ins) { return assembleBLT(ins);  }},
         {"bge",  [this](const AssemblyInstruction& ins) { return assembleBGE(ins);  }},
         {"bltu", [this](const AssemblyInstruction& ins) { return assembleBLTU(ins); }},
-        {"bgeu", [this](const AssemblyInstruction& ins) { return assembleBGEU(ins); }}
+        {"bgeu", [this](const AssemblyInstruction& ins) { return assembleBGEU(ins); }},
+        // JType instructions
+        {"jal",  [this](const AssemblyInstruction& ins) { return assembleJAL(ins);  }}
+
     };
     AssemblyInstruction instruction{instructionString};
 
@@ -332,4 +335,65 @@ uint32_t AssemblyCompiler::assembleBGEU(const AssemblyInstruction& instruction)
 {
     uint8_t funct3 = 0x7;
     return assembleBType(instruction, funct3);
+}
+
+uint32_t AssemblyCompiler::encodeJType(int32_t imm, uint8_t rd, uint8_t opcode)
+{
+    uint32_t encoded = 0;
+    uint32_t imm20 = static_cast<uint32_t>(imm);
+
+    encoded |= ((imm20 >> 20) & 0x1)     << 31;
+    encoded |= ((imm20 >> 1)  & 0x3FF)   << 21;
+    encoded |= ((imm20 >> 11) & 0x1)     << 20;
+    encoded |= ((imm20 >> 12) & 0xFF)    << 12;
+    encoded |= (rd & 0x1F)               << 7;
+    encoded |= (opcode & 0x7F);
+
+    return encoded;
+}
+
+uint32_t AssemblyCompiler::assembleJType(const AssemblyInstruction& instruction)
+{
+    auto& operands = instruction.getOperands();
+    if (operands.size() != 2)
+    {
+        instructionOutput->consoleLog = "Not the right number of operands, should be exactly 2!";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    auto rd = registerNameToNumber(operands[0]);
+
+    if (!validateRegister(rd, operands.at(0)))
+        return 0;
+
+    int imm;
+    try {
+        imm = std::stoi(operands[1]);
+    } catch (...) {
+        instructionOutput->consoleLog = "Invalid immediate value!";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    if (imm % 4 != 0)
+    {
+        instructionOutput->consoleLog = "Jump offset must be a multiple of 4!";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    if (imm < -1048576 || imm > 1048574)
+    {
+        instructionOutput->consoleLog = "Jump offset out of 21-bit signed range (-1048576 to 1048574)!";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    return encodeJType(static_cast<int32_t>(imm), *rd, 0x6F);
+}
+
+uint32_t AssemblyCompiler::assembleJAL(const AssemblyInstruction& instruction)
+{
+    return assembleJType(instruction);
 }

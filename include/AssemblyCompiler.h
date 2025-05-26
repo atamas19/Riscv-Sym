@@ -55,6 +55,13 @@ private:
     uint32_t assembleBGEU(const AssemblyInstruction& instruction);
 
 private:
+    uint32_t encodeJType(int32_t imm, uint8_t rd, uint8_t opcode);
+    uint32_t assembleJType(const AssemblyInstruction& instruction);
+
+    uint32_t assembleJAL(const AssemblyInstruction& instruction);
+
+
+private:
     InstructionOutput* instructionOutput;
 };
 

@@ -42,6 +42,11 @@ void JAL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     cpu.setPc(targetAddress);
 
+    instructionOutput.consoleLog = "Performed JAL: x" + std::to_string(rd) +
+        " = PC + 4, PC += " + std::to_string(imm) + ".";
+
+    instructionOutput.setRegisters({rd});
+
 #if DEBUG
     std::cout << "Address: " << targetAddress << "\n";
     std::cout << "Modified register value: " << cpu.getRegister(rd) << "\n";
