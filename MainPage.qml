@@ -118,7 +118,6 @@ Item {
                 currentHighlightedLine = 0
                 isRunning = true
             } else if (currentHighlightedLine + 1 >= lines.length) {
-                appendToConsole("End of program")
                 currentHighlightedLine = -1
                 isRunning = false
                 clearRegisterHighlights()
@@ -453,11 +452,19 @@ Item {
                             Label { text: "PC"; Layout.columnSpan: 1; color: "#cccccc" }
                             Label {
                                 id: pcDisplay
-                                text: "0x00000000"
+                                property int currentPC: 0
+                                text: currentPC
                                 font.family: "Courier New"
                                 width: 100
                                 Layout.columnSpan: 3
                                 color: "#eeeeee"
+
+                                Connections {
+                                    target: cpuWrapper
+                                    function onPcChanged(newPc) {
+                                        pcDisplay.currentPC = newPc
+                                    }
+                                }
                             }
                         }
                     }

@@ -37,6 +37,7 @@ void CpuWrapper::sendCommand(const QString &command)
             emit registersChanged(qList);
         }
     }
+    emit pcChanged(cpu.getPc());
 }
 
 void CpuWrapper::reset()
@@ -47,4 +48,5 @@ void CpuWrapper::reset()
     std::iota(allIndices.begin(), allIndices.end(), 0);
 
     emit registersChanged(allIndices);
+    emit pcChanged(cpu.getPc());
 }

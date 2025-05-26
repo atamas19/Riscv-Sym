@@ -31,7 +31,6 @@ void LUI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void AUIPC::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    cpu.setPc(0x800012f4); // TODO: delete this, it was just for testing porpuses
     int32_t imm_u = getImm_u();
     int32_t resultValue = cpu.getPc() + imm_u;
 

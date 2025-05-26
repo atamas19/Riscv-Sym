@@ -18,6 +18,7 @@ signals:
     void registersUpdated();
     void logMessage(const QString &message);
     void clearRegistersHighlights();
+    void pcChanged(int newPc);
 
 public slots:
     Q_INVOKABLE QVariant getRegister(int index);
