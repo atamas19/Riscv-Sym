@@ -3,7 +3,6 @@
 #include <unordered_map>
 #include <cassert>
 #include <functional>
-#include <optional>
 #include <iostream>
 
 static std::optional<uint8_t> registerNameToNumber(const std::string& reg)
@@ -33,6 +32,56 @@ void AssemblyCompiler::setInstructionOutput(InstructionOutput& instructionOutput
     this->instructionOutput = &instructionOutput;
 }
 
+void AssemblyInstruction::parse(const std::string& line)
+{
+    std::istringstream iss(line);
+    iss >> instructionName;
+
+    std::string operand;
+    while (std::getline(iss, operand, ','))
+    {
+        trim(operand);
+        if (!operand.empty())
+            operands.push_back(operand);
+    }
+}
+
+void AssemblyInstruction::print() const
+{
+    std::cout << "Instruction name: " << instructionName << "\nOperands: ";
+    for (const auto& op : operands)
+        std::cout << op << " ";
+    std::cout << "\n";
+}
+
+void AssemblyInstruction::trim(std::string& s)
+{
+    size_t start = s.find_first_not_of(" \t");
+    size_t end = s.find_last_not_of(" \t");
+    s = (start == std::string::npos || end == std::string::npos) ? "" : s.substr(start, end - start + 1);
+}
+
+const std::string& AssemblyInstruction::getName() const
+{
+    return instructionName;
+}
+
+const std::vector<std::string>& AssemblyInstruction::getOperands() const
+{
+    return operands;
+}
+
+bool AssemblyCompiler::validateRegister(const std::optional<uint8_t>& reg, const std::string& name)
+{
+    if (!reg)
+    {
+        instructionOutput->consoleLog = name + " is not a valid register.";
+        instructionOutput->exitCode = -1;
+        return false;
+    }
+    return true;
+};
+
 uint32_t AssemblyCompiler::compile(const std::string& asmCode, InstructionOutput& instructionOutput)
 {
     auto& assemblyCompiler = AssemblyCompiler::getInstance();
@@ -43,10 +92,7 @@ uint32_t AssemblyCompiler::compile(const std::string& asmCode, InstructionOutput
 
     return encodedInstruction;
 }
- // add x1, x2, x3 -> 01101110111011
- // addi x1, x2, 191
- // add x1, x2, 191(x3)
- // lw x1, 1
+
 uint32_t AssemblyCompiler::getInstruction(const std::string& instructionString)
 {
     static const std::unordered_map<std::string, std::function<uint32_t(const AssemblyInstruction&)>> instructionMap = {
@@ -60,7 +106,14 @@ uint32_t AssemblyCompiler::getInstruction(const std::string& instructionString)
         {"srl",  [this](const AssemblyInstruction& ins) { return assembleSRL(ins);  }},
         {"sra",  [this](const AssemblyInstruction& ins) { return assembleSRA(ins);  }},
         {"or",   [this](const AssemblyInstruction& ins) { return assembleOR(ins);   }},
-        {"and",  [this](const AssemblyInstruction& ins) { return assembleAND(ins);  }}
+        {"and",  [this](const AssemblyInstruction& ins) { return assembleAND(ins);  }},
+        // BType instructions
+        {"beq",  [this](const AssemblyInstruction& ins) { return assembleBEQ(ins);  }},
+        {"bne",  [this](const AssemblyInstruction& ins) { return assembleBNE(ins);  }},
+        {"blt",  [this](const AssemblyInstruction& ins) { return assembleBLT(ins);  }},
+        {"bge",  [this](const AssemblyInstruction& ins) { return assembleBGE(ins);  }},
+        {"bltu", [this](const AssemblyInstruction& ins) { return assembleBLTU(ins); }},
+        {"bgeu", [this](const AssemblyInstruction& ins) { return assembleBGEU(ins); }}
     };
     AssemblyInstruction instruction{instructionString};
 
@@ -76,10 +129,6 @@ uint32_t AssemblyCompiler::getInstruction(const std::string& instructionString)
 
 uint32_t AssemblyCompiler::encodeRType(uint8_t funct7, uint8_t rs2, uint8_t rs1, uint8_t funct3, uint8_t rd, uint8_t opcode)
 {
-    assert(funct7 <= 0x7F && "funct7 must be 7 bits");
-    assert(funct3 <= 0x07 && "funct3 must be 3 bits");
-    assert(opcode <= 0x7F && "opcode must be 7 bits");
-
     uint32_t encoded = 0;
     encoded |= (static_cast<uint32_t>(funct7) << 25);
     encoded |= (static_cast<uint32_t>(rs2)    << 20);
@@ -100,16 +149,6 @@ uint32_t AssemblyCompiler::assembleRType(const AssemblyInstruction& instruction,
         instructionOutput->exitCode = -1;
         return 0;
     }
-
-    auto validateRegister = [&](const std::optional<uint8_t>& reg, const std::string& name) -> bool {
-    if (!reg)
-        {
-            instructionOutput->consoleLog = name + " is not a valid register.";
-            instructionOutput->exitCode = -1;
-            return false;
-        }
-        return true;
-    };
 
     auto rd = registerNameToNumber(operands.at(0));
     auto rs1 = registerNameToNumber(operands.at(1));
@@ -200,41 +239,97 @@ uint32_t AssemblyCompiler::assembleAND(const AssemblyInstruction& instruction)
     return assembleRType(instruction, funct3, funct7);
 }
 
-void AssemblyInstruction::parse(const std::string& line)
+uint32_t AssemblyCompiler::encodeBType(int16_t imm, uint8_t rs2, uint8_t rs1, uint8_t funct3, uint8_t opcode)
 {
-    std::istringstream iss(line);
-    iss >> instructionName;
+    uint32_t encoded = 0;
+    uint16_t imm12 = static_cast<uint16_t>(imm);
 
-    std::string operand;
-    while (std::getline(iss, operand, ','))
+    encoded |= ((imm12 >> 12) & 0x1)     << 31;
+    encoded |= ((imm12 >> 5)  & 0x3F)    << 25;
+    encoded |= (rs2 & 0x1F)              << 20;
+    encoded |= (rs1 & 0x1F)              << 15;
+    encoded |= (funct3 & 0x07)           << 12;
+    encoded |= ((imm12 >> 1) & 0x0F)     << 8;
+    encoded |= ((imm12 >> 11) & 0x1)     << 7;
+    encoded |= (opcode & 0x7F);
+
+    return encoded;
+}
+
+uint32_t AssemblyCompiler::assembleBType(const AssemblyInstruction& instruction, uint8_t funct3)
+{
+    auto& operands = instruction.getOperands();
+    if (operands.size() != 3)
     {
-        trim(operand);
-        if (!operand.empty())
-            operands.push_back(operand);
+        instructionOutput->consoleLog = "Not the right number of operands, should be exactly 3!";
+        instructionOutput->exitCode = -1;
+        return 0;
     }
+
+    auto rs1 = registerNameToNumber(operands[0]);
+    auto rs2 = registerNameToNumber(operands[1]);
+
+    if (!validateRegister(rs1, operands.at(1)) || !validateRegister(rs2, operands.at(2)))
+        return 0;
+
+    int imm;
+    try {
+        imm = std::stoi(operands[2]);
+    } catch (...) {
+        instructionOutput->consoleLog = "Invalid immediate value!";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    if (imm % 4 != 0)
+    {
+        instructionOutput->consoleLog = "Branch offset must be a multiple of 4!";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    if (imm < -4096 || imm > 4094)
+    {
+        instructionOutput->consoleLog = "Branch offset out of 13-bit signed range (-4096 to 4094)!";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    return encodeBType(static_cast<int16_t>(imm), *rs2, *rs1, funct3, 0x63);
 }
 
-void AssemblyInstruction::print() const
+uint32_t AssemblyCompiler::assembleBEQ(const AssemblyInstruction& instruction)
 {
-    std::cout << "Instruction name: " << instructionName << "\nOperands: ";
-    for (const auto& op : operands)
-        std::cout << op << " ";
-    std::cout << "\n";
+    uint8_t funct3 = 0x0;
+    return assembleBType(instruction, funct3);
 }
 
-void AssemblyInstruction::trim(std::string& s)
+uint32_t AssemblyCompiler::assembleBNE(const AssemblyInstruction& instruction)
 {
-    size_t start = s.find_first_not_of(" \t");
-    size_t end = s.find_last_not_of(" \t");
-    s = (start == std::string::npos || end == std::string::npos) ? "" : s.substr(start, end - start + 1);
+    uint8_t funct3 = 0x1;
+    return assembleBType(instruction, funct3);
 }
 
-const std::string& AssemblyInstruction::getName() const
+uint32_t AssemblyCompiler::assembleBLT(const AssemblyInstruction& instruction)
 {
-    return instructionName;
+    uint8_t funct3 = 0x4;
+    return assembleBType(instruction, funct3);
 }
 
-const std::vector<std::string>& AssemblyInstruction::getOperands() const
+uint32_t AssemblyCompiler::assembleBGE(const AssemblyInstruction& instruction)
 {
-    return operands;
+    uint8_t funct3 = 0x5;
+    return assembleBType(instruction, funct3);
+}
+
+uint32_t AssemblyCompiler::assembleBLTU(const AssemblyInstruction& instruction)
+{
+    uint8_t funct3 = 0x6;
+    return assembleBType(instruction, funct3);
+}
+
+uint32_t AssemblyCompiler::assembleBGEU(const AssemblyInstruction& instruction)
+{
+    uint8_t funct3 = 0x7;
+    return assembleBType(instruction, funct3);
 }

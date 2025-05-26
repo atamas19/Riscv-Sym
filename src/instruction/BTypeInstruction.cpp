@@ -66,6 +66,16 @@ void BEQ::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     cpu.setPc(cpu.getPc() + pcIncrement);
 
+    instructionOutput.consoleLog = "Performed BEQ: x" + std::to_string(rs1) +
+                               " (" + std::to_string(rs1Value) + ") == x" + std::to_string(rs2) +
+                               " (" + std::to_string(rs2Value) + ") -> ";
+    instructionOutput.consoleLog += (rs1Value == rs2Value)
+                                    ? "branch taken to PC + " + std::to_string(imm) + "."
+                                    : "branch not taken.";
+
+    instructionOutput.setRegisters({rs1, rs2});
+
+
 #if DEBUG
     std::cout << "PC increment: " << pcIncrement << std::endl;
 #endif
@@ -79,6 +89,15 @@ void BNE::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t pcIncrement = (rs1Value != rs2Value) ? imm : 4;
 
     cpu.setPc(cpu.getPc() + pcIncrement);
+
+    instructionOutput.consoleLog = "Performed BNE: x" + std::to_string(rs1) +
+                               " (" + std::to_string(rs1Value) + ") != x" + std::to_string(rs2) +
+                               " (" + std::to_string(rs2Value) + ") -> ";
+    instructionOutput.consoleLog += (rs1Value != rs2Value)
+                                    ? "branch taken to PC + " + std::to_string(imm) + "."
+                                    : "branch not taken.";
+
+    instructionOutput.setRegisters({rs1, rs2});
 
 #if DEBUG
     std::cout << "PC increment: " << pcIncrement << std::endl;
@@ -94,6 +113,15 @@ void BLT::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     cpu.setPc(cpu.getPc() + pcIncrement);
 
+    instructionOutput.consoleLog = "Performed BLT: x" + std::to_string(rs1) +
+                               " (" + std::to_string((int32_t)rs1Value) + ") < x" + std::to_string(rs2) +
+                               " (" + std::to_string((int32_t)rs2Value) + ") -> ";
+    instructionOutput.consoleLog += ((int32_t)rs1Value < (int32_t)rs2Value)
+                                    ? "branch taken to PC + " + std::to_string(imm) + "."
+                                    : "branch not taken.";
+
+    instructionOutput.setRegisters({rs1, rs2});
+
 #if DEBUG
     std::cout << "PC increment: " << pcIncrement << std::endl;
 #endif
@@ -107,6 +135,15 @@ void BGE::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t pcIncrement = (rs1Value >= rs2Value) ? imm : 4;
 
     cpu.setPc(cpu.getPc() + pcIncrement);
+
+    instructionOutput.consoleLog = "Performed BGE: x" + std::to_string(rs1) +
+                                " (" + std::to_string((int32_t)rs1Value) + ") >= x" + std::to_string(rs2) +
+                                " (" + std::to_string((int32_t)rs2Value) + ") -> ";
+    instructionOutput.consoleLog += ((int32_t)rs1Value >= (int32_t)rs2Value)
+                                    ? "branch taken to PC + " + std::to_string(imm) + "."
+                                    : "branch not taken.";
+
+    instructionOutput.setRegisters({rs1, rs2});
 
 #if DEBUG
     std::cout << "PC increment: " << pcIncrement << std::endl;
@@ -122,6 +159,15 @@ void BLTU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     cpu.setPc(cpu.getPc() + pcIncrement);
 
+    instructionOutput.consoleLog = "Performed BLTU: x" + std::to_string(rs1) +
+                                " (" + std::to_string(rs1Value) + ") < x" + std::to_string(rs2) +
+                                " (" + std::to_string(rs2Value) + ") -> ";
+    instructionOutput.consoleLog += (rs1Value < rs2Value)
+                                    ? "branch taken to PC + " + std::to_string(imm) + "."
+                                    : "branch not taken.";
+
+    instructionOutput.setRegisters({rs1, rs2});
+
 #if DEBUG
     std::cout << "PC increment: " << pcIncrement << std::endl;
 #endif
@@ -135,6 +181,15 @@ void BGEU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t pcIncrement = (rs1Value >= rs2Value) ? imm : 4;
 
     cpu.setPc(cpu.getPc() + pcIncrement);
+
+    instructionOutput.consoleLog = "Performed BGEU: x" + std::to_string(rs1) +
+                               " (" + std::to_string(rs1Value) + ") >= x" + std::to_string(rs2) +
+                               " (" + std::to_string(rs2Value) + ") -> ";
+    instructionOutput.consoleLog += (rs1Value >= rs2Value)
+                                    ? "branch taken to PC + " + std::to_string(imm) + "."
+                                    : "branch not taken.";
+
+    instructionOutput.setRegisters({rs1, rs2});
 
 #if DEBUG
     std::cout << "PC increment: " << pcIncrement << std::endl;

@@ -5,6 +5,7 @@
 #include <memory>
 #include <bitset>
 #include <sstream>
+#include <optional>
 
 #include "instruction/Instruction.h"
 
@@ -25,9 +26,10 @@ private:
 
     void setInstructionOutput(InstructionOutput& instructionOutput);
 
-    uint32_t encodeRType(uint8_t funct7, uint8_t rs2, uint8_t rs1, uint8_t funct3, uint8_t rd, uint8_t opcode);
+    bool validateRegister(const std::optional<uint8_t>& reg, const std::string& name);
 
 private:
+    uint32_t encodeRType(uint8_t funct7, uint8_t rs2, uint8_t rs1, uint8_t funct3, uint8_t rd, uint8_t opcode);
     uint32_t assembleRType(const AssemblyInstruction& instruction, uint8_t funct3, uint8_t funct7);
 
     uint32_t assembleADD(const AssemblyInstruction& instruction);
@@ -40,6 +42,17 @@ private:
     uint32_t assembleSRA(const AssemblyInstruction& instruction);
     uint32_t assembleOR(const AssemblyInstruction& instruction);
     uint32_t assembleAND(const AssemblyInstruction& instruction);
+
+private:
+    uint32_t encodeBType(int16_t imm, uint8_t rs2, uint8_t rs1, uint8_t funct3, uint8_t opcode);
+    uint32_t assembleBType(const AssemblyInstruction& instruction, uint8_t funct3);
+
+    uint32_t assembleBEQ(const AssemblyInstruction& instruction);
+    uint32_t assembleBNE(const AssemblyInstruction& instruction);
+    uint32_t assembleBLT(const AssemblyInstruction& instruction);
+    uint32_t assembleBGE(const AssemblyInstruction& instruction);
+    uint32_t assembleBLTU(const AssemblyInstruction& instruction);
+    uint32_t assembleBGEU(const AssemblyInstruction& instruction);
 
 private:
     InstructionOutput* instructionOutput;
