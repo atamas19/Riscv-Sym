@@ -14,6 +14,8 @@ Item {
     property bool isRunning: false
     property var highlightedRegisters: []
     property int highlighTime: 1500
+    property var highlightedMemory: []
+    property var highlightTimers: ({})
 
     Timer {
         id: highlightTimer
@@ -27,6 +29,51 @@ Item {
         interval: highlighTime
         repeat: false
         onTriggered: clearRegisterHighlights()
+    }
+
+    Timer {
+        id: memoryHighlightClearTimer
+        interval: highlighTime
+        repeat: false
+        onTriggered: clearMemoryHighlights()
+    }
+
+    function clearMemoryHighlights() {
+        for (let i = 0; i < highlightedMemory.length; i++) {
+            let index = highlightedMemory[i]
+            if (index >= 0 && index < memoryModel.count) {
+                memoryModel.set(index, {
+                    address: memoryModel.get(index).address,
+                    value: memoryModel.get(index).value,
+                    isHighlighted: false
+                });
+            }
+        }
+        highlightedMemory = []
+    }
+
+    function startMemoryHighlightClearTimer(index) {
+        if (highlightTimers[index]) {
+            highlightTimers[index].stop()
+        }
+
+        let timer = Qt.createQmlObject('import QtQuick 2.0; Timer {}', root);
+        timer.interval = highlighTime;
+        timer.repeat = false;
+        timer.triggered.connect(() => {
+            if (index >= 0 && index < memoryModel.count) {
+                memoryModel.set(index, {
+                    address: memoryModel.get(index).address,
+                    value: memoryModel.get(index).value,
+                    isHighlighted: false
+                });
+            }
+            timer.destroy();
+            delete highlightTimers[index];
+        });
+
+        highlightTimers[index] = timer;
+        timer.start();
     }
 
     function appendToConsole(message) {
@@ -534,59 +581,78 @@ Item {
                             ListView {
                                 id: memoryView
                                 model: memoryModel
-                                delegate: Row {
-                                    spacing: 16
-                                    // width: parent.width
+                                cacheBuffer: 100
+                                delegate: Rectangle {
+                                    width: memoryView.width
+                                    height: 25
+                                    color: model.isHighlighted ? "#2a4d7d" : "transparent"
+                                    radius: 4
 
-                                    Label {
-                                        text: "0x" + address.toString(16).padStart(8, "0").toUpperCase() + ":"
-                                        color: "#cccccc"
-                                        font.family: "Courier New"
-                                        width: 120
-                                    }
-
-                                    Label {
-                                        text: "0x" + value.toString(16).padStart(8, "0").toUpperCase()
-                                        color: "#eeeeee"
-                                        font.family: "Courier New"
-                                        width: 120
-                                    }
-
-                                    Label {
-                                        text: {
-                                            const bytes = [
-                                                (value >> 24) & 0xFF,
-                                                (value >> 16) & 0xFF,
-                                                (value >> 8) & 0xFF,
-                                                value & 0xFF
-                                            ];
-                                            return bytes.map(b => b.toString(16).padStart(2, "0").toUpperCase()).join(" ");
+                                    Behavior on color {
+                                        ColorAnimation {
+                                            duration: 300
+                                            easing.type: Easing.InOutQuad
                                         }
-                                        color: "#aaaaaa"
-                                        font.family: "Courier New"
-                                        width: 120
                                     }
 
-                                    Label {
-                                        text: {
-                                            const bytes = [
-                                                (value >> 24) & 0xFF,
-                                                (value >> 16) & 0xFF,
-                                                (value >> 8) & 0xFF,
-                                                value & 0xFF
-                                            ];
-                                            return bytes.map(b => (b >= 32 && b <= 126) ? String.fromCharCode(b) : ".").join("");
+                                    Row {
+                                        anchors.fill: parent
+                                        spacing: 16
+                                        anchors.margins: 4
+
+                                        Label {
+                                            text: "0x" + address.toString(16).padStart(8, "0").toUpperCase() + ":"
+                                            color: "#cccccc"
+                                            font.family: "Courier New"
+                                            width: 120
                                         }
-                                        color: "#ffffff"
-                                        font.family: "Courier New"
-                                        width: 80
+
+                                        Label {
+                                            text: "0x" + value.toString(16).padStart(8, "0").toUpperCase()
+                                            color: "#eeeeee"
+                                            font.family: "Courier New"
+                                            width: 120
+                                        }
+
+                                        Label {
+                                            text: {
+                                                const bytes = [
+                                                    (value >> 24) & 0xFF,
+                                                    (value >> 16) & 0xFF,
+                                                    (value >> 8) & 0xFF,
+                                                    value & 0xFF
+                                                ];
+                                                return bytes.map(b => b.toString(16).padStart(2, "0").toUpperCase()).join(" ");
+                                            }
+                                            color: "#aaaaaa"
+                                            font.family: "Courier New"
+                                            width: 120
+                                        }
+
+                                        Label {
+                                            text: {
+                                                const bytes = [
+                                                    (value >> 24) & 0xFF,
+                                                    (value >> 16) & 0xFF,
+                                                    (value >> 8) & 0xFF,
+                                                    value & 0xFF
+                                                ];
+                                                return bytes.map(b => (b >= 32 && b <= 126) ? String.fromCharCode(b) : ".").join("");
+                                            }
+                                            color: "#ffffff"
+                                            font.family: "Courier New"
+                                            width: 80
+                                        }
                                     }
                                 }
+
                                 clip: true
 
                                 onCountChanged: {
                                     if (count > 0) {
-                                        memoryView.positionViewAtIndex(count - 1, ListView.End);
+                                        Qt.callLater(() => {
+                                            memoryView.positionViewAtIndex(count - 1, ListView.End);
+                                        });
                                     }
                                 }
                             }
@@ -602,18 +668,24 @@ Item {
                             Connections {
                                 target: cpuWrapper
                                 function onAddMemoryEntry(address, value) {
-                                    let found = false;
-                                    for (let i = 0; i < memoryModel.count; ++i) {
+                                    for (let i = 0; i < memoryModel.count; i++) {
                                         if (memoryModel.get(i).address === address) {
-                                            memoryModel.set(i, { address: address, value: value });
-                                            found = true;
-                                            break;
+                                            memoryModel.set(i, {
+                                                address: address,
+                                                value: value,
+                                                isHighlighted: true
+                                            });
+                                            startMemoryHighlightClearTimer(i);
+                                            return;
                                         }
                                     }
 
-                                    if (!found) {
-                                        memoryModel.append({ address: address, value: value });
-                                    }
+                                    memoryModel.append({
+                                        address: address,
+                                        value: value,
+                                        isHighlighted: true
+                                    });
+                                    startMemoryHighlightClearTimer(memoryModel.count - 1);
                                 }
 
                                 function onClearMemory() {
