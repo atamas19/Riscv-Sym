@@ -24,6 +24,7 @@ public slots:
     Q_INVOKABLE QVariant getRegister(int index);
     Q_INVOKABLE void sendCommand(const QString& command);
     Q_INVOKABLE void reset();
+    Q_INVOKABLE void resetPC();
 
 private:
     RiscvCpu& cpu;

@@ -50,3 +50,10 @@ void CpuWrapper::reset()
     emit registersChanged(allIndices);
     emit pcChanged(cpu.getPc());
 }
+
+void CpuWrapper::resetPC()
+{
+    cpu.setPc(0);
+
+    emit pcChanged(cpu.getPc());
+}

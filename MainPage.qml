@@ -65,18 +65,20 @@ Item {
         if (lines.length === 1 && lines[0].trim() === "") {
             isRunning = false
             highlightTimer.stop()
+            cpuWrapper.resetPC()
             return
         }
 
-        if (currentHighlightedLine + 1 >= lines.length) {
-            currentHighlightedLine = -1
+        let currentPCLine = pcDisplay.currentPC / 4;
+        if (currentPCLine >= lines.length || pcDisplay.currentPC % 4 !== 0) {
             isRunning = false
+            cpuWrapper.resetPC()
             clearRegisterHighlights()
             highlightTimer.stop()
             return
         }
 
-        currentHighlightedLine++
+        currentHighlightedLine = currentPCLine
 
         // Scroll to line
         var pos = 0
@@ -100,6 +102,7 @@ Item {
         var lines = text.split('\n')
         if (lines.length === 1 && lines[0].trim() === "") {
             highlightTimer.stop()
+            cpuWrapper.resetPC()
             return
         }
         isRunning = true
@@ -118,14 +121,18 @@ Item {
             if (currentHighlightedLine === -1) {
                 currentHighlightedLine = 0
                 isRunning = true
-            } else if (currentHighlightedLine + 1 >= lines.length) {
-                currentHighlightedLine = -1
-                isRunning = false
-                clearRegisterHighlights()
-                return
-            } else {
-                currentHighlightedLine++
             }
+            let currentPCLine = pcDisplay.currentPC / 4;
+            if (currentPCLine >= lines.length || pcDisplay.currentPC % 4 !== 0) {
+                isRunning = false
+                cpuWrapper.resetPC()
+                clearRegisterHighlights()
+                highlightTimer.stop()
+                currentHighlightedLine = -1
+                return
+            }
+
+            currentHighlightedLine = currentPCLine
 
             // Update cursor position to scroll
             var pos = 0
@@ -144,7 +151,6 @@ Item {
     function pauseExecution() {
         if (isRunning) {
             highlightTimer.stop()
-            // isRunning = false
             appendToConsole("Execution stopped at line " + (currentHighlightedLine + 1))
         }
     }
@@ -155,11 +161,15 @@ Item {
             isRunning = false
             currentHighlightedLine = -1
             appendToConsole("Execution stopped at line " + (currentHighlightedLine + 1))
+            cpuWrapper.resetPC()
             clearRegisterHighlights()
         }
     }
 
     function reset() {
+        highlightTimer.stop()
+        isRunning = false
+        currentHighlightedLine = -1
         cpuWrapper.reset()
         clearConsoleLog()
         highlightClearTimer.start()
