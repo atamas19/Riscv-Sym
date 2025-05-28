@@ -30,8 +30,10 @@ Item {
     }
 
     function appendToConsole(message) {
-        consoleLog.text = message + "\n" + consoleLog.text // Prepend new messages
+        consoleLog.text += message + "\n"
+        consoleLog.cursorPosition = consoleLog.text.length
     }
+
 
     function clearRegisterHighlights() {
         for (let i = 0; i < highlightedRegisters.length; i++) {
@@ -335,17 +337,8 @@ Item {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
 
-                            ScrollBar.vertical: ScrollBar { // TODO: fix the scrollbar not showing
-                                policy: ScrollBar.AlwaysOn
-                                width: 6
-                                contentItem: Rectangle {
-                                    implicitWidth: 6
-                                    radius: 3
-                                    color: "#555"
-                                }
-                                background: Rectangle {
-                                    color: "#2b2b2b"
-                                }
+                            ScrollBar.vertical: ScrollBar {
+                                policy: ScrollBar.AlwaysOff
                             }
 
                             TextArea {
@@ -508,7 +501,6 @@ Item {
                                     }
                                 }
                             }
-
                         }
                     }
                 }
@@ -544,7 +536,7 @@ Item {
                                 model: memoryModel
                                 delegate: Row {
                                     spacing: 16
-                                    width: parent.width
+                                    // width: parent.width
 
                                     Label {
                                         text: "0x" + address.toString(16).padStart(8, "0").toUpperCase() + ":"
@@ -590,10 +582,19 @@ Item {
                                         width: 80
                                     }
                                 }
-
-
                                 clip: true
+
+                                onCountChanged: {
+                                    if (count > 0) {
+                                        memoryView.positionViewAtIndex(count - 1, ListView.End);
+                                    }
+                                }
                             }
+
+                            ScrollBar.vertical: ScrollBar {
+                                policy: ScrollBar.AlwaysOff
+                            }
+
 
                             ListModel {
                                 id: memoryModel
@@ -601,11 +602,20 @@ Item {
                             Connections {
                                 target: cpuWrapper
                                 function onAddMemoryEntry(address, value) {
-                                    memoryModel.append({
-                                        address: address,
-                                        value: value
-                                    })
+                                    let found = false;
+                                    for (let i = 0; i < memoryModel.count; ++i) {
+                                        if (memoryModel.get(i).address === address) {
+                                            memoryModel.set(i, { address: address, value: value });
+                                            found = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (!found) {
+                                        memoryModel.append({ address: address, value: value });
+                                    }
                                 }
+
                                 function onClearMemory() {
                                     memoryModel.clear()
                                 }
