@@ -18,6 +18,14 @@ Q_INVOKABLE QVariant CpuWrapper::getRegister(int index)
 
 void CpuWrapper::sendCommand(const QString &command)
 {
+    // Just for testing purposes
+    // TODO: delete once the memory is linked with the rv32i commands
+    static uint32_t address = 0;
+    static uint32_t value = 1;
+
+    emit addMemoryEntry(address++, value++);
+
+
     emit clearRegistersHighlights();
     InstructionOutput commandOutput;
     qDebug() << "Executing command:" << command;
@@ -49,6 +57,7 @@ void CpuWrapper::reset()
 
     emit registersChanged(allIndices);
     emit pcChanged(cpu.getPc());
+    emit clearMemory();
 }
 
 void CpuWrapper::resetPC()

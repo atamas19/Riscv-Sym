@@ -535,32 +535,83 @@ Item {
                             Layout.alignment: Qt.AlignTop
                         }
 
-                        // ScrollView {
-                        //     Layout.fillWidth: true
-                        //     Layout.fillHeight: true
+                        ScrollView {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
 
-                        //     GridLayout {
-                        //         id: ramGrid
-                        //         columns: 2
-                        //         columnSpacing: 10
-                        //         rowSpacing: 4
-                        //         Layout.fillWidth: true
+                            ListView {
+                                id: memoryView
+                                model: memoryModel
+                                delegate: Row {
+                                    spacing: 16
+                                    width: parent.width
 
-                        //         Repeater {
-                        //             model: 10
-                        //             delegate: Row {
-                        //                 spacing: 4
-                        //                 Label { text: "0x" + Qt.formatNumber(index * 4, 'x', 8) + ":"; width: 80; color: "#cccccc" }
-                        //                 Label {
-                        //                     text: "0x00000000"
-                        //                     font.family: "Courier New"
-                        //                     width: 100
-                        //                     color: "#eeeeee"
-                        //                 }
-                        //             }
-                        //         }
-                        //     }
-                        // }
+                                    Label {
+                                        text: "0x" + address.toString(16).padStart(8, "0").toUpperCase() + ":"
+                                        color: "#cccccc"
+                                        font.family: "Courier New"
+                                        width: 120
+                                    }
+
+                                    Label {
+                                        text: "0x" + value.toString(16).padStart(8, "0").toUpperCase()
+                                        color: "#eeeeee"
+                                        font.family: "Courier New"
+                                        width: 120
+                                    }
+
+                                    Label {
+                                        text: {
+                                            const bytes = [
+                                                (value >> 24) & 0xFF,
+                                                (value >> 16) & 0xFF,
+                                                (value >> 8) & 0xFF,
+                                                value & 0xFF
+                                            ];
+                                            return bytes.map(b => b.toString(16).padStart(2, "0").toUpperCase()).join(" ");
+                                        }
+                                        color: "#aaaaaa"
+                                        font.family: "Courier New"
+                                        width: 120
+                                    }
+
+                                    Label {
+                                        text: {
+                                            const bytes = [
+                                                (value >> 24) & 0xFF,
+                                                (value >> 16) & 0xFF,
+                                                (value >> 8) & 0xFF,
+                                                value & 0xFF
+                                            ];
+                                            return bytes.map(b => (b >= 32 && b <= 126) ? String.fromCharCode(b) : ".").join("");
+                                        }
+                                        color: "#ffffff"
+                                        font.family: "Courier New"
+                                        width: 80
+                                    }
+                                }
+
+
+                                clip: true
+                            }
+
+                            ListModel {
+                                id: memoryModel
+                            }
+                            Connections {
+                                target: cpuWrapper
+                                function onAddMemoryEntry(address, value) {
+                                    memoryModel.append({
+                                        address: address,
+                                        value: value
+                                    })
+                                }
+                                function onClearMemory() {
+                                    memoryModel.clear()
+                                }
+                            }
+                        }
+
                     }
                 }
             }

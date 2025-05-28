@@ -19,6 +19,8 @@ signals:
     void logMessage(const QString &message);
     void clearRegistersHighlights();
     void pcChanged(int newPc);
+    void addMemoryEntry(quint32 address, quint32 value);
+    void clearMemory();
 
 public slots:
     Q_INVOKABLE QVariant getRegister(int index);
