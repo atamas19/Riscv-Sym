@@ -19,7 +19,7 @@ signals:
     void logMessage(const QString &message);
     void clearRegistersHighlights();
     void pcChanged(int newPc);
-    void addMemoryEntry(quint32 address, quint32 value);
+    void addMemoryEntry(quint32 address, qint32 value);
     void clearMemory();
 
 public slots:

@@ -270,7 +270,7 @@ void LB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t rs1Value = cpu.getRegister(rs1);
 
     uint32_t addr = rs1Value + imm;
-    uint32_t memoryValue = Memory::getInstance().read8(addr);
+    int32_t memoryValue = Memory::getInstance().read8(addr);
 
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);
@@ -292,7 +292,7 @@ void LH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t rs1Value = cpu.getRegister(rs1);
 
     uint32_t addr = rs1Value + imm;
-    uint32_t memoryValue = Memory::getInstance().read16(addr);
+    int32_t memoryValue = Memory::getInstance().read16(addr);
 
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);
@@ -314,7 +314,7 @@ void LW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t rs1Value = cpu.getRegister(rs1);
 
     uint32_t addr = rs1Value + imm;
-    uint32_t memoryValue = Memory::getInstance().read32(addr);
+    int32_t memoryValue = Memory::getInstance().read32(addr);
 
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);
@@ -336,7 +336,7 @@ void LBU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t rs1Value = cpu.getRegister(rs1);
 
     uint32_t addr = rs1Value + imm;
-    uint32_t memoryValue = (Memory::getInstance().read8(addr) & 0x000000ff);
+    uint32_t memoryValue = static_cast<uint32_t>(Memory::getInstance().read8(addr)) & 0xFF;
 
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);
@@ -358,7 +358,7 @@ void LHU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t rs1Value = cpu.getRegister(rs1);
 
     uint32_t addr = rs1Value + imm;
-    uint32_t memoryValue = (Memory::getInstance().read16(addr) & 0x0000ffff);
+    uint32_t memoryValue = static_cast<uint32_t>(Memory::getInstance().read16(addr)) & 0xFFFF;
 
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);

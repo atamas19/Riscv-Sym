@@ -50,7 +50,7 @@ void SB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t rs2Value = cpu.getRegister(rs2);
 
     uint32_t addr = rs1Value + imm;
-    uint32_t result = getBits(rs2Value, 0, 8);
+    int32_t result = static_cast<int8_t>(getBits(rs2Value, 0, 8));
 
     Memory::getInstance().write8(addr, result);
 
@@ -73,7 +73,7 @@ void SH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t rs2Value = cpu.getRegister(rs2);
 
     uint32_t addr = rs1Value + imm;
-    uint32_t result = getBits(rs2Value, 0, 16);
+    int32_t result = static_cast<int16_t>(getBits(rs2Value, 0, 16));
 
     Memory::getInstance().write16(addr, result);
 
@@ -93,7 +93,7 @@ void SH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 void SW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = static_cast<uint32_t>(cpu.getRegister(rs2));
+    int32_t rs2Value = static_cast<int32_t>(cpu.getRegister(rs2));
 
     uint32_t addr = rs1Value + imm;
 
