@@ -118,8 +118,25 @@ uint32_t AssemblyCompiler::getInstruction(const std::string& instructionString)
         {"jal",  [this](const AssemblyInstruction& ins) { return assembleJAL(ins);  }},
         // UType instructions
         {"lui",  [this](const AssemblyInstruction& ins) { return assembleLUI(ins);  }},
-        {"auipc",[this](const AssemblyInstruction& ins) { return assembleAUIPC(ins);}}
-
+        {"auipc",[this](const AssemblyInstruction& ins) { return assembleAUIPC(ins);}},
+        // IType instruction
+        {"addi", [this](const AssemblyInstruction& ins) { return assembleADDI(ins); }},
+        {"slti", [this](const AssemblyInstruction& ins) { return assembleSLTI(ins); }},
+        {"sltiu",[this](const AssemblyInstruction& ins) { return assembleSLTIU(ins);}},
+        {"xori", [this](const AssemblyInstruction& ins) { return assembleXORI(ins); }},
+        {"ori",  [this](const AssemblyInstruction& ins) { return assembleORI(ins);  }},
+        {"andi", [this](const AssemblyInstruction& ins) { return assembleANDI(ins); }},
+            // Shift type
+        {"slli", [this](const AssemblyInstruction& ins) { return assembleSLLI(ins); }},
+        {"srli", [this](const AssemblyInstruction& ins) { return assembleSRLI(ins); }},
+        {"srai", [this](const AssemblyInstruction& ins) { return assembleSRAI(ins); }},
+            // Load type
+        {"lb",   [this](const AssemblyInstruction& ins) { return assembleLB(ins);   }},
+        {"lh",   [this](const AssemblyInstruction& ins) { return assembleLH(ins);   }},
+        {"lw",   [this](const AssemblyInstruction& ins) { return assembleLW(ins);   }},
+        {"lbu",  [this](const AssemblyInstruction& ins) { return assembleLBU(ins);  }},
+        {"lhu",  [this](const AssemblyInstruction& ins) { return assembleLHU(ins);  }},
+        {"jalr", [this](const AssemblyInstruction& ins) { return assembleJALR(ins); }}
     };
     AssemblyInstruction instruction{instructionString};
 
@@ -450,4 +467,229 @@ uint32_t AssemblyCompiler::assembleLUI(const AssemblyInstruction& instruction)
 uint32_t AssemblyCompiler::assembleAUIPC(const AssemblyInstruction& instruction)
 {
     return assembleUType(instruction, 0x17);
+}
+
+uint32_t AssemblyCompiler::encodeIType(int16_t imm, uint8_t rs1, uint8_t funct3, uint8_t rd, uint8_t opcode)
+{
+    uint32_t encoded = 0;
+    uint16_t imm12 = static_cast<uint16_t>(imm);
+
+    encoded |= (imm12 & 0xFFF) << 20;
+    encoded |= (rs1 & 0x1F)    << 15;
+    encoded |= (funct3 & 0x07) << 12;
+    encoded |= (rd & 0x1F)     << 7;
+    encoded |= (opcode & 0x7F);
+
+    return encoded;
+}
+
+uint32_t AssemblyCompiler::assembleIType(const AssemblyInstruction& instruction, uint8_t funct3)
+{
+    const auto& operands = instruction.getOperands();
+    if (operands.size() != 3)
+    {
+        instructionOutput->consoleLog = "Not the right number of operands, should be exactly 3!";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    auto rd = registerNameToNumber(operands[0]);
+    auto rs1 = registerNameToNumber(operands[1]);
+
+    if (!validateRegister(rd, operands.at(0)) || !validateRegister(rs1, operands.at(1)))
+        return 0;
+
+    int imm;
+    try {
+        imm = std::stoi(operands[2]);
+    } catch (...) {
+        instructionOutput->consoleLog = "Invalid immediate value!";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    if (imm < -2048 || imm > 2047)
+    {
+        instructionOutput->consoleLog = "Immediate value out of 12-bit signed range (-2048 to 2047)!";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    return encodeIType(static_cast<int16_t>(imm), *rs1, funct3, *rd, 0x13);
+}
+
+uint32_t AssemblyCompiler::assembleADDI(const AssemblyInstruction& instruction)
+{
+    return assembleIType(instruction, 0x0);
+}
+
+uint32_t AssemblyCompiler::assembleSLTI(const AssemblyInstruction& instruction)
+{
+    return assembleIType(instruction, 0x2);
+}
+
+uint32_t AssemblyCompiler::assembleSLTIU(const AssemblyInstruction& instruction)
+{
+    return assembleIType(instruction, 0x3);
+}
+
+uint32_t AssemblyCompiler::assembleXORI(const AssemblyInstruction& instruction)
+{
+    return assembleIType(instruction, 0x4);
+}
+
+uint32_t AssemblyCompiler::assembleORI(const AssemblyInstruction& instruction)
+{
+    return assembleIType(instruction, 0x6);
+}
+
+uint32_t AssemblyCompiler::assembleANDI(const AssemblyInstruction& instruction)
+{
+    return assembleIType(instruction, 0x7);
+}
+
+uint32_t AssemblyCompiler::encodeIShiftType(uint8_t shamt, uint8_t rs1, uint8_t funct3, uint8_t rd, uint8_t funct7, uint8_t opcode)
+{
+    uint32_t encoded = 0;
+
+    encoded |= (funct7 & 0x7F) << 25;
+    encoded |= (shamt & 0x1F) << 20;
+    encoded |= (rs1 & 0x1F)   << 15;
+    encoded |= (funct3 & 0x07) << 12;
+    encoded |= (rd & 0x1F)     << 7;
+    encoded |= (opcode & 0x7F);
+
+    return encoded;
+}
+
+uint32_t AssemblyCompiler::assembleIShiftType(const AssemblyInstruction& instruction, uint8_t funct3, uint8_t funct7)
+{
+    const auto& operands = instruction.getOperands();
+    if (operands.size() != 3)
+    {
+        instructionOutput->consoleLog = "Shift instructions require exactly 3 operands (rd, rs1, shamt)";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    auto rd = registerNameToNumber(operands[0]);
+    auto rs1 = registerNameToNumber(operands[1]);
+    if (!validateRegister(rd, operands.at(0)) || !validateRegister(rs1, operands.at(1)))
+        return 0;
+
+    int shamt;
+    try {
+        shamt = std::stoi(operands[2]);
+    } catch (...) {
+        instructionOutput->consoleLog = "Invalid shift amount!";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    if (shamt < 0 || shamt > 31)
+    {
+        instructionOutput->consoleLog = "Shift amount must be between 0 and 31!";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    return encodeIShiftType(static_cast<uint8_t>(shamt), *rs1, funct3, *rd, funct7, 0x13);
+}
+
+uint32_t AssemblyCompiler::assembleSLLI(const AssemblyInstruction& instruction)
+{
+    return assembleIShiftType(instruction, 0x1, 0x0);
+}
+
+uint32_t AssemblyCompiler::assembleSRLI(const AssemblyInstruction& instruction)
+{
+    return assembleIShiftType(instruction, 0x5, 0x0);
+}
+
+uint32_t AssemblyCompiler::assembleSRAI(const AssemblyInstruction& instruction)
+{
+    return assembleIShiftType(instruction, 0x5, 0x20);
+}
+
+uint32_t AssemblyCompiler::assembleILoadType(const AssemblyInstruction& instruction, uint8_t funct3, uint8_t opcode)
+{
+    const auto& operands = instruction.getOperands();
+
+    if (operands.size() != 2)
+    {
+        instructionOutput->consoleLog = "Load instructions require exactly 2 operands (rd, imm(rs1))";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    auto rd = registerNameToNumber(operands[0]);
+    if (!validateRegister(rd, operands[0]))
+        return 0;
+
+    const std::string& memOperand = operands[1];
+    size_t openParen = memOperand.find('(');
+    size_t closeParen = memOperand.find(')');
+
+    if (openParen == std::string::npos || closeParen == std::string::npos || closeParen <= openParen + 1)
+    {
+        instructionOutput->consoleLog = "Invalid load address format, expected imm(rs1)";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    std::string immStr = memOperand.substr(0, openParen);
+    std::string rs1Str = memOperand.substr(openParen + 1, closeParen - openParen - 1);
+
+    int imm;
+    try {
+        imm = std::stoi(immStr);
+    } catch (...) {
+        instructionOutput->consoleLog = "Invalid immediate value in load instruction";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    auto rs1 = registerNameToNumber(rs1Str);
+    if (!validateRegister(rs1, rs1Str))
+        return 0;
+
+    // Immediate range check (signed 12-bit)
+    if (imm < -2048 || imm > 2047)
+    {
+        instructionOutput->consoleLog = "Immediate out of range for load instruction (-2048 to 2047)";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    return encodeIType(static_cast<int16_t>(imm), *rs1, funct3, *rd, opcode);
+}
+
+uint32_t AssemblyCompiler::assembleLB(const AssemblyInstruction& instruction)
+{
+    return assembleILoadType(instruction, 0x0, 0x3);
+}
+
+uint32_t AssemblyCompiler::assembleLH(const AssemblyInstruction& instruction)
+{
+    return assembleILoadType(instruction, 0x1, 0x3);
+}
+
+uint32_t AssemblyCompiler::assembleLW(const AssemblyInstruction& instruction)
+{
+    return assembleILoadType(instruction, 0x2, 0x3);
+}
+
+uint32_t AssemblyCompiler::assembleLBU(const AssemblyInstruction& instruction)
+{
+    return assembleILoadType(instruction, 0x4, 0x3);
+}
+
+uint32_t AssemblyCompiler::assembleLHU(const AssemblyInstruction& instruction)
+{
+    return assembleILoadType(instruction, 0x5, 0x3);
+}
+
+uint32_t AssemblyCompiler::assembleJALR(const AssemblyInstruction& instruction)
+{
+    return assembleILoadType(instruction, 0x5, 0x67);
 }

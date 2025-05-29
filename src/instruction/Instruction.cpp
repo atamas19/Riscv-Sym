@@ -47,7 +47,7 @@ void InstructionOutput::setRegisters(std::initializer_list<uint8_t> regs)
     modifiedRegisters.assign(regs.begin(), regs.end());
 }
 
-void InstructionOutput::setRamAddresses(std::initializer_list<uint32_t> addresses)
+void InstructionOutput::setRamAddresses(std::initializer_list<MemoryCell> memoryCell)
 {
-    modifiedRamAddresses.assign(addresses.begin(), addresses.end());
+    modifiedRamAddresses.assign(memoryCell.begin(), memoryCell.end());
 }

@@ -28,3 +28,10 @@ private:
 
     std::vector<uint8_t> memory;
 };
+
+struct MemoryCell
+{
+    MemoryCell(uint32_t address, uint32_t value): address(address), value(value) {};
+
+    uint32_t address, value;
+};

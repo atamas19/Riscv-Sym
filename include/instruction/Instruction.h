@@ -7,6 +7,8 @@
 #include <initializer_list>
 #include <string>
 
+#include "Memory.h"
+
 class RiscvCpu;
 struct InstructionOutput;
 
@@ -34,8 +36,8 @@ struct InstructionOutput
     int exitCode;
     std::string consoleLog;
     std::vector<uint8_t> modifiedRegisters;
-    std::vector<uint32_t> modifiedRamAddresses;
+    std::vector<MemoryCell> modifiedRamAddresses;
 
     void setRegisters(std::initializer_list<uint8_t> regs);
-    void setRamAddresses(std::initializer_list<uint32_t> addresses);
+    void setRamAddresses(std::initializer_list<MemoryCell> memoryCell);
 };
