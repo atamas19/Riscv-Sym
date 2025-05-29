@@ -31,56 +31,22 @@ Item {
         onTriggered: clearRegisterHighlights()
     }
 
-    Timer {
-        id: memoryHighlightClearTimer
-        interval: highlighTime
-        repeat: false
-        onTriggered: clearMemoryHighlights()
-    }
-
     function clearMemoryHighlights() {
-        for (let i = 0; i < highlightedMemory.length; i++) {
-            let index = highlightedMemory[i]
-            if (index >= 0 && index < memoryModel.count) {
-                memoryModel.set(index, {
-                    address: memoryModel.get(index).address,
-                    value: memoryModel.get(index).value,
+        for (let i = 0; i < memoryModel.count; i++) {
+            if (memoryModel.get(i).isHighlighted) {
+                memoryModel.set(i, {
+                    address: memoryModel.get(i).address,
+                    value: memoryModel.get(i).value,
                     isHighlighted: false
                 });
             }
         }
-        highlightedMemory = []
-    }
-
-    function startMemoryHighlightClearTimer(index) {
-        if (highlightTimers[index]) {
-            highlightTimers[index].stop()
-        }
-
-        let timer = Qt.createQmlObject('import QtQuick 2.0; Timer {}', root);
-        timer.interval = highlighTime;
-        timer.repeat = false;
-        timer.triggered.connect(() => {
-            if (index >= 0 && index < memoryModel.count) {
-                memoryModel.set(index, {
-                    address: memoryModel.get(index).address,
-                    value: memoryModel.get(index).value,
-                    isHighlighted: false
-                });
-            }
-            timer.destroy();
-            delete highlightTimers[index];
-        });
-
-        highlightTimers[index] = timer;
-        timer.start();
     }
 
     function appendToConsole(message) {
         consoleLog.text += message + "\n"
         consoleLog.cursorPosition = consoleLog.text.length
     }
-
 
     function clearRegisterHighlights() {
         for (let i = 0; i < highlightedRegisters.length; i++) {
@@ -102,6 +68,7 @@ Item {
 
     function sendCommandToCPU(lines) {
         clearRegisterHighlights()
+        clearMemoryHighlights()
         var currentLineText = lines[currentHighlightedLine].trim()
         if (currentLineText.length > 0) {
             cpuWrapper.sendCommand(currentLineText)
@@ -123,20 +90,19 @@ Item {
             isRunning = false
             cpuWrapper.resetPC()
             clearRegisterHighlights()
+            clearMemoryHighlights()
             highlightTimer.stop()
             return
         }
 
         currentHighlightedLine = currentPCLine
 
-        // Scroll to line
         var pos = 0
         for (var i = 0; i < currentHighlightedLine; i++) {
             pos += lines[i].length + 1
         }
         assemblyEditor.cursorPosition = pos
 
-        // Position highlight
         editorContainer.currentLineY = currentHighlightedLine * editorContainer.lineHeight
 
         sendCommandToCPU(lines)
@@ -151,7 +117,6 @@ Item {
         var lines = text.split('\n')
         if (lines.length === 1 && lines[0].trim() === "") {
             highlightTimer.stop()
-            cpuWrapper.resetPC()
             return
         }
         isRunning = true
@@ -176,6 +141,7 @@ Item {
                 isRunning = false
                 cpuWrapper.resetPC()
                 clearRegisterHighlights()
+                clearMemoryHighlights()
                 highlightTimer.stop()
                 currentHighlightedLine = -1
                 return
@@ -183,14 +149,12 @@ Item {
 
             currentHighlightedLine = currentPCLine
 
-            // Update cursor position to scroll
             var pos = 0
             for (var i = 0; i < currentHighlightedLine; i++) {
-                pos += lines[i].length + 1 // newline
+                pos += lines[i].length + 1
             }
             assemblyEditor.cursorPosition = pos
 
-            // Move highlight
             editorContainer.currentLineY = currentHighlightedLine * editorContainer.lineHeight
 
             sendCommandToCPU(lines)
@@ -200,7 +164,6 @@ Item {
     function pauseExecution() {
         if (isRunning) {
             highlightTimer.stop()
-            appendToConsole("Execution stopped at line " + (currentHighlightedLine + 1))
         }
     }
 
@@ -209,9 +172,9 @@ Item {
             highlightTimer.stop()
             isRunning = false
             currentHighlightedLine = -1
-            appendToConsole("Execution stopped at line " + (currentHighlightedLine + 1))
             cpuWrapper.resetPC()
             clearRegisterHighlights()
+            clearMemoryHighlights()
         }
     }
 
@@ -675,7 +638,6 @@ Item {
                                                 value: value,
                                                 isHighlighted: true
                                             });
-                                            startMemoryHighlightClearTimer(i);
                                             return;
                                         }
                                     }
@@ -685,7 +647,6 @@ Item {
                                         value: value,
                                         isHighlighted: true
                                     });
-                                    startMemoryHighlightClearTimer(memoryModel.count - 1);
                                 }
 
                                 function onClearMemory() {
@@ -693,7 +654,6 @@ Item {
                                 }
                             }
                         }
-
                     }
                 }
             }

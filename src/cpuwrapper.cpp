@@ -43,8 +43,8 @@ void CpuWrapper::sendCommand(const QString &command)
                 emit addMemoryEntry(memoryCell.address, memoryCell.value);
             }
         }
+        emit pcChanged(cpu.getPc());
     }
-    emit pcChanged(cpu.getPc());
 }
 
 void CpuWrapper::reset()

@@ -391,9 +391,9 @@ uint32_t AssemblyCompiler::assembleJType(const AssemblyInstruction& instruction)
     if (!validateRegister(rd, operands.at(0)))
         return 0;
 
-    int imm;
+    int32_t imm;
     try {
-        imm = std::stoi(operands[1]);
+        imm = std::stol(operands[1], nullptr, 0);
     } catch (...) {
         instructionOutput->consoleLog = "Invalid immediate value!";
         instructionOutput->exitCode = -1;
@@ -503,9 +503,9 @@ uint32_t AssemblyCompiler::assembleIType(const AssemblyInstruction& instruction,
     if (!validateRegister(rd, operands.at(0)) || !validateRegister(rs1, operands.at(1)))
         return 0;
 
-    int imm;
+    int32_t imm;
     try {
-        imm = std::stoi(operands[2]);
+        imm = std::stol(operands[2], nullptr, 0);
     } catch (...) {
         instructionOutput->consoleLog = "Invalid immediate value!";
         instructionOutput->exitCode = -1;
@@ -581,9 +581,9 @@ uint32_t AssemblyCompiler::assembleIShiftType(const AssemblyInstruction& instruc
     if (!validateRegister(rd, operands.at(0)) || !validateRegister(rs1, operands.at(1)))
         return 0;
 
-    int shamt;
+    int32_t shamt;
     try {
-        shamt = std::stoi(operands[2]);
+        shamt = std::stol(operands[2], nullptr, 0);
     } catch (...) {
         instructionOutput->consoleLog = "Invalid shift amount!";
         instructionOutput->exitCode = -1;
@@ -644,9 +644,9 @@ uint32_t AssemblyCompiler::assembleILoadType(const AssemblyInstruction& instruct
     std::string immStr = memOperand.substr(0, openParen);
     std::string rs1Str = memOperand.substr(openParen + 1, closeParen - openParen - 1);
 
-    int imm;
+    int32_t imm;
     try {
-        imm = std::stoi(immStr);
+        imm = std::stol(immStr, nullptr, 0);
     } catch (...) {
         instructionOutput->consoleLog = "Invalid immediate value in load instruction";
         instructionOutput->exitCode = -1;
@@ -745,9 +745,9 @@ uint32_t AssemblyCompiler::assembleSType(const AssemblyInstruction& instruction,
     std::string immStr = memOperand.substr(0, openParen);
     std::string rs1Str = memOperand.substr(openParen + 1, closeParen - openParen - 1);
 
-    int imm;
+    int32_t imm;
     try {
-        imm = std::stoi(immStr);
+        imm = std::stol(immStr, nullptr, 0);
     } catch (...) {
         instructionOutput->consoleLog = "Invalid immediate value in store instruction";
         instructionOutput->exitCode = -1;
