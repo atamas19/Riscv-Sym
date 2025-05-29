@@ -136,7 +136,11 @@ uint32_t AssemblyCompiler::getInstruction(const std::string& instructionString)
         {"lw",   [this](const AssemblyInstruction& ins) { return assembleLW(ins);   }},
         {"lbu",  [this](const AssemblyInstruction& ins) { return assembleLBU(ins);  }},
         {"lhu",  [this](const AssemblyInstruction& ins) { return assembleLHU(ins);  }},
-        {"jalr", [this](const AssemblyInstruction& ins) { return assembleJALR(ins); }}
+        {"jalr", [this](const AssemblyInstruction& ins) { return assembleJALR(ins); }},
+        // SType instructions
+        {"sb",   [this](const AssemblyInstruction& ins) { return assembleSB(ins);   }},
+        {"sh",   [this](const AssemblyInstruction& ins) { return assembleSH(ins);   }},
+        {"sw",   [this](const AssemblyInstruction& ins) { return assembleSW(ins);   }}
     };
     AssemblyInstruction instruction{instructionString};
 
@@ -692,4 +696,90 @@ uint32_t AssemblyCompiler::assembleLHU(const AssemblyInstruction& instruction)
 uint32_t AssemblyCompiler::assembleJALR(const AssemblyInstruction& instruction)
 {
     return assembleILoadType(instruction, 0x5, 0x67);
+}
+
+uint32_t AssemblyCompiler::encodeSType(int16_t imm, uint8_t rs1, uint8_t rs2, uint8_t funct3, uint8_t opcode)
+{
+    uint32_t encoded = 0;
+    uint16_t imm12 = static_cast<uint16_t>(imm);
+
+    uint8_t imm4_0 = imm12 & 0x1F;
+    uint8_t imm11_5 = (imm12 >> 5) & 0x7F;
+
+    encoded |= (imm11_5 & 0x7F) << 25;
+    encoded |= (rs2 & 0x1F)     << 20;
+    encoded |= (rs1 & 0x1F)     << 15;
+    encoded |= (funct3 & 0x07)  << 12;
+    encoded |= (imm4_0 & 0x1F)  << 7;
+    encoded |= (opcode & 0x7F);
+
+    return encoded;
+}
+
+uint32_t AssemblyCompiler::assembleSType(const AssemblyInstruction& instruction, uint8_t funct3, uint8_t opcode)
+{
+    const auto& operands = instruction.getOperands();
+
+    if (operands.size() != 2)
+    {
+        instructionOutput->consoleLog = "Store instructions require exactly 2 operands (rs2, imm(rs1))";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    auto rs2 = registerNameToNumber(operands[0]);
+    if (!validateRegister(rs2, operands[0]))
+        return 0;
+
+    const std::string& memOperand = operands[1];
+    size_t openParen = memOperand.find('(');
+    size_t closeParen = memOperand.find(')');
+
+    if (openParen == std::string::npos || closeParen == std::string::npos || closeParen <= openParen + 1)
+    {
+        instructionOutput->consoleLog = "Invalid store address format, expected imm(rs1)";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    std::string immStr = memOperand.substr(0, openParen);
+    std::string rs1Str = memOperand.substr(openParen + 1, closeParen - openParen - 1);
+
+    int imm;
+    try {
+        imm = std::stoi(immStr);
+    } catch (...) {
+        instructionOutput->consoleLog = "Invalid immediate value in store instruction";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    auto rs1 = registerNameToNumber(rs1Str);
+    if (!validateRegister(rs1, rs1Str))
+        return 0;
+
+    // Immediate range check (signed 12-bit)
+    if (imm < -2048 || imm > 2047)
+    {
+        instructionOutput->consoleLog = "Immediate out of range for store instruction (-2048 to 2047)";
+        instructionOutput->exitCode = -1;
+        return 0;
+    }
+
+    return encodeSType(static_cast<int16_t>(imm), *rs1, *rs2, funct3, opcode);
+}
+
+uint32_t AssemblyCompiler::assembleSB(const AssemblyInstruction& instruction)
+{
+    return assembleSType(instruction, 0x0);
+}
+
+uint32_t AssemblyCompiler::assembleSH(const AssemblyInstruction& instruction)
+{
+    return assembleSType(instruction, 0x1);
+}
+
+uint32_t AssemblyCompiler::assembleSW(const AssemblyInstruction& instruction)
+{
+    return assembleSType(instruction, 0x2);
 }

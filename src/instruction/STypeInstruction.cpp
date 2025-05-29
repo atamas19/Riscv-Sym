@@ -56,6 +56,12 @@ void SB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     cpu.setPc(cpu.getPc() + 4);
 
+    instructionOutput.consoleLog = "Performed SB: mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
+                                ") + " + std::to_string(imm) + "] = x" + std::to_string(rs2) +
+                                " (" + std::to_string(rs2Value & 0xFF) + ") [byte].";
+    instructionOutput.setRegisters({rs1, rs2});
+    instructionOutput.setRamAddresses({{addr, result}});
+
 #if DEBUG
     std::cout << "Rezultat: " << Memory::getInstance().read8(addr);
 #endif
@@ -69,11 +75,15 @@ void SH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     uint32_t addr = rs1Value + imm;
     uint32_t result = getBits(rs2Value, 0, 16);
 
-    std::cout << "Rezultat inainte: " << Memory::getInstance().read16(addr);
-    std::cout << "\nRezultat: " << result << "\n";
-
     Memory::getInstance().write16(addr, result);
+
     cpu.setPc(cpu.getPc() + 4);
+
+    instructionOutput.consoleLog = "Performed SH: mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
+                                    ") + " + std::to_string(imm) + "] = x" + std::to_string(rs2) +
+                                    " (" + std::to_string(rs2Value & 0xFFFF) + ") [halfword].";
+    instructionOutput.setRegisters({rs1, rs2});
+    instructionOutput.setRamAddresses({{addr, result}});
 
 #if DEBUG
     std::cout << "Rezultat: " << Memory::getInstance().read16(addr);
@@ -83,15 +93,19 @@ void SH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 void SW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    int32_t rs2Value = static_cast<uint32_t>(cpu.getRegister(rs2));
 
     uint32_t addr = rs1Value + imm;
 
-    std::cout << "Rezultat inainte: " << Memory::getInstance().read32(addr);
-    std::cout << "\nRezultat: " << rs2Value << "\n";
-
     Memory::getInstance().write32(addr, rs2Value);
+
     cpu.setPc(cpu.getPc() + 4);
+
+    instructionOutput.consoleLog = "Performed SW: mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
+                                ") + " + std::to_string(imm) + "] = x" + std::to_string(rs2) +
+                                " (" + std::to_string(rs2Value) + ") [word].";
+    instructionOutput.setRegisters({rs1, rs2});
+    instructionOutput.setRamAddresses({{addr, rs2Value}});
 
 #if DEBUG
     std::cout << "Rezultat: " << Memory::getInstance().read32(addr);

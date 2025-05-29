@@ -98,6 +98,14 @@ private:
     uint32_t assembleJALR(const AssemblyInstruction& instruction);
 
 private:
+    uint32_t encodeSType(int16_t imm, uint8_t rs1, uint8_t funct3, uint8_t rd, uint8_t opcode);
+    uint32_t assembleSType(const AssemblyInstruction& instruction, uint8_t funct3, uint8_t opcode = 0x23);
+
+    uint32_t assembleSB(const AssemblyInstruction& instruction);
+    uint32_t assembleSH(const AssemblyInstruction& instruction);
+    uint32_t assembleSW(const AssemblyInstruction& instruction);
+
+private:
     InstructionOutput* instructionOutput;
 };
 

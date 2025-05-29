@@ -103,4 +103,6 @@ void RiscvCpu::reset()
 {
     pc = 0;
     std::fill(std::begin(regs), std::end(regs), 0);
+
+    Memory::getInstance().reset();
 }
