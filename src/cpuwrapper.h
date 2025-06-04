@@ -21,10 +21,11 @@ signals:
     void pcChanged(int newPc);
     void addMemoryEntry(quint32 address, qint32 value);
     void clearMemory();
+    void stopExecution();
 
 public slots:
     Q_INVOKABLE QVariant getRegister(int index);
-    Q_INVOKABLE void sendCommand(const QString& command);
+    Q_INVOKABLE bool sendCommand(const QString& command);
     Q_INVOKABLE void reset();
     Q_INVOKABLE void resetPC();
 

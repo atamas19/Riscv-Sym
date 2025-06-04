@@ -16,6 +16,8 @@ Item {
     property int highlighTime: 1500
     property var highlightedMemory: []
     property var highlightTimers: ({})
+    property bool stopNextStepExecution: false
+    property color instructionHighlightColor: "#2a4d7d"
 
     Timer {
         id: highlightTimer
@@ -29,6 +31,16 @@ Item {
         interval: highlighTime
         repeat: false
         onTriggered: clearRegisterHighlights()
+    }
+
+    Timer {
+        id: stopExecutionTimer
+        interval: highlighTime
+        repeat: false
+        onTriggered: {
+            instructionHighlightColor = "#2a4d7d"
+            stopExecution()
+        }
     }
 
     function clearMemoryHighlights() {
@@ -71,8 +83,11 @@ Item {
         clearMemoryHighlights()
         var currentLineText = lines[currentHighlightedLine].trim()
         if (currentLineText.length > 0) {
-            cpuWrapper.sendCommand(currentLineText)
+            if (cpuWrapper.sendCommand(currentLineText) === false) {
+                return false
+            }
         }
+        return true
     }
 
     function highlightAndExecuteNextLine() {
@@ -87,11 +102,7 @@ Item {
 
         let currentPCLine = pcDisplay.currentPC / 4;
         if (currentPCLine >= lines.length || pcDisplay.currentPC % 4 !== 0) {
-            isRunning = false
-            cpuWrapper.resetPC()
-            clearRegisterHighlights()
-            clearMemoryHighlights()
-            highlightTimer.stop()
+            stopExecution()
             return
         }
 
@@ -105,12 +116,16 @@ Item {
 
         editorContainer.currentLineY = currentHighlightedLine * editorContainer.lineHeight
 
-        sendCommandToCPU(lines)
+        if (!sendCommandToCPU(lines)) {
+            instructionHighlightColor = "#b24c4c"
+            stopExecutionTimer.start()
+            highlightTimer.stop()
+        }
     }
 
     function startExecution() {
         if (isRunning) {
-            highlightTimer.stop()
+            return
         }
 
         var text = assemblyEditor.text
@@ -121,7 +136,9 @@ Item {
         }
         isRunning = true
         highlightAndExecuteNextLine()
-        highlightTimer.start()
+        if (isRunning) {
+            highlightTimer.start()
+        }
     }
 
     function stepExecution() {
@@ -131,6 +148,11 @@ Item {
                 isRunning = false
                 return
             }
+            if (stopNextStepExecution) {
+                instructionHighlightColor = "#2a4d7d"
+                stopExecution()
+                return
+            }
 
             if (currentHighlightedLine === -1) {
                 currentHighlightedLine = 0
@@ -138,12 +160,7 @@ Item {
             }
             let currentPCLine = pcDisplay.currentPC / 4;
             if (currentPCLine >= lines.length || pcDisplay.currentPC % 4 !== 0) {
-                isRunning = false
-                cpuWrapper.resetPC()
-                clearRegisterHighlights()
-                clearMemoryHighlights()
-                highlightTimer.stop()
-                currentHighlightedLine = -1
+                stopExecution()
                 return
             }
 
@@ -157,7 +174,10 @@ Item {
 
             editorContainer.currentLineY = currentHighlightedLine * editorContainer.lineHeight
 
-            sendCommandToCPU(lines)
+            if (!sendCommandToCPU(lines)) {
+                instructionHighlightColor = "#b24c4c"
+                stopNextStepExecution = true
+            }
         }
     }
 
@@ -168,17 +188,17 @@ Item {
     }
 
     function stopExecution() {
-        if (isRunning) {
-            highlightTimer.stop()
-            isRunning = false
-            currentHighlightedLine = -1
-            cpuWrapper.resetPC()
-            clearRegisterHighlights()
-            clearMemoryHighlights()
-        }
+        stopNextStepExecution = false
+        highlightTimer.stop()
+        isRunning = false
+        currentHighlightedLine = -1
+        cpuWrapper.resetPC()
+        clearRegisterHighlights()
+        clearMemoryHighlights()
     }
 
     function reset() {
+        stopNextStepExecution = false
         highlightTimer.stop()
         isRunning = false
         currentHighlightedLine = -1
@@ -240,7 +260,7 @@ Item {
                                 anchors.right: parent.right
                                 height: editorContainer.lineHeight
                                 y: editorContainer.currentLineY
-                                color: "#2a4d7d"
+                                color: instructionHighlightColor
                                 visible: currentHighlightedLine >= 0
                                 z: 0
                             }

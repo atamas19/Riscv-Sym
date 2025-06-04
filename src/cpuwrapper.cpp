@@ -16,7 +16,7 @@ Q_INVOKABLE QVariant CpuWrapper::getRegister(int index)
     return QVariant(cpu.getRegister(index));
 }
 
-void CpuWrapper::sendCommand(const QString &command)
+bool CpuWrapper::sendCommand(const QString &command)
 {
     emit clearRegistersHighlights();
     InstructionOutput commandOutput;
@@ -25,10 +25,6 @@ void CpuWrapper::sendCommand(const QString &command)
     int executionResult = cpu.executeAsmCommand(command.toStdString(), commandOutput);
     if (!commandOutput.consoleLog.empty())
         emit logMessage(QString::fromStdString(commandOutput.consoleLog));
-    if (executionResult == -1)
-    {
-        // stop execution, see which one is more reliable, commandOutput.exitCode || executionResult
-    }
     if (commandOutput.exitCode == 0)
     {
         if (!commandOutput.modifiedRegisters.empty())
@@ -44,7 +40,10 @@ void CpuWrapper::sendCommand(const QString &command)
             }
         }
         emit pcChanged(cpu.getPc());
+        return true;
     }
+    else
+        return false;
 }
 
 void CpuWrapper::reset()
