@@ -56,13 +56,13 @@ Window {
                                 onClicked: {
                                     switch (index) {
                                     case 0:
-                                        mainLoader.source = "MainPage.qml"
+                                        mainContentArea.currentIndex = 0
                                         break
                                     case 1:
-                                        mainLoader.source = "InstructionsPage.qml"
+                                        mainContentArea.currentIndex = 1
                                         break
                                     case 2:
-                                        mainLoader.source = "AboutPage.qml"
+                                        mainContentArea.currentIndex = 2
                                         break
                                     }
                                 }
@@ -96,7 +96,6 @@ Window {
                             }
                         }
                     }
-
                     Rectangle {
                         Layout.fillHeight: true
                         color: "transparent"
@@ -104,7 +103,6 @@ Window {
                 }
             }
 
-            // Main Content Area
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -114,10 +112,18 @@ Window {
                     id: mainContentArea
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    currentIndex: 0
 
-                    Loader {
-                        id: mainLoader
-                        source: "MainPage.qml"
+                    MainPage {
+                        id: mainPage
+                    }
+
+                    InstructionsPage {
+                        id: instructionsPage
+                    }
+
+                    AboutPage {
+                        id: aboutPage
                     }
                 }
             }
