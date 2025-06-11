@@ -84,6 +84,8 @@ std::unique_ptr<Instruction> RiscvCpu::getInstructionFromAsmCommand(const std::s
 {
     uint32_t binaryInstruction = AssemblyCompiler::compile(asmCommand, instructionOutput);
 
+    std::cout << "Binary Instruction: " << std::bitset<32>(binaryInstruction) << "\n";
+
     if (binaryInstruction == 0)
     {
         instructionOutput.consoleLog = "Error converting `" + asmCommand + "` to binary: " + instructionOutput.consoleLog;

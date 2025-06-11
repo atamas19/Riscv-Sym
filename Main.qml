@@ -101,14 +101,6 @@ Window {
                         Layout.fillHeight: true
                         color: "transparent"
                     }
-
-                    // Label {
-                    //     text: "v0.0.1"
-                    //     color: "#aaaaaa"
-                    //     font.pixelSize: 12
-                    //     horizontalAlignment: Text.AlignHCenter
-                    //     Layout.alignment: Qt.AlignHCenter
-                    // }
                 }
             }
 
@@ -118,38 +110,15 @@ Window {
                 Layout.fillHeight: true
                 spacing: 0
 
-                // Rectangle {
-                //     height: 60
-                //     color: "#ffffff"
-                //     Layout.fillWidth: true
-
-                //     Text {
-                //         anchors.centerIn: parent
-                //         text: "Dashboard"
-                //         font.pixelSize: 20
-                //         color: "#333"
-                //     }
-                // }
-
                 StackLayout {
                     id: mainContentArea
                     Layout.fillWidth: true
                     Layout.fillHeight: true
 
-                    // Loader { source: "WelcomePage.qml" } // I will implement this later, for now I have other priorities
                     Loader {
                         id: mainLoader
                         source: "MainPage.qml"
                     }
-
-                    // Rectangle {
-                    //     color: "red";
-                    //     Layout.alignment: AlignCenter
-                    //     Text { anchors.centerIn: parent; text: "Home" }
-                    // }
-                    // Rectangle { color: "#fefefe"; Text { anchors.centerIn: parent; text: "Documents" } }
-                    // Rectangle { color: "#ffffff"; Text { anchors.centerIn: parent; text: "Settings" } }
-                    // Rectangle { color: "#fefefe"; Text { anchors.centerIn: parent; text: "Help" } }
                 }
             }
         }

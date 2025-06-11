@@ -345,7 +345,7 @@ void LBU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                    " = Mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                    ") + imm (" + std::to_string(imm) + ")] (byte loaded, zero-extended)";
     instructionOutput.setRegisters({rs1, rd});
-    instructionOutput.setRamAddresses({{addr, memoryValue}});
+    instructionOutput.setRamAddresses({{addr, static_cast<int32_t>(memoryValue)}});
 
 #if DEBUG
     std::cout << "Address: " << addr << "\n";
@@ -367,7 +367,7 @@ void LHU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                    " = Mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                    ") + imm (" + std::to_string(imm) + ")] (halfword loaded, zero-extended)";
     instructionOutput.setRegisters({rs1, rd});
-    instructionOutput.setRamAddresses({{addr, memoryValue}});
+    instructionOutput.setRamAddresses({{addr, static_cast<int32_t>(memoryValue)}});
 
 #if DEBUG
     std::cout << "Address: " << addr << "\n";
@@ -381,8 +381,7 @@ void JALR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     uint32_t targetAddress = (rs1Value + imm) & ~1;
 
-    if (rd != 0)
-        cpu.setRegister(rd, cpu.getPc() + 4);
+    cpu.setRegister(rd, cpu.getPc() + 4);
 
     cpu.setPc(targetAddress);
 
