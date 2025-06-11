@@ -4,7 +4,8 @@ import QtQuick.Layouts
 
 Item {
     id: root
-    anchors.fill: parent
+    Layout.fillWidth: parent
+    Layout.fillHeight: true
 
     Rectangle {
         anchors.fill: parent

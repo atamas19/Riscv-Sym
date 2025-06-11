@@ -7,7 +7,8 @@ import QtQuick.Layouts
 
 Item {
     id: root
-    anchors.fill: parent
+    Layout.fillWidth: parent
+    Layout.fillHeight: true
 
     property int currentHighlightedLine: -1
     property var linePositions: []

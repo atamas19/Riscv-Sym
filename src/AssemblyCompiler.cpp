@@ -4,6 +4,7 @@
 #include <cassert>
 #include <functional>
 #include <iostream>
+#include <algorithm>
 
 static std::optional<uint8_t> registerNameToNumber(const std::string& reg)
 {
@@ -144,7 +145,12 @@ uint32_t AssemblyCompiler::getInstruction(const std::string& instructionString)
     };
     AssemblyInstruction instruction{instructionString};
 
-    auto it = instructionMap.find(instruction.getName());
+    std::string instructionName = instruction.getName();
+    // This transform is neccesary so uppercase instructions are also ran
+    std::transform(instructionName.begin(), instructionName.end(), instructionName.begin(),
+        [](unsigned char c) { return std::tolower(c); });
+
+    auto it = instructionMap.find(instructionName);
     if (it != instructionMap.end())
         return it->second(instruction);
     else
