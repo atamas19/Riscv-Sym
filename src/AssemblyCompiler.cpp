@@ -1,7 +1,6 @@
 #include "AssemblyCompiler.h"
 
 #include <unordered_map>
-#include <cassert>
 #include <functional>
 #include <iostream>
 #include <algorithm>
@@ -143,6 +142,11 @@ uint32_t AssemblyCompiler::getInstruction(const std::string& instructionString)
         {"sh",   [this](const AssemblyInstruction& ins) { return assembleSH(ins);   }},
         {"sw",   [this](const AssemblyInstruction& ins) { return assembleSW(ins);   }}
     };
+    if (instructionString.empty())
+    {
+        instructionOutput->consoleLog = "Cannot execute an empty instruction.";
+        return 0;
+    }
     AssemblyInstruction instruction{instructionString};
 
     std::string instructionName = instruction.getName();

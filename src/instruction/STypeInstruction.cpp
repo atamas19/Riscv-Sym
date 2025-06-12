@@ -49,10 +49,14 @@ void SB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
 
-    uint32_t addr = rs1Value + imm;
+    int32_t addr = rs1Value + imm;
+    if (addr < 0)
+        throw std::out_of_range("Invalid memory access at address: " + std::to_string(addr));
+
+    uint32_t finalAddress = static_cast<uint32_t>(addr);
     int32_t result = static_cast<int8_t>(getBits(rs2Value, 0, 8));
 
-    Memory::getInstance().write8(addr, result);
+    Memory::getInstance().write8(finalAddress, result);
 
     cpu.setPc(cpu.getPc() + 4);
 
@@ -60,7 +64,7 @@ void SB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                 ") + " + std::to_string(imm) + "] = x" + std::to_string(rs2) +
                                 " (" + std::to_string(rs2Value & 0xFF) + ") [byte].";
     instructionOutput.setRegisters({rs1, rs2});
-    instructionOutput.setRamAddresses({{addr, result}});
+    instructionOutput.setRamAddresses({{finalAddress, result}});
 
 #if DEBUG
     std::cout << "Rezultat: " << Memory::getInstance().read8(addr);
@@ -72,10 +76,14 @@ void SH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
 
-    uint32_t addr = rs1Value + imm;
+    int32_t addr = rs1Value + imm;
+    if (addr < 0)
+        throw std::out_of_range("Invalid memory access at address: " + std::to_string(addr));
+
+    uint32_t finalAddress = static_cast<uint32_t>(addr);
     int32_t result = static_cast<int16_t>(getBits(rs2Value, 0, 16));
 
-    Memory::getInstance().write16(addr, result);
+    Memory::getInstance().write16(finalAddress, result);
 
     cpu.setPc(cpu.getPc() + 4);
 
@@ -83,7 +91,7 @@ void SH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     ") + " + std::to_string(imm) + "] = x" + std::to_string(rs2) +
                                     " (" + std::to_string(rs2Value & 0xFFFF) + ") [halfword].";
     instructionOutput.setRegisters({rs1, rs2});
-    instructionOutput.setRamAddresses({{addr, result}});
+    instructionOutput.setRamAddresses({{finalAddress, result}});
 
 #if DEBUG
     std::cout << "Rezultat: " << Memory::getInstance().read16(addr);
@@ -95,9 +103,14 @@ void SW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = static_cast<int32_t>(cpu.getRegister(rs2));
 
-    uint32_t addr = rs1Value + imm;
+    int32_t addr = rs1Value + imm;
 
-    Memory::getInstance().write32(addr, rs2Value);
+    if (addr < 0)
+        throw std::out_of_range("Invalid memory access at address: " + std::to_string(addr));
+
+    uint32_t finalAddress = static_cast<uint32_t>(addr);
+
+    Memory::getInstance().write32(finalAddress, rs2Value);
 
     cpu.setPc(cpu.getPc() + 4);
 
@@ -105,7 +118,7 @@ void SW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                 ") + " + std::to_string(imm) + "] = x" + std::to_string(rs2) +
                                 " (" + std::to_string(rs2Value) + ") [word].";
     instructionOutput.setRegisters({rs1, rs2});
-    instructionOutput.setRamAddresses({{addr, rs2Value}});
+    instructionOutput.setRamAddresses({{finalAddress, rs2Value}});
 
 #if DEBUG
     std::cout << "Rezultat: " << Memory::getInstance().read32(addr);

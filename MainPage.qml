@@ -83,10 +83,8 @@ Item {
         clearRegisterHighlights()
         clearMemoryHighlights()
         var currentLineText = lines[currentHighlightedLine].trim()
-        if (currentLineText.length > 0) {
-            if (cpuWrapper.sendCommand(currentLineText) === false) {
-                return false
-            }
+        if (cpuWrapper.sendCommand(currentLineText) === false) {
+            return false
         }
         return true
     }

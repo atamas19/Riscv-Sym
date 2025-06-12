@@ -1,12 +1,9 @@
 #pragma once
 
 #include <cstdint>
-#include <cstddef>
-#include <vector>
+#include <array>
 
-#define MEMORY_SIZE 1024
-
-// TODO: review all this Memory class, find out if it's right to be this way
+#define MEMORY_SIZE 4096 // 4 kb
 
 class Memory
 {
@@ -24,9 +21,9 @@ public:
 
     void reset();
 private:
-    Memory() { memory.resize(MEMORY_SIZE, 0); }
+    Memory() { reset(); }
 
-    std::vector<int8_t> memory;
+    std::array<int8_t, MEMORY_SIZE> memory;
 };
 
 struct MemoryCell

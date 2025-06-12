@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <bitset>
-#include <cassert>
 
 RiscvCpu& RiscvCpu::getInstance()
 {
