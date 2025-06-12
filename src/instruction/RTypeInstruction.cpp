@@ -19,20 +19,20 @@ void Instruction::decode()
     std::cout << "rd: "  << std::bitset<8>(rd)  << std::endl;
 #endif
 }
-// TODO: remove the InstructionDescriptor from the constructor of every RType instruction
+
 std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruction)
 {
-    static const std::unordered_map<InstructionDescriptor, std::function<std::unique_ptr<Instruction>(uint32_t, InstructionDescriptor)>, InstructionDescriptor::InstructionDescriptorHash> instructionMap = {
-        { SLTU::getInstructionDescriptor(), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<SLTU>(ins, descriptor); }},
-        { ADD::getInstructionDescriptor (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<ADD> (ins, descriptor); }},
-        { SUB::getInstructionDescriptor (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<SUB> (ins, descriptor); }},
-        { SLL::getInstructionDescriptor (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<SLL> (ins, descriptor); }},
-        { SLT::getInstructionDescriptor (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<SLT> (ins, descriptor); }},
-        { XOR::getInstructionDescriptor (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<XOR> (ins, descriptor); }},
-        { SRL::getInstructionDescriptor (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<SRL> (ins, descriptor); }},
-        { SRA::getInstructionDescriptor (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<SRA> (ins, descriptor); }},
-        { AND::getInstructionDescriptor (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<AND> (ins, descriptor); }},
-        { OR::getInstructionDescriptor  (), [](uint32_t ins, InstructionDescriptor descriptor) { return std::make_unique<OR>  (ins, descriptor); }}
+    static const std::unordered_map<InstructionDescriptor, std::function<std::unique_ptr<Instruction>(uint32_t)>, InstructionDescriptor::InstructionDescriptorHash> instructionMap = {
+        { SLTU::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<SLTU>(ins); }},
+        { ADD::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<ADD> (ins); }},
+        { SUB::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<SUB> (ins); }},
+        { SLL::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<SLL> (ins); }},
+        { SLT::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<SLT> (ins); }},
+        { XOR::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<XOR> (ins); }},
+        { SRL::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<SRL> (ins); }},
+        { SRA::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<SRA> (ins); }},
+        { AND::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<AND> (ins); }},
+        { OR::getInstructionDescriptor  (), [](uint32_t ins) { return std::make_unique<OR>  (ins); }}
     };
 
     uint8_t funct3 = getBits(encodedInstruction, 12, 14);
@@ -47,7 +47,7 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
 
     auto it = instructionMap.find(descriptor);
     if (it != instructionMap.end())
-        return it->second(encodedInstruction, descriptor);
+        return it->second(encodedInstruction);
 
     return nullptr;
 }
