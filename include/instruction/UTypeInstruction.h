@@ -13,7 +13,6 @@ public:
     virtual ~Instruction() = default;
 protected:
     void decode() override;
-    const int32_t getImm_u() { return (instruction & 0xfffff000); } 
 
     uint8_t rd;
     int32_t imm;
