@@ -123,7 +123,7 @@ Item {
     }
 
     function startExecution() {
-        if (isRunning) {
+        if (highlightTimer.running) {
             return
         }
 
@@ -432,7 +432,7 @@ Item {
                             Repeater {
                                 id: registerRepeater
                                 model: 32
-                                delegate: Row { // TODO: Change the layout so the registers are ordered vertically not horizontally
+                                delegate: Row {
                                     spacing: 4
                                     property Rectangle regBackgroundRect: regBackground
 
@@ -590,7 +590,7 @@ Item {
                                         }
 
                                         Label {
-                                            text: "0x" + value.toString(16).padStart(8, "0").toUpperCase()
+                                            text: value.toString(10)
                                             color: "#eeeeee"
                                             font.family: "Courier New"
                                             width: 120

@@ -31,28 +31,6 @@ void RiscvCpu::setRegister(uint8_t registerIndex, int32_t registerValue)
     regs[registerIndex] = registerValue;
 }
 
-void RiscvCpu::run()
-{
-#if DEBUG // this whole run function is just for checking implemented instructions for now
-    uint32_t instruction{0b01010101011011111111001111101111};
-
-    regs[5] = 0x1;
-    regs[6] = 0x1;
-
-    std::cout << "Instruction in binary: " << std::bitset<32>(instruction) << std::endl;
-
-    auto test = InstructionFactory::create(instruction);
-
-    if (test) [[likely]]
-        // test->execute(*this);
-        ;
-    else [[unlikely]]
-        std::cout << "Failed to create instruction" << std::endl;
-
-    test.reset();
-#endif
-}
-
 int RiscvCpu::executeAsmCommand(const std::string& command, InstructionOutput& instructionOutput)
 {
     auto instruction = getInstructionFromAsmCommand(command, instructionOutput);
@@ -94,7 +72,7 @@ std::unique_ptr<Instruction> RiscvCpu::getInstructionFromAsmCommand(const std::s
     auto instruction = InstructionFactory::create(binaryInstruction);
 
     if (instruction == nullptr)
-        instructionOutput.consoleLog = asmCommand + " doesn't exist"; // TODO: find better wording
+        instructionOutput.consoleLog = asmCommand + " doesn't exist";
         // Should never come into this if statement
 
     return instruction;

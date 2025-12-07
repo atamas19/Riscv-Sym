@@ -114,7 +114,7 @@ uint32_t AssemblyCompiler::getInstruction(const std::string& instructionString)
         {"bge",  [this](const AssemblyInstruction& ins) { return assembleBGE(ins);  }},
         {"bltu", [this](const AssemblyInstruction& ins) { return assembleBLTU(ins); }},
         {"bgeu", [this](const AssemblyInstruction& ins) { return assembleBGEU(ins); }},
-        // JType instructions
+        // JType instruction
         {"jal",  [this](const AssemblyInstruction& ins) { return assembleJAL(ins);  }},
         // UType instructions
         {"lui",  [this](const AssemblyInstruction& ins) { return assembleLUI(ins);  }},

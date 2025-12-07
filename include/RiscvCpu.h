@@ -12,8 +12,6 @@ class RiscvCpu
 public:
     static RiscvCpu& getInstance();
 
-    void run();
-
     int executeAsmCommand(const std::string& command, InstructionOutput& instructionOutput);
 
     void reset();
@@ -29,7 +27,6 @@ public:
 private:
     RiscvCpu() = default;
     ~RiscvCpu() = default;
-        // fetch - decode - execute
     RiscvCpu(const RiscvCpu&) = delete;
     RiscvCpu& operator=(const RiscvCpu&) = delete;
     RiscvCpu(RiscvCpu&&) = delete;

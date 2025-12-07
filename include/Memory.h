@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <array>
 
-#define MEMORY_SIZE 4096 // 4 kb
+#define MEMORY_SIZE 8192 // 8 kb
 
 class Memory
 {
