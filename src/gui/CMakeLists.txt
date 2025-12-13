@@ -1,62 +1,46 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(RiscvSim VERSION 0.1 LANGUAGES CXX)
-
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-
-find_package(Qt6 REQUIRED COMPONENTS Quick)
+find_package(Qt6 REQUIRED COMPONENTS Quick Core Gui)
 
 qt_standard_project_setup(REQUIRES 6.5)
 
-include_directories(${PROJECT_SOURCE_DIR}/../core/include)
+file(GLOB_RECURSE GUI_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
-file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/*.cpp")
-file(GLOB_RECURSE CORE_SOURCES "${PROJECT_SOURCE_DIR}/../core/*.cpp")
-file(GLOB_RECURSE INSTRUCTION_SOURCES "${PROJECT_SOURCE_DIR}/../core/instruction/*.cpp")
+# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../core/include)
 
-message(STATUS "SOURCES: ${SOURCES}")
-message(STATUS "CORE_SOURCES: ${CORE_SOURCES}")
-message(STATUS "INSTRUCTION_SOURCES: ${INSTRUCTION_SOURCES}")
-
-qt_add_executable(Riscv-Sim
-    ${SOURCES}
-    ${CORE_SOURCES}
-    ${INSTRUCTION_SOURCES}
+qt_add_executable(riscv_viz
+    ${GUI_SOURCES}
 )
 
-qt_add_qml_module(Riscv-Sim
+qt_add_qml_module(riscv_viz
     URI RiscvSim
     VERSION 1.0
     QML_FILES
         Main.qml
-        RESOURCES main.qrc
         MainPage.qml
         InstructionsPage.qml
         AboutPage.qml
         WelcomePage.qml
         InstructionCard.qml
+    RESOURCES
+        main.qrc
 )
 
-# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
-# If you are developing for iOS or macOS you should consider setting an
-# explicit, fixed bundle identifier manually though.
-set_target_properties(Riscv-Sim PROPERTIES
-#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.Riscv-Sim
+set_target_properties(riscv_viz PROPERTIES
+    # MACOSX_BUNDLE_GUI_IDENTIFIER com.example.Riscv-Viz
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
 )
 
-target_link_libraries(Riscv-Sim
-    PRIVATE Qt6::Quick
+target_link_libraries(riscv_viz PRIVATE
+    Qt6::Quick
+    riscv_core
 )
 
 include(GNUInstallDirs)
-install(TARGETS Riscv-Sim
+install(TARGETS riscv_viz
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
