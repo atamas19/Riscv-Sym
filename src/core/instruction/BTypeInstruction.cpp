@@ -1,6 +1,6 @@
-#include "instruction/BTypeInstruction.h"
-#include "RiscvCpu.h"
-#include "Memory.h"
+#include <core/instruction/BTypeInstruction.h>
+#include <core/RiscvCpu.h>
+#include <core/Memory.h>
 
 #include <unordered_map>
 #include <iostream>

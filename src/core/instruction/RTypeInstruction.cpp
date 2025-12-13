@@ -1,5 +1,5 @@
-#include "instruction/RTypeInstruction.h"
-#include "RiscvCpu.h"
+#include <core/instruction/RTypeInstruction.h>
+#include <core/RiscvCpu.h>
 
 #include <unordered_map>
 #include <iostream>

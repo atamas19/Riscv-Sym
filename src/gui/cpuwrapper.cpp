@@ -1,5 +1,5 @@
 #include "cpuwrapper.h"
-#include "instruction/Instruction.h"
+#include <core/instruction/Instruction.h>
 
 #include <numeric>
 

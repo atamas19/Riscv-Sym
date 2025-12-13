@@ -4,8 +4,8 @@
 #include <QVariant>
 #include <QDebug>
 
-#include "RiscvCpu.h"
-#include "AssemblyCompiler.h"
+#include <core/RiscvCpu.h>
+#include <core/AssemblyCompiler.h>
 
 class CpuWrapper : public QObject
 {

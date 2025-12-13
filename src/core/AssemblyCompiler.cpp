@@ -1,4 +1,4 @@
-#include "AssemblyCompiler.h"
+#include <core/AssemblyCompiler.h>
 
 #include <unordered_map>
 #include <functional>

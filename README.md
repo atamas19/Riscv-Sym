@@ -86,8 +86,9 @@ https://github.com/user-attachments/assets/61972d1a-19b7-4c1b-8666-0adb38b50659
     cd Riscv-Sym
     ```
 
-2.  **Build using Qt Creator (Recommended)**
-    * Open `CMakeLists.txt` in Qt Creator.
+2.  **Build using Qt Creator (Recommended for Windows)**
+    * Open the **root** `CMakeLists.txt` in Qt Creator.
+    * Configure the project. It is highly recommended to select the **Release** configuration to ensure the simulator runs at maximum speed.
     * Press **Build & Run** (Ctrl+R).
 
 3.  **Build using Command Line (CMake)**
@@ -95,7 +96,7 @@ https://github.com/user-attachments/assets/61972d1a-19b7-4c1b-8666-0adb38b50659
     mkdir build && cd build
     cmake ..
     cmake --build . -j
-    ./RISCV-Simulator
+    ./riscv-viz
     ```
 
 ---
