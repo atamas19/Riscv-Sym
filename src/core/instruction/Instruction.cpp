@@ -1,10 +1,10 @@
-#include "instruction/Instruction.h"
-#include "instruction/RTypeInstruction.h"
-#include "instruction/UTypeInstruction.h"
-#include "instruction/ITypeInstruction.h"
-#include "instruction/STypeInstruction.h"
-#include "instruction/BTypeInstruction.h"
-#include "instruction/JTypeInstruction.h"
+#include <core/instruction/Instruction.h>
+#include <core/instruction/RTypeInstruction.h>
+#include <core/instruction/UTypeInstruction.h>
+#include <core/instruction/ITypeInstruction.h>
+#include <core/instruction/STypeInstruction.h>
+#include <core/instruction/BTypeInstruction.h>
+#include <core/instruction/JTypeInstruction.h>
 
 #include <stdexcept>
 #include <unordered_map>

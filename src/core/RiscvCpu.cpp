@@ -1,5 +1,5 @@
-#include "RiscvCpu.h"
-#include "AssemblyCompiler.h"
+#include <core/RiscvCpu.h>
+#include <core/AssemblyCompiler.h>
 
 #include <iostream>
 #include <bitset>

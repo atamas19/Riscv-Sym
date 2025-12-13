@@ -1,5 +1,5 @@
-#include "instruction/UTypeInstruction.h"
-#include "RiscvCpu.h"
+#include <core/instruction/UTypeInstruction.h>
+#include <core/RiscvCpu.h>
 
 #include <iostream>
 

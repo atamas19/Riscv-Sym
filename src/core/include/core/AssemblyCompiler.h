@@ -7,7 +7,7 @@
 #include <sstream>
 #include <optional>
 
-#include "instruction/Instruction.h"
+#include <core/instruction/Instruction.h>
 
 class AssemblyInstruction;
 

@@ -1,6 +1,6 @@
-#include "instruction/JTypeInstruction.h"
-#include "RiscvCpu.h"
-#include "Memory.h"
+#include <core/instruction/JTypeInstruction.h>
+#include <core/RiscvCpu.h>
+#include <core/Memory.h>
 
 #include <iostream>
 

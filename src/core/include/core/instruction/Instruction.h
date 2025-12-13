@@ -7,7 +7,7 @@
 #include <initializer_list>
 #include <string>
 
-#include "Memory.h"
+#include <core/Memory.h>
 
 class RiscvCpu;
 struct InstructionOutput;
