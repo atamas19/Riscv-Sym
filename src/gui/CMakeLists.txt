@@ -6,8 +6,6 @@ qt_standard_project_setup(REQUIRES 6.5)
 
 file(GLOB_RECURSE GUI_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
-# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../core/include)
-
 qt_add_executable(riscv_viz
     ${GUI_SOURCES}
 )
