@@ -4,7 +4,7 @@
 ![Qt](https://img.shields.io/badge/Framework-Qt_6-green)
 ![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Windows-lightgrey)
 
-## 📖 Overview
+## Overview
 
 **RISC-V Simulator** is a graphical desktop application developed to simulate the **RV32I (RISC-V 32-bit Integer)** Instruction Set Architecture. 
 
@@ -14,7 +14,7 @@ It serves as an educational tool for understanding computer architecture, the Fe
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
 ### Main Interface & Code Editor
 <img width="1917" height="1029" alt="image" src="https://github.com/user-attachments/assets/35415f29-fb39-4424-8d84-256080dd4649" />
@@ -35,7 +35,7 @@ https://github.com/user-attachments/assets/61972d1a-19b7-4c1b-8666-0adb38b50659
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 * **Full RV32I Implementation:** Supports the standard integer instruction set of the RISC-V architecture.
 * **Integrated Code Editor:**
@@ -50,7 +50,7 @@ https://github.com/user-attachments/assets/61972d1a-19b7-4c1b-8666-0adb38b50659
     * **Register Bank:** View 32 GPRs in Decimal.
     * **Memory Inspector:** Monitor changes dynamically (view Address, Decimal, Hexadecimal, and ASCII values).
 
- ## 🎮 Controls & UI Logic
+ ## Controls & UI Logic
 
 | Control | Action | Description |
 | :--- | :--- | :--- |
@@ -62,7 +62,7 @@ https://github.com/user-attachments/assets/61972d1a-19b7-4c1b-8666-0adb38b50659
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 * **Core Logic:** C++ (RV32I Implementation, Memory Management, Simulation Engine)
 * **User Interface:** Qt Quick (QML) - for a modern, fluid, and responsive GUI.
@@ -71,7 +71,7 @@ https://github.com/user-attachments/assets/61972d1a-19b7-4c1b-8666-0adb38b50659
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 * C++ Compiler (GCC, Clang, or MSVC)
@@ -101,7 +101,7 @@ https://github.com/user-attachments/assets/61972d1a-19b7-4c1b-8666-0adb38b50659
 
 ---
 
-## 💡 Usage Example
+## Usage Example
 
 1.  Launch the application.
 2.  In the editor panel, write a simple RISC-V program (e.g., adding two numbers):
@@ -115,7 +115,7 @@ https://github.com/user-attachments/assets/61972d1a-19b7-4c1b-8666-0adb38b50659
 
 ---
 
-## 🧩 Architecture Details
+## Architecture Details
 
 The simulator mimics a single-cycle processor architecture.
 * **Instruction Memory:** Stores the assembled machine code.
@@ -125,7 +125,7 @@ The simulator mimics a single-cycle processor architecture.
 
 ---
 
-## 👤 Author
+## Author
 
 **Andrei Tamas**
 * GitHub: [@atamas19](https://github.com/atamas19)
