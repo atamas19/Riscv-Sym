@@ -13,7 +13,7 @@ void Instruction::decode()
 {
     rs1 = getBits(instruction, 15, 19);
     rs2 = getBits(instruction, 20, 24);
-    imm = (getBits(instruction, 25, 31) << 4 | getBits(instruction, 7, 11));
+    imm = (getBits(instruction, 25, 31) << 5 | getBits(instruction, 7, 11));
 
     if (getBits(imm, 11, 11) == 1)
         imm = (imm | 0xfffff000);

@@ -5,7 +5,7 @@
 
 #include <core/instruction/Instruction.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 class RiscvCpu
 {
@@ -15,6 +15,8 @@ public:
     int executeAsmCommand(const std::string& command, InstructionOutput& instructionOutput);
 
     void reset();
+
+    bool executeFromBinFile(const std::string& filePath);
 
     // Getters
     const uint32_t getPc() const { return pc; }
@@ -34,6 +36,8 @@ private:
 
 private:
     std::unique_ptr<Instruction> getInstructionFromAsmCommand(const std::string& asmCommand, InstructionOutput& instructionOutput);
+
+    bool loadBinFileToMemory(const std::string& filename);
 
 private:
     int32_t regs[32];
