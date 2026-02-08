@@ -90,7 +90,7 @@ void ADDI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SLTI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    uint32_t rs1Value = cpu.getRegister(rs1);
+    int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
 
     uint8_t result = (rs1Value < imm);
 
@@ -110,16 +110,15 @@ void SLTI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 void SLTIU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     uint32_t rs1Value = cpu.getRegister(rs1);
-    uint32_t u_rs1Value = static_cast<uint32_t>(rs1Value);
     uint32_t u_imm = static_cast<uint32_t>(imm);
 
-    uint8_t result = (u_rs1Value < u_imm);
+    uint8_t result = (rs1Value < u_imm);
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
     instructionOutput.consoleLog = "Performed SLTIU: x" + std::to_string(rd) +
-                                    " = (x" + std::to_string(rs1) + " (" + std::to_string(u_rs1Value) +
+                                    " = (x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                     ") < imm (" + std::to_string(u_imm) + "))";
     instructionOutput.setRegisters({rs1, rd});
 
@@ -227,7 +226,7 @@ void SRLI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SRAI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    uint32_t rs1Value = cpu.getRegister(rs1);
+    int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
     int32_t shamt_i = getShamt();
 
     uint32_t result = (rs1Value >> shamt_i);

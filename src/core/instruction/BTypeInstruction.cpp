@@ -106,8 +106,8 @@ void BNE::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void BLT::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    uint32_t rs1Value = cpu.getRegister(rs1);
-    uint32_t rs2Value = cpu.getRegister(rs2);
+    int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
+    int32_t rs2Value = static_cast<int32_t>(cpu.getRegister(rs2));
 
     int32_t pcIncrement = (rs1Value < rs2Value) ? imm : 4;
 
@@ -129,8 +129,8 @@ void BLT::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void BGE::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    uint32_t rs1Value = cpu.getRegister(rs1);
-    uint32_t rs2Value = cpu.getRegister(rs2);
+    int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
+    int32_t rs2Value = static_cast<int32_t>(cpu.getRegister(rs2));
 
     int32_t pcIncrement = (rs1Value >= rs2Value) ? imm : 4;
 

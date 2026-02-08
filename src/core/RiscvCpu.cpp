@@ -84,7 +84,7 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
         #if DEBUG
         std::cout << "PC: " << std::to_string(this->_pc) << " executed for " << i << "\n";
         #endif
-        int32_t binaryInstruction = _mem.read32(this->_pc);
+        uint32_t binaryInstruction = _mem.read32(this->_pc);
 
         if (binaryInstruction == 0) {
             std::cout << "End of code reached (0x0 instruction).\n";
