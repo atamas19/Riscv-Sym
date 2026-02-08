@@ -17,11 +17,11 @@ public:
     void reset();
     void resetGUI();
 
-    bool executeFromBinFile(const std::string& filePath, uint32_t startAddr);
+    bool executeFromBinFile(const std::string& filePath, uint32_t startAddr = 0x80000000);
 
     // Getters
-    const uint32_t getPc() const { return _pc; }
-    const int32_t getRegister(uint8_t registerIndex) const;
+    uint32_t getPc() const;
+    int32_t getRegister(uint8_t registerIndex) const;
 
     // Setters
     void setPc(uint32_t pcValue) { _pc = pcValue; }

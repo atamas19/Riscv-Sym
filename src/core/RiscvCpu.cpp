@@ -12,7 +12,11 @@ RiscvCpu& RiscvCpu::getInstance()
     return instance;
 }
 
-const int32_t RiscvCpu::getRegister(uint8_t registerIndex) const {
+uint32_t RiscvCpu::getPc() const {
+    return _pc;
+}
+
+int32_t RiscvCpu::getRegister(uint8_t registerIndex) const {
     return _regs.at(registerIndex);
 }
 

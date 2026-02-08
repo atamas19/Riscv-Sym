@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <cstring>
 
 uint8_t* Memory::getMemoryPtr(uint32_t address, bool allocateIfNeeded) {
     uint32_t pageIndex = address >> PAGE_SHIFT;
@@ -54,6 +55,23 @@ bool Memory::handleMMIO(uint32_t address, uint32_t value) {
 void Memory::write32(uint32_t address, uint32_t value) {
     if (handleMMIO(address, value)) return;
 
+    uint32_t pageIndex = address >> PAGE_SHIFT;
+    uint32_t offset = address & PAGE_MASK;
+
+    if (offset + sizeof(uint32_t) <= PAGE_SIZE) {
+        auto it = _pages.find(pageIndex);
+
+        if (it != _pages.end()) {
+            uint8_t* ptr = &(it->second->at(offset));
+            std::memcpy(ptr, &value, sizeof(uint32_t));
+            return;
+        }
+
+        uint8_t* ptr = getMemoryPtr(address, true);
+        std::memcpy(ptr, &value, sizeof(uint32_t));
+        return;
+    }
+
     write8(address,     value & 0xFF);
     write8(address + 1, (value >> 8) & 0xFF);
     write8(address + 2, (value >> 16) & 0xFF);
@@ -61,6 +79,22 @@ void Memory::write32(uint32_t address, uint32_t value) {
 }
 
 uint32_t Memory::read32(uint32_t address) {
+    uint32_t pageIndex = address >> PAGE_SHIFT;
+    uint32_t offset = address & PAGE_MASK;
+
+    if (offset + sizeof(uint32_t) <= PAGE_SIZE) {
+        auto it = _pages.find(pageIndex);
+        if (it != _pages.end()) {
+            uint8_t* ptr = &(it->second->at(offset));
+
+            uint32_t value;
+            std::memcpy(&value, ptr, sizeof(uint32_t));
+            return value;
+        } else {
+            return 0;
+        }
+    }
+
     uint32_t b0 = read8(address);
     uint32_t b1 = read8(address + 1);
     uint32_t b2 = read8(address + 2);
@@ -72,11 +106,44 @@ uint32_t Memory::read32(uint32_t address) {
 void Memory::write16(uint32_t address, uint16_t value) {
     if (handleMMIO(address, value)) return;
 
+    uint32_t pageIndex = address >> PAGE_SHIFT;
+    uint32_t offset = address & PAGE_MASK;
+
+    if (offset + sizeof(uint16_t) <= PAGE_SIZE) {
+        auto it = _pages.find(pageIndex);
+
+        if (it != _pages.end()) {
+            uint8_t* ptr = &(it->second->at(offset));
+            std::memcpy(ptr, &value, sizeof(uint16_t));
+            return;
+        }
+
+        uint8_t* ptr = getMemoryPtr(address, true);
+        std::memcpy(ptr, &value, sizeof(uint16_t));
+        return;
+    }
+
     write8(address,     value & 0xFF);
     write8(address + 1, (value >> 8) & 0xFF);
 }
 
 uint16_t Memory::read16(uint32_t address) {
+    uint32_t pageIndex = address >> PAGE_SHIFT;
+    uint32_t offset = address & PAGE_MASK;
+
+    if (offset + sizeof(uint16_t) <= PAGE_SIZE) {
+        auto it = _pages.find(pageIndex);
+        if (it != _pages.end()) {
+            uint8_t* ptr = &(it->second->at(offset));
+
+            uint16_t value;
+            std::memcpy(&value, ptr, sizeof(uint16_t));
+            return value;
+        } else {
+            return 0;
+        }
+    }
+
     uint32_t b0 = read8(address);
     uint32_t b1 = read8(address + 1);
 
