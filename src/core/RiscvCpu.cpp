@@ -12,43 +12,30 @@ RiscvCpu& RiscvCpu::getInstance()
     return instance;
 }
 
-const int32_t RiscvCpu::getRegister(uint8_t registerIndex) const
-{
-    if (registerIndex >= 32)
-        throw std::out_of_range("Register index out of range: x" + std::to_string(registerIndex));
-
-    return regs[registerIndex];
+const int32_t RiscvCpu::getRegister(uint8_t registerIndex) const {
+    return _regs.at(registerIndex);
 }
 
-void RiscvCpu::setRegister(uint8_t registerIndex, int32_t registerValue)
-{
+void RiscvCpu::setRegister(uint8_t registerIndex, int32_t registerValue) {
     if (registerIndex == 0) {
         return ;
     }
-    if (registerIndex >= 32) {
-        throw std::out_of_range("Register index out of range: x" + std::to_string(registerIndex));
-    }
 
-    regs[registerIndex] = registerValue;
+    _regs.at(registerIndex) = registerValue;
 }
 
-int RiscvCpu::executeAsmCommand(const std::string& command, InstructionOutput& instructionOutput)
-{
+int RiscvCpu::executeAsmCommand(const std::string& command, InstructionOutput& instructionOutput) {
     auto instruction = getInstructionFromAsmCommand(command, instructionOutput);
 
-    if (instruction == nullptr)
-    {
+    if (instruction == nullptr) {
         instructionOutput.exitCode = -1;
         return 1;
     }
 
-    try
-    {
+    try {
         instruction->execute(*this, instructionOutput);
         instructionOutput.exitCode = 0;
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         instructionOutput.consoleLog = "Error executing `" + command + "`: " + std::string{e.what()};
         instructionOutput.exitCode = -1;
     }
@@ -58,14 +45,12 @@ int RiscvCpu::executeAsmCommand(const std::string& command, InstructionOutput& i
     return 0;
 }
 
-std::unique_ptr<Instruction> RiscvCpu::getInstructionFromAsmCommand(const std::string& asmCommand, InstructionOutput& instructionOutput)
-{
+std::unique_ptr<Instruction> RiscvCpu::getInstructionFromAsmCommand(const std::string& asmCommand, InstructionOutput& instructionOutput) {
     uint32_t binaryInstruction = AssemblyCompiler::compile(asmCommand, instructionOutput);
 
     std::cout << "Binary Instruction: " << std::bitset<32>(binaryInstruction) << "\n";
 
-    if (binaryInstruction == 0)
-    {
+    if (binaryInstruction == 0) {
         instructionOutput.consoleLog = "Error converting `" + asmCommand + "` to binary: " + instructionOutput.consoleLog;
         return nullptr;
     }
@@ -79,24 +64,23 @@ std::unique_ptr<Instruction> RiscvCpu::getInstructionFromAsmCommand(const std::s
     return instruction;
 }
 
-bool RiscvCpu::executeFromBinFile(const std::string& filePath) {
-    if (!loadBinFileToMemory(filePath)) {
+bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAddr) {
+    if (!loadBinFileToMemory(filePath, startAddr)) {
         std::cout << "Couldn't load bin file to memory!\n";
         return false;
     }
 
     std::cout << "Instructions have been loaded. Starting execution...\n";
 
-    this->pc = 0x00000000;
-    
-    auto& mem = Memory::getInstance();
+    this->_pc = startAddr;
+
     InstructionOutput test;
 
     for (int i{0}; true; ++i) {
         #if DEBUG
-        std::cout << "PC: " << std::to_string(this->pc) << " executed for " << i << "\n";
+        std::cout << "PC: " << std::to_string(this->_pc) << " executed for " << i << "\n";
         #endif
-        int32_t binaryInstruction = mem.read32(this->pc);
+        int32_t binaryInstruction = _mem.read32(this->_pc);
 
         if (binaryInstruction == 0) {
             std::cout << "End of code reached (0x0 instruction).\n";
@@ -106,7 +90,7 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath) {
         auto instruction = InstructionFactory::create(binaryInstruction);
 
         if (!instruction) {
-             std::cout << "Unknown instruction at PC: " << std::hex << pc << "\n";
+             std::cout << "Unknown instruction at PC: " << std::hex << _pc << "\n";
              break;
         }
         
@@ -119,7 +103,8 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath) {
 
     return true;
 }
-bool RiscvCpu::loadBinFileToMemory(const std::string& filename) {
+
+bool RiscvCpu::loadBinFileToMemory(const std::string& filename, uint32_t startAddr) {
     std::ifstream file(filename, std::ios::binary | std::ios::ate);
     if (!file) return false;
 
@@ -131,22 +116,20 @@ bool RiscvCpu::loadBinFileToMemory(const std::string& filename) {
         return false;
     }
 
-    auto& mem = Memory::getInstance();
-    uint32_t start_addr = 0x00000000;
-
     for(size_t i = 0; i < buffer.size(); i++) {
-        mem.write8(start_addr + i, buffer[i]);
+        _mem.write8(startAddr + i, buffer[i]);
     }
-
-    this->pc = start_addr; 
     
     return true;
 }
 
-void RiscvCpu::reset()
-{
-    pc = 0;
-    std::fill(std::begin(regs), std::end(regs), 0);
+void RiscvCpu::reset() {
+    constexpr uint32_t ram_base = 0x80000000;
+    constexpr uint32_t stack_size = 1024 * 1024;
 
-    Memory::getInstance().reset();
+    _regs.fill(0);
+    _pc = ram_base;
+    _regs.at(2) = ram_base + stack_size;
+
+    _mem.reset();
 }

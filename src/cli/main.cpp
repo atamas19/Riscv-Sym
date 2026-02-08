@@ -5,7 +5,7 @@ int main() {
 
     constexpr const char* path = "/home/atamas19/projects/randomStuff/elfTest/hello.bin";
 
-    cpu.executeFromBinFile(path);
+    cpu.executeFromBinFile(path, 0x80000000);
 
     return 0;
 }

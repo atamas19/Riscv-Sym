@@ -3,10 +3,23 @@
 #include <algorithm>
 #include <iostream>
 
-#define UART_ADDR           0x10000000
-#define SYSCTRL_ADDR        0x10000020
-#define SYSCTRL_EXIT_OK     0x5555
-#define SYSCTRL_EXIT_ERR    0x3333
+uint8_t* Memory::getMemoryPtr(uint32_t address, bool allocateIfNeeded) {
+    uint32_t pageIndex = address >> PAGE_SHIFT;
+    uint32_t offset = address & PAGE_MASK;
+
+    auto it = _pages.find(pageIndex);
+    if (it != _pages.end()) {
+        return &(it->second->at(offset));
+    }
+
+    if (allocateIfNeeded) {
+        auto newPage = std::make_unique<Page>();
+        newPage->fill(0);
+        auto result = _pages.insert({pageIndex, std::move(newPage)});
+        return &(result.first->second->at(offset));
+    }
+    return nullptr;
+}
 
 Memory& Memory::getInstance() {
     static Memory instance;
@@ -41,41 +54,48 @@ bool Memory::handleMMIO(uint32_t address, uint32_t value) {
 void Memory::write32(uint32_t address, uint32_t value) {
     if (handleMMIO(address, value)) return;
 
-    _memory.at(address)     = value & 0xFF;
-    _memory.at(address + 1) = (value >>  8) & 0xFF;
-    _memory.at(address + 2) = (value >> 16) & 0xFF;
-    _memory.at(address + 3) = (value >> 24) & 0xFF;
+    write8(address,     value & 0xFF);
+    write8(address + 1, (value >> 8) & 0xFF);
+    write8(address + 2, (value >> 16) & 0xFF);
+    write8(address + 3, (value >> 24) & 0xFF);
 }
 
 uint32_t Memory::read32(uint32_t address) {
-    return _memory.at(address) |
-            (_memory.at(address + 1) <<  8) |
-            (_memory.at(address + 2) << 16) |
-            (_memory.at(address + 3) << 24);
+    uint32_t b0 = read8(address);
+    uint32_t b1 = read8(address + 1);
+    uint32_t b2 = read8(address + 2);
+    uint32_t b3 = read8(address + 3);
+
+    return b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
 }
 
 void Memory::write16(uint32_t address, uint16_t value) {
     if (handleMMIO(address, value)) return;
 
-    _memory.at(address)     = value & 0xFF;
-    _memory.at(address + 1) = (value >> 8) & 0xFF;
+    write8(address,     value & 0xFF);
+    write8(address + 1, (value >> 8) & 0xFF);
 }
 
 uint16_t Memory::read16(uint32_t address) {
-    return _memory.at(address) |
-            (_memory.at(address + 1) << 8);
+    uint32_t b0 = read8(address);
+    uint32_t b1 = read8(address + 1);
+
+    return b0 | (b1 << 8);
 }
 
 void Memory::write8(uint32_t address, uint8_t value) {
     if (handleMMIO(address, value)) return;
 
-    _memory.at(address) = value & 0xFF;
+    uint8_t* ptr = getMemoryPtr(address, true);
+    *ptr = value;
 }
 
 uint8_t Memory::read8(uint32_t address) {
-    return _memory.at(address);
+    uint8_t* ptr = getMemoryPtr(address, false);
+
+    return ptr ? *ptr : 0;
 }
 
 void Memory::reset() {
-    std::fill(_memory.begin(), _memory.end(), 0);
+    _pages.clear();
 }
