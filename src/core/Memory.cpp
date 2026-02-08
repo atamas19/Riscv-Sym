@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <iostream>
 #include <cstring>
+#include <cassert>
 
 uint8_t* Memory::getMemoryPtr(uint32_t address, bool allocateIfNeeded) {
     uint32_t pageIndex = address >> PAGE_SHIFT;
@@ -59,16 +60,20 @@ void Memory::write32(uint32_t address, uint32_t value) {
     uint32_t offset = address & PAGE_MASK;
 
     if (offset + sizeof(uint32_t) <= PAGE_SIZE) {
+        uint8_t* ptr = nullptr;
+
         auto it = _pages.find(pageIndex);
-
         if (it != _pages.end()) {
-            uint8_t* ptr = &(it->second->at(offset));
-            std::memcpy(ptr, &value, sizeof(uint32_t));
-            return;
+            ptr = &(it->second->at(offset));
+        } else {
+            ptr = getMemoryPtr(address, true);
         }
+        assert(ptr != nullptr);
 
-        uint8_t* ptr = getMemoryPtr(address, true);
-        std::memcpy(ptr, &value, sizeof(uint32_t));
+        ptr[0] = value & 0xFF;
+        ptr[1] = (value >> 8) & 0xFF;
+        ptr[2] = (value >> 16) & 0xFF;
+        ptr[3] = (value >> 24) & 0xFF;
         return;
     }
 
@@ -86,10 +91,12 @@ uint32_t Memory::read32(uint32_t address) {
         auto it = _pages.find(pageIndex);
         if (it != _pages.end()) {
             uint8_t* ptr = &(it->second->at(offset));
+            assert(ptr != nullptr);
 
-            uint32_t value;
-            std::memcpy(&value, ptr, sizeof(uint32_t));
-            return value;
+            return uint32_t(ptr[0]) |
+                   (uint32_t(ptr[1]) << 8) |
+                   (uint32_t(ptr[2]) << 16) |
+                   (uint32_t(ptr[3]) << 24);
         } else {
             return 0;
         }
@@ -110,16 +117,18 @@ void Memory::write16(uint32_t address, uint16_t value) {
     uint32_t offset = address & PAGE_MASK;
 
     if (offset + sizeof(uint16_t) <= PAGE_SIZE) {
+        uint8_t* ptr = nullptr;
+
         auto it = _pages.find(pageIndex);
-
         if (it != _pages.end()) {
-            uint8_t* ptr = &(it->second->at(offset));
-            std::memcpy(ptr, &value, sizeof(uint16_t));
-            return;
+            ptr = &(it->second->at(offset));
+        } else {
+            ptr = getMemoryPtr(address, true);
         }
+        assert(ptr != nullptr);
 
-        uint8_t* ptr = getMemoryPtr(address, true);
-        std::memcpy(ptr, &value, sizeof(uint16_t));
+        ptr[0] = value & 0xFF;
+        ptr[1] = (value >> 8) & 0xFF;
         return;
     }
 
@@ -135,10 +144,9 @@ uint16_t Memory::read16(uint32_t address) {
         auto it = _pages.find(pageIndex);
         if (it != _pages.end()) {
             uint8_t* ptr = &(it->second->at(offset));
+            assert(ptr != nullptr);
 
-            uint16_t value;
-            std::memcpy(&value, ptr, sizeof(uint16_t));
-            return value;
+            return uint16_t(ptr[0]) | (uint16_t(ptr[1]) << 8);
         } else {
             return 0;
         }

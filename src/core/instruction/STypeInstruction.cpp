@@ -46,8 +46,8 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
 
 void SB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
     uint32_t finalAddress = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(imm);
 
@@ -70,8 +70,8 @@ void SB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
     uint32_t finalAddress = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(imm);
 
@@ -94,8 +94,8 @@ void SH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
     uint32_t finalAddress = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(imm);
 

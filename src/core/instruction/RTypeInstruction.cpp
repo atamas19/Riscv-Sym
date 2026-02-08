@@ -54,8 +54,8 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
 
 void ADD::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
     int32_t result = rs2Value + rs1Value;
 
@@ -74,8 +74,8 @@ void ADD::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SUB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
     int32_t result = rs1Value - rs2Value;
 
@@ -95,8 +95,8 @@ void SUB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SLL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
     uint8_t shiftValue = getBits(rs2Value, 0, 5);
 
@@ -117,8 +117,8 @@ void SLL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SLT::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
     uint8_t result = (rs1Value < rs2Value);
 
@@ -138,8 +138,8 @@ void SLT::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SLTU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
     uint8_t result = (static_cast<uint32_t>(rs1Value) < static_cast<uint32_t>(rs2Value));
 
@@ -159,8 +159,8 @@ void SLTU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void XOR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
     int32_t result = (rs1Value ^ rs2Value);
 
@@ -179,8 +179,8 @@ void XOR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SRL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
     uint8_t shiftValue = getBits(rs2Value, 0, 5);
 
@@ -201,8 +201,8 @@ void SRL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SRA::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
     uint8_t shiftValue = getBits(rs2Value, 0, 5);
 
@@ -223,8 +223,8 @@ void SRA::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void OR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
     int32_t result = (rs1Value | rs2Value);
 
@@ -243,8 +243,8 @@ void OR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void AND::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
     int32_t result = (rs1Value & rs2Value);
 

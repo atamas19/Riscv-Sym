@@ -21,11 +21,11 @@ public:
 
     // Getters
     uint32_t getPc() const;
-    int32_t getRegister(uint8_t registerIndex) const;
+    uint32_t getRegister(uint8_t registerIndex) const;
 
     // Setters
     void setPc(uint32_t pcValue) { _pc = pcValue; }
-    void setRegister(uint8_t registerIndex, int32_t registerValue);
+    void setRegister(uint8_t registerIndex, uint32_t registerValue);
 
 private:
     RiscvCpu(): _mem(Memory::getInstance()) { reset(); };
@@ -41,7 +41,7 @@ private:
     bool loadBinFileToMemory(const std::string& filename, uint32_t startAddr);
 
 private:
-    std::array<int32_t, 32> _regs;
+    std::array<uint32_t, 32> _regs;
     uint32_t _pc;
     Memory& _mem;
 };

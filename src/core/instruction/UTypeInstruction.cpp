@@ -33,8 +33,8 @@ void LUI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void AUIPC::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t resultValue = cpu.getPc() + imm;
-    int32_t pc = cpu.getPc();
+    uint32_t resultValue = cpu.getPc() + imm;
+    uint32_t pc = cpu.getPc();
 
     cpu.setRegister(rd, resultValue);
     cpu.setPc(cpu.getPc() + 4);

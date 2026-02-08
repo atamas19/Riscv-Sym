@@ -16,11 +16,11 @@ uint32_t RiscvCpu::getPc() const {
     return _pc;
 }
 
-int32_t RiscvCpu::getRegister(uint8_t registerIndex) const {
+uint32_t RiscvCpu::getRegister(uint8_t registerIndex) const {
     return _regs.at(registerIndex);
 }
 
-void RiscvCpu::setRegister(uint8_t registerIndex, int32_t registerValue) {
+void RiscvCpu::setRegister(uint8_t registerIndex, uint32_t registerValue) {
     if (registerIndex == 0) {
         return ;
     }
