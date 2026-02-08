@@ -54,10 +54,10 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
 
 void ADD::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
-    int32_t result = rs2Value + rs1Value;
+    uint32_t result = rs2Value + rs1Value;
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -74,10 +74,10 @@ void ADD::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SUB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
-    int32_t result = rs1Value - rs2Value;
+    uint32_t result = rs1Value - rs2Value;
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -95,12 +95,12 @@ void SUB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SLL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
     uint8_t shiftValue = getBits(rs2Value, 0, 5);
 
-    int32_t result = rs1Value << shiftValue;
+    uint32_t result = rs1Value << shiftValue;
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -117,8 +117,8 @@ void SLL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SLT::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
+    int32_t rs2Value = static_cast<int32_t>(cpu.getRegister(rs2));
 
     uint8_t result = (rs1Value < rs2Value);
 
@@ -138,10 +138,10 @@ void SLT::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SLTU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
-    uint8_t result = (static_cast<uint32_t>(rs1Value) < static_cast<uint32_t>(rs2Value));
+    uint8_t result = (rs1Value < rs2Value);
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -159,10 +159,10 @@ void SLTU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void XOR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
-    int32_t result = (rs1Value ^ rs2Value);
+    uint32_t result = (rs1Value ^ rs2Value);
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -179,12 +179,12 @@ void XOR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SRL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
     uint8_t shiftValue = getBits(rs2Value, 0, 5);
 
-    int32_t result = static_cast<uint32_t>(rs1Value) >> shiftValue;
+    uint32_t result = static_cast<uint32_t>(rs1Value) >> shiftValue;
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -201,12 +201,12 @@ void SRL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SRA::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
     uint8_t shiftValue = getBits(rs2Value, 0, 5);
 
-    int32_t result = rs1Value >> shiftValue;
+    uint32_t result = static_cast<uint32_t>(static_cast<int32_t>(rs1Value) >> shiftValue);
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -223,10 +223,10 @@ void SRA::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void OR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
-    int32_t result = (rs1Value | rs2Value);
+    uint32_t result = (rs1Value | rs2Value);
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -243,10 +243,10 @@ void OR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void AND::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
-    int32_t result = (rs1Value & rs2Value);
+    uint32_t result = (rs1Value & rs2Value);
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);

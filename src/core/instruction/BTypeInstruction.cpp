@@ -59,8 +59,8 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
 
 void BEQ::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
     int32_t pcIncrement = (rs1Value == rs2Value) ? imm : 4;
 
@@ -83,8 +83,8 @@ void BEQ::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void BNE::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
 
     int32_t pcIncrement = (rs1Value != rs2Value) ? imm : 4;
 
@@ -106,17 +106,17 @@ void BNE::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void BLT::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
+    int32_t rs2Value = static_cast<int32_t>(cpu.getRegister(rs2));
 
     int32_t pcIncrement = (rs1Value < rs2Value) ? imm : 4;
 
     cpu.setPc(cpu.getPc() + pcIncrement);
 
     instructionOutput.consoleLog = "Performed BLT: x" + std::to_string(rs1) +
-                               " (" + std::to_string((int32_t)rs1Value) + ") < x" + std::to_string(rs2) +
-                               " (" + std::to_string((int32_t)rs2Value) + ") -> ";
-    instructionOutput.consoleLog += ((int32_t)rs1Value < (int32_t)rs2Value)
+                               " (" + std::to_string(rs1Value) + ") < x" + std::to_string(rs2) +
+                               " (" + std::to_string(rs2Value) + ") -> ";
+    instructionOutput.consoleLog += (rs1Value < rs2Value)
                                     ? "branch taken to PC + " + std::to_string(imm) + "."
                                     : "branch not taken.";
 
@@ -129,17 +129,17 @@ void BLT::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void BGE::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    int32_t rs2Value = cpu.getRegister(rs2);
+    int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
+    int32_t rs2Value = static_cast<int32_t>(cpu.getRegister(rs2));
 
     int32_t pcIncrement = (rs1Value >= rs2Value) ? imm : 4;
 
     cpu.setPc(cpu.getPc() + pcIncrement);
 
     instructionOutput.consoleLog = "Performed BGE: x" + std::to_string(rs1) +
-                                " (" + std::to_string((int32_t)rs1Value) + ") >= x" + std::to_string(rs2) +
-                                " (" + std::to_string((int32_t)rs2Value) + ") -> ";
-    instructionOutput.consoleLog += ((int32_t)rs1Value >= (int32_t)rs2Value)
+                                " (" + std::to_string(rs1Value) + ") >= x" + std::to_string(rs2) +
+                                " (" + std::to_string(rs2Value) + ") -> ";
+    instructionOutput.consoleLog += (rs1Value >= rs2Value)
                                     ? "branch taken to PC + " + std::to_string(imm) + "."
                                     : "branch not taken.";
 

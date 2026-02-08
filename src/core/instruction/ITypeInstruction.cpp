@@ -71,9 +71,9 @@ std::unique_ptr<Instruction> ArithmeticInstructionFactory::create(uint32_t encod
 
 void ADDI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs1Value = cpu.getRegister(rs1);
 
-    int32_t result = rs1Value + imm;
+    uint32_t result = rs1Value + imm;
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -90,9 +90,9 @@ void ADDI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SLTI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
 
-    int8_t result = (rs1Value < imm);
+    uint8_t result = (rs1Value < imm);
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -109,17 +109,16 @@ void SLTI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SLTIU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
-    uint32_t u_rs1Value = static_cast<uint32_t>(rs1Value);
+    uint32_t rs1Value = cpu.getRegister(rs1);
     uint32_t u_imm = static_cast<uint32_t>(imm);
 
-    int8_t result = (u_rs1Value < u_imm);
+    uint8_t result = (rs1Value < u_imm);
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
 
     instructionOutput.consoleLog = "Performed SLTIU: x" + std::to_string(rd) +
-                                    " = (x" + std::to_string(rs1) + " (" + std::to_string(u_rs1Value) +
+                                    " = (x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                     ") < imm (" + std::to_string(u_imm) + "))";
     instructionOutput.setRegisters({rs1, rd});
 
@@ -130,9 +129,9 @@ void SLTIU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void XORI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs1Value = cpu.getRegister(rs1);
 
-    int32_t result = (rs1Value ^ imm);
+    uint32_t result = (rs1Value ^ imm);
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -149,9 +148,9 @@ void XORI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void ORI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs1Value = cpu.getRegister(rs1);
 
-    int32_t result = (rs1Value | imm);
+    uint32_t result = (rs1Value | imm);
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -168,9 +167,9 @@ void ORI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void ANDI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs1Value = cpu.getRegister(rs1);
 
-    int32_t result = (rs1Value & imm);
+    uint32_t result = (rs1Value & imm);
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -187,10 +186,10 @@ void ANDI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SLLI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs1Value = cpu.getRegister(rs1);
     int32_t shamt_i = getShamt();
 
-    int32_t result = (rs1Value << shamt_i);
+    uint32_t result = (rs1Value << shamt_i);
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -207,10 +206,10 @@ void SLLI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SRLI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs1Value = cpu.getRegister(rs1);
     int32_t shamt_i = getShamt();
 
-    int32_t result = (static_cast<uint32_t>(rs1Value) >> shamt_i);
+    uint32_t result = (static_cast<uint32_t>(rs1Value) >> shamt_i);
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -227,10 +226,10 @@ void SRLI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void SRAI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
+    int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
     int32_t shamt_i = getShamt();
 
-    int32_t result = (rs1Value >> shamt_i);
+    uint32_t result = (rs1Value >> shamt_i);
 
     cpu.setRegister(rd, result);
     cpu.setPc(cpu.getPc() + 4);
@@ -267,19 +266,20 @@ std::unique_ptr<Instruction> LoadInstructionFactory::create(uint32_t encodedInst
 
 void LB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs1Value = cpu.getRegister(rs1);
 
-    uint32_t addr = rs1Value + imm;
-    int32_t memoryValue = Memory::getInstance().read8(addr);
+    uint32_t addr = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(imm);
+    uint8_t rawByte = Memory::getInstance().read8(addr);
+    int32_t signedVal = static_cast<int32_t>(static_cast<int8_t>(rawByte));
 
-    cpu.setRegister(rd, memoryValue);
+    cpu.setRegister(rd, static_cast<uint32_t>(signedVal));
     cpu.setPc(cpu.getPc() + 4);
 
     instructionOutput.consoleLog = "Performed LB: x" + std::to_string(rd) +
                                    " = Mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                    ") + imm (" + std::to_string(imm) + ")] (byte loaded)";
     instructionOutput.setRegisters({rs1, rd});
-    instructionOutput.setRamAddresses({{addr, memoryValue}});
+    instructionOutput.setRamAddresses({{addr, rawByte}});
 
 #if DEBUG
     std::cout << "Address: " << addr << "\n";
@@ -289,19 +289,20 @@ void LB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void LH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs1Value = cpu.getRegister(rs1);
 
-    uint32_t addr = rs1Value + imm;
-    int32_t memoryValue = Memory::getInstance().read16(addr);
+    uint32_t addr = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(imm);
+    uint16_t rawHw = Memory::getInstance().read16(addr);
+    int32_t signedVal = static_cast<int32_t>(static_cast<int16_t>(rawHw));
 
-    cpu.setRegister(rd, memoryValue);
+    cpu.setRegister(rd, static_cast<uint32_t>(signedVal));
     cpu.setPc(cpu.getPc() + 4);
 
     instructionOutput.consoleLog = "Performed LH: x" + std::to_string(rd) +
                                    " = Mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                    ") + imm (" + std::to_string(imm) + ")] (halfword loaded)";
     instructionOutput.setRegisters({rs1, rd});
-    instructionOutput.setRamAddresses({{addr, memoryValue}});
+    instructionOutput.setRamAddresses({{addr, rawHw}});
 
 #if DEBUG
     std::cout << "Address: " << addr << "\n";
@@ -311,19 +312,20 @@ void LH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void LW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs1Value = cpu.getRegister(rs1);
 
-    uint32_t addr = rs1Value + imm;
-    int32_t memoryValue = Memory::getInstance().read32(addr);
+    uint32_t addr = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(imm);
+    uint32_t rawWord = Memory::getInstance().read32(addr);
+    int32_t signedVal = static_cast<int32_t>(rawWord);
 
-    cpu.setRegister(rd, memoryValue);
+    cpu.setRegister(rd, static_cast<uint32_t>(signedVal));
     cpu.setPc(cpu.getPc() + 4);
 
     instructionOutput.consoleLog = "Performed LW: x" + std::to_string(rd) +
                                    " = Mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                    ") + imm (" + std::to_string(imm) + ")] (word loaded)";
     instructionOutput.setRegisters({rs1, rd});
-    instructionOutput.setRamAddresses({{addr, memoryValue}});
+    instructionOutput.setRamAddresses({{addr, rawWord}});
 
 #if DEBUG
     std::cout << "Address: " << addr << "\n";
@@ -333,10 +335,10 @@ void LW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void LBU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs1Value = cpu.getRegister(rs1);
 
-    uint32_t addr = rs1Value + imm;
-    uint32_t memoryValue = static_cast<uint32_t>(Memory::getInstance().read8(addr)) & 0xFF;
+    uint32_t addr = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(imm);
+    uint32_t memoryValue = Memory::getInstance().read8(addr);
 
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);
@@ -345,7 +347,7 @@ void LBU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                    " = Mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                    ") + imm (" + std::to_string(imm) + ")] (byte loaded, zero-extended)";
     instructionOutput.setRegisters({rs1, rd});
-    instructionOutput.setRamAddresses({{addr, static_cast<int32_t>(memoryValue)}});
+    instructionOutput.setRamAddresses({{addr, memoryValue}});
 
 #if DEBUG
     std::cout << "Address: " << addr << "\n";
@@ -355,10 +357,10 @@ void LBU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void LHU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs1Value = cpu.getRegister(rs1);
 
-    uint32_t addr = rs1Value + imm;
-    uint32_t memoryValue = static_cast<uint32_t>(Memory::getInstance().read16(addr)) & 0xFFFF;
+    uint32_t addr = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(imm);
+    uint32_t memoryValue = Memory::getInstance().read16(addr);
 
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);
@@ -367,7 +369,7 @@ void LHU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                    " = Mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                    ") + imm (" + std::to_string(imm) + ")] (halfword loaded, zero-extended)";
     instructionOutput.setRegisters({rs1, rd});
-    instructionOutput.setRamAddresses({{addr, static_cast<int32_t>(memoryValue)}});
+    instructionOutput.setRamAddresses({{addr, memoryValue}});
 
 #if DEBUG
     std::cout << "Address: " << addr << "\n";
@@ -377,7 +379,7 @@ void LHU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 void JALR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
-    int32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs1Value = cpu.getRegister(rs1);
 
     uint32_t targetAddress = (rs1Value + imm) & ~1;
 
