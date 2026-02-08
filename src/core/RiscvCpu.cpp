@@ -133,3 +133,9 @@ void RiscvCpu::reset() {
 
     _mem.reset();
 }
+
+void RiscvCpu::resetGUI() {
+    _regs.fill(0);
+    _pc = 0;
+    _mem.reset();
+}

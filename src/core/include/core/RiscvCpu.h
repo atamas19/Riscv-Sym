@@ -15,6 +15,7 @@ public:
     int executeAsmCommand(const std::string& command, InstructionOutput& instructionOutput);
 
     void reset();
+    void resetGUI();
 
     bool executeFromBinFile(const std::string& filePath, uint32_t startAddr);
 

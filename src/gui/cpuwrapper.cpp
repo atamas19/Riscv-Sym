@@ -6,6 +6,7 @@
 CpuWrapper::CpuWrapper(QObject *parent)
     : QObject{parent}, cpu(RiscvCpu::getInstance())
 {
+    cpu.resetGUI();
 }
 
 Q_INVOKABLE QVariant CpuWrapper::getRegister(int index)
@@ -45,7 +46,7 @@ bool CpuWrapper::sendCommand(const QString &command)
 
 void CpuWrapper::reset()
 {
-    cpu.reset();
+    cpu.resetGUI();
 
     QVector<int> allIndices(32);
     std::iota(allIndices.begin(), allIndices.end(), 0);
