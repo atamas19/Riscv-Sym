@@ -270,7 +270,7 @@ void LB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t rs1Value = cpu.getRegister(rs1);
 
     uint32_t addr = rs1Value + imm;
-    int32_t memoryValue = Memory::getInstance().read8(addr);
+    int32_t memoryValue = static_cast<int8_t>(Memory::getInstance().read8(addr));
 
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);
@@ -279,7 +279,7 @@ void LB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                    " = Mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                    ") + imm (" + std::to_string(imm) + ")] (byte loaded)";
     instructionOutput.setRegisters({rs1, rd});
-    instructionOutput.setRamAddresses({{addr, memoryValue}});
+    instructionOutput.setRamAddresses({{addr, static_cast<uint32_t>(memoryValue)}});
 
 #if DEBUG
     std::cout << "Address: " << addr << "\n";
@@ -292,7 +292,7 @@ void LH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t rs1Value = cpu.getRegister(rs1);
 
     uint32_t addr = rs1Value + imm;
-    int32_t memoryValue = Memory::getInstance().read16(addr);
+    int32_t memoryValue = static_cast<int16_t>(Memory::getInstance().read16(addr));
 
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);
@@ -301,7 +301,7 @@ void LH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                    " = Mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                    ") + imm (" + std::to_string(imm) + ")] (halfword loaded)";
     instructionOutput.setRegisters({rs1, rd});
-    instructionOutput.setRamAddresses({{addr, memoryValue}});
+    instructionOutput.setRamAddresses({{addr, static_cast<uint32_t>(memoryValue)}});
 
 #if DEBUG
     std::cout << "Address: " << addr << "\n";
@@ -323,7 +323,7 @@ void LW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                    " = Mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                    ") + imm (" + std::to_string(imm) + ")] (word loaded)";
     instructionOutput.setRegisters({rs1, rd});
-    instructionOutput.setRamAddresses({{addr, memoryValue}});
+    instructionOutput.setRamAddresses({{addr, static_cast<uint32_t>(memoryValue)}});
 
 #if DEBUG
     std::cout << "Address: " << addr << "\n";
@@ -336,7 +336,7 @@ void LBU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t rs1Value = cpu.getRegister(rs1);
 
     uint32_t addr = rs1Value + imm;
-    uint32_t memoryValue = static_cast<uint32_t>(Memory::getInstance().read8(addr)) & 0xFF;
+    uint32_t memoryValue = Memory::getInstance().read8(addr);
 
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);
@@ -345,7 +345,7 @@ void LBU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                    " = Mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                    ") + imm (" + std::to_string(imm) + ")] (byte loaded, zero-extended)";
     instructionOutput.setRegisters({rs1, rd});
-    instructionOutput.setRamAddresses({{addr, static_cast<int32_t>(memoryValue)}});
+    instructionOutput.setRamAddresses({{addr, memoryValue}});
 
 #if DEBUG
     std::cout << "Address: " << addr << "\n";
@@ -358,7 +358,7 @@ void LHU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t rs1Value = cpu.getRegister(rs1);
 
     uint32_t addr = rs1Value + imm;
-    uint32_t memoryValue = static_cast<uint32_t>(Memory::getInstance().read16(addr)) & 0xFFFF;
+    uint32_t memoryValue = Memory::getInstance().read16(addr);
 
     cpu.setRegister(rd, memoryValue);
     cpu.setPc(cpu.getPc() + 4);
@@ -367,7 +367,7 @@ void LHU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                    " = Mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                    ") + imm (" + std::to_string(imm) + ")] (halfword loaded, zero-extended)";
     instructionOutput.setRegisters({rs1, rd});
-    instructionOutput.setRamAddresses({{addr, static_cast<int32_t>(memoryValue)}});
+    instructionOutput.setRamAddresses({{addr, memoryValue}});
 
 #if DEBUG
     std::cout << "Address: " << addr << "\n";
