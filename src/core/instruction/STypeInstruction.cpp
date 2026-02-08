@@ -49,7 +49,7 @@ void SB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
 
-    uint32_t finalAddress = static_cast<uint32_t>(rs1Value + imm);
+    uint32_t finalAddress = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(imm);
 
     uint8_t result = static_cast<uint8_t>(rs2Value);
 
@@ -73,7 +73,7 @@ void SH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
 
-    uint32_t finalAddress = static_cast<uint32_t>(rs1Value + imm);
+    uint32_t finalAddress = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(imm);
 
     uint16_t result = static_cast<uint16_t>(rs2Value);
 
@@ -97,7 +97,7 @@ void SW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     int32_t rs1Value = cpu.getRegister(rs1);
     int32_t rs2Value = cpu.getRegister(rs2);
 
-    uint32_t finalAddress = static_cast<uint32_t>(rs1Value + imm);
+    uint32_t finalAddress = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(imm);
 
     uint32_t result = static_cast<uint32_t>(rs2Value);
 
