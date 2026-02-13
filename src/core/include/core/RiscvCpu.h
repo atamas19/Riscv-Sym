@@ -5,6 +5,8 @@
 #include <array>
 
 #include <core/instruction/Instruction.h>
+#include <core/Memory.h>
+#include <core/CsrUnit.h>
 
 #define DEBUG 0
 
@@ -22,6 +24,7 @@ public:
     // Getters
     uint32_t getPc() const;
     uint32_t getRegister(uint8_t registerIndex) const;
+    CsrUnit& getCsr();
 
     // Setters
     void setPc(uint32_t pcValue) { _pc = pcValue; }
@@ -43,5 +46,6 @@ private:
 private:
     std::array<uint32_t, 32> _regs;
     uint32_t _pc;
+    CsrUnit _csrUnit;
     Memory& _mem;
 };

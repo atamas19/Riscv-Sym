@@ -20,6 +20,10 @@ uint32_t RiscvCpu::getRegister(uint8_t registerIndex) const {
     return _regs.at(registerIndex);
 }
 
+CsrUnit& RiscvCpu::getCsr() {
+    return _csrUnit;
+}
+
 void RiscvCpu::setRegister(uint8_t registerIndex, uint32_t registerValue) {
     if (registerIndex == 0) {
         return ;
@@ -121,6 +125,7 @@ bool RiscvCpu::loadBinFileToMemory(const std::string& filename, uint32_t startAd
     }
 
     for(size_t i = 0; i < buffer.size(); i++) {
+        // TODO: consider loading bigger blocks of memory in the future
         _mem.write8(startAddr + i, buffer[i]);
     }
     
