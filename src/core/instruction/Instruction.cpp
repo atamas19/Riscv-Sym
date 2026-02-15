@@ -5,7 +5,7 @@
 #include <core/instruction/STypeInstruction.h>
 #include <core/instruction/BTypeInstruction.h>
 #include <core/instruction/JTypeInstruction.h>
-#include <core/instruction/ZicsrInstruction.h>
+#include <core/instruction/SystemInstruction.h>
 
 #include <stdexcept>
 #include <unordered_map>
@@ -28,7 +28,7 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
         { RType          ::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return RType          ::InstructionFactory::create(ins); }},
         { SType          ::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return SType          ::InstructionFactory::create(ins); }},
         { BType          ::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return BType          ::InstructionFactory::create(ins); }},
-        { Zicsr          ::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return Zicsr          ::InstructionFactory::create(ins); }},
+        { System         ::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return System         ::InstructionFactory::create(ins); }},
 
         { UType::LUI::getInstructionDescriptor  (), [](uint32_t ins) { return std::make_unique<UType::LUI>  (ins); }},
         { UType::AUIPC::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<UType::AUIPC>(ins); }},

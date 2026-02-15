@@ -1,9 +1,9 @@
-#include <core/instruction/ZicsrInstruction.h>
+#include <core/instruction/SystemInstruction.h>
 
 #include <core/RiscvCpu.h>
 #include <core/CsrUnit.h>
 
-namespace Zicsr {
+namespace System {
 
 void Instruction::decode() {
     IType::Instruction::decode(); 
@@ -12,7 +12,7 @@ void Instruction::decode() {
 }
 
 std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruction) {
-    static const std::unordered_map<uint8_t, std::function<std::unique_ptr<Instruction>(uint32_t)>> instructionMap = {
+    static const std::unordered_map<uint8_t, std::function<std::unique_ptr<Instruction>(uint32_t)>> zicsrInstructionMap = {
         { CSRRW ::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<CSRRW> (ins); }},
         { CSRRS ::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<CSRRS> (ins); }},
         { CSRRC ::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<CSRRC> (ins); }},
@@ -23,8 +23,19 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
 
     uint8_t funct3 = getBits(encodedInstruction, 12, 14);
 
-    auto it = instructionMap.find(funct3);
-    if (it != instructionMap.end())
+    if (funct3 == 0) {
+        uint32_t funct12 = getBits(encodedInstruction, 20, 31);
+        switch (funct12) {
+            case ECALL::getInstructionDescriptor():  return std::make_unique<ECALL> (encodedInstruction);
+            case EBREAK::getInstructionDescriptor(): return std::make_unique<EBREAK>(encodedInstruction);
+            case MRET::getInstructionDescriptor():   return std::make_unique<MRET>(encodedInstruction);
+            case SRET::getInstructionDescriptor():   return std::make_unique<SRET>(encodedInstruction);
+            default:    return nullptr;
+        }
+    }
+
+    auto it = zicsrInstructionMap.find(funct3);
+    if (it != zicsrInstructionMap.end())
         return it->second(encodedInstruction);
 
     return nullptr;
@@ -120,4 +131,16 @@ void CSRRCI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     instructionOutput.consoleLog = "CSRRCI: Read/Clear CSR[0x" + std::to_string(csr_addr) + "]";
 }
 
-} // namespace Zicsr
+void ECALL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+}
+
+void EBREAK::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+}
+
+void MRET::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+}
+
+void SRET::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+}
+
+} // namespace System

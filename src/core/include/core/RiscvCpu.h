@@ -10,6 +10,13 @@
 
 #define DEBUG 0
 
+enum class PrivilegeMode : uint8_t {
+    User = 0,
+    Supervisor = 1,
+    Reserved = 2,
+    Machine = 3
+};
+
 class RiscvCpu {
 public:
     static RiscvCpu& getInstance();
@@ -25,10 +32,12 @@ public:
     uint32_t getPc() const;
     uint32_t getRegister(uint8_t registerIndex) const;
     CsrUnit& getCsr();
+    PrivilegeMode getPrivilegeMode() const;
 
     // Setters
-    void setPc(uint32_t pcValue) { _pc = pcValue; }
+    void setPc(uint32_t pcValue);
     void setRegister(uint8_t registerIndex, uint32_t registerValue);
+    void setPrivilegeMode(PrivilegeMode mode);
 
 private:
     RiscvCpu(): _mem(Memory::getInstance()) { reset(); };
@@ -48,4 +57,6 @@ private:
     uint32_t _pc;
     CsrUnit _csrUnit;
     Memory& _mem;
+
+    PrivilegeMode _priviledgeMode = PrivilegeMode::Machine;
 };

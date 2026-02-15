@@ -3,7 +3,7 @@
 #include "ITypeInstruction.h"
 
 
-namespace Zicsr {
+namespace System {
 
 class Instruction : public IType::Instruction {
 public:
@@ -22,6 +22,8 @@ public:
 
     static constexpr uint8_t getInstructionDescription() { return 0x73; }
 };
+
+// ZICSR Instructions
 
 // CSR Read/Write
 class CSRRW final : public Instruction {
@@ -77,4 +79,44 @@ public:
     static constexpr uint8_t getInstructionDescriptor() { return 0x7; }
 };
 
-} // namespace Zicsr
+// Environment instructions
+
+// Environment Call
+class ECALL final : public Instruction {
+public:
+    ECALL(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+
+    static constexpr uint8_t getInstructionDescriptor() { return 0x0; }
+};
+
+// Environment Break
+class EBREAK final : public Instruction {
+public:
+    EBREAK(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+
+    static constexpr uint8_t getInstructionDescriptor() { return 0x1; }
+};
+
+// Return instructions
+
+// Machine-mode RETurn
+class MRET final : public Instruction {
+public:
+    MRET(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+
+    static constexpr uint16_t getInstructionDescriptor() { return 0x302; }
+};
+
+// Supervisor-mode RETurn
+class SRET final : public Instruction {
+public:
+    SRET(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+
+    static constexpr uint16_t getInstructionDescriptor() { return 0x102; }
+};
+
+} // namespace System
