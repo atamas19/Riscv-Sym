@@ -5,6 +5,7 @@
 #include <core/instruction/STypeInstruction.h>
 #include <core/instruction/BTypeInstruction.h>
 #include <core/instruction/JTypeInstruction.h>
+#include <core/instruction/SystemInstruction.h>
 
 #include <stdexcept>
 #include <unordered_map>
@@ -23,10 +24,12 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
 {
     static const std::unordered_map<uint8_t, std::function<std::unique_ptr<Instruction>(uint32_t)>> instructionMap = {
         { IType::ArithmeticInstructionFactory::getInstructionDescription(), [](uint32_t ins) { return IType::ArithmeticInstructionFactory::create(ins); }},
-        { IType::LoadInstructionFactory::getInstructionDescription      (), [](uint32_t ins) { return IType::LoadInstructionFactory      ::create(ins); }},
-        { RType::InstructionFactory::getInstructionDescription          (), [](uint32_t ins) { return RType::InstructionFactory          ::create(ins); }},
-        { SType::InstructionFactory::getInstructionDescription          (), [](uint32_t ins) { return SType::InstructionFactory          ::create(ins); }},
-        { BType::InstructionFactory::getInstructionDescription          (), [](uint32_t ins) { return BType::InstructionFactory          ::create(ins); }},
+        { IType      ::LoadInstructionFactory::getInstructionDescription(), [](uint32_t ins) { return IType      ::LoadInstructionFactory::create(ins); }},
+        { RType          ::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return RType          ::InstructionFactory::create(ins); }},
+        { SType          ::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return SType          ::InstructionFactory::create(ins); }},
+        { BType          ::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return BType          ::InstructionFactory::create(ins); }},
+        { System         ::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return System         ::InstructionFactory::create(ins); }},
+
         { UType::LUI::getInstructionDescriptor  (), [](uint32_t ins) { return std::make_unique<UType::LUI>  (ins); }},
         { UType::AUIPC::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<UType::AUIPC>(ins); }},
         { IType::JALR::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<IType::JALR> (ins); }},

@@ -20,12 +20,28 @@ uint32_t RiscvCpu::getRegister(uint8_t registerIndex) const {
     return _regs.at(registerIndex);
 }
 
+CsrUnit& RiscvCpu::getCsr() {
+    return _csrUnit;
+}
+
+PrivilegeMode RiscvCpu::getPrivilegeMode() const {
+    return _priviledgeMode;
+}
+
+void RiscvCpu::setPc(uint32_t pcValue) {
+    _pc = pcValue;
+}
+
 void RiscvCpu::setRegister(uint8_t registerIndex, uint32_t registerValue) {
     if (registerIndex == 0) {
         return ;
     }
 
     _regs.at(registerIndex) = registerValue;
+}
+
+void RiscvCpu::setPrivilegeMode(PrivilegeMode mode) {
+    _priviledgeMode = mode;
 }
 
 int RiscvCpu::executeAsmCommand(const std::string& command, InstructionOutput& instructionOutput) {
@@ -121,6 +137,7 @@ bool RiscvCpu::loadBinFileToMemory(const std::string& filename, uint32_t startAd
     }
 
     for(size_t i = 0; i < buffer.size(); i++) {
+        // TODO: consider loading bigger blocks of memory in the future
         _mem.write8(startAddr + i, buffer[i]);
     }
     
@@ -131,11 +148,14 @@ void RiscvCpu::reset() {
     constexpr uint32_t ram_base = 0x80000000;
     constexpr uint32_t stack_size = 1024 * 1024;
 
+    _priviledgeMode = PrivilegeMode::Machine;
+
     _regs.fill(0);
     _pc = ram_base;
     _regs.at(2) = ram_base + stack_size;
 
     _mem.reset();
+    _csrUnit.reset();
 }
 
 void RiscvCpu::resetGUI() {
