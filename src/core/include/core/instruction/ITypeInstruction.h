@@ -202,4 +202,28 @@ public:
     static const uint8_t getInstructionDescriptor() { return 0x67; }
 };
 
+class FenceInstructionFactory
+{
+public:
+    static std::unique_ptr<Instruction> create(uint32_t encodedInstruction);
+
+    static constexpr uint8_t getInstructionDescription() { return 0x0F; }
+};
+
+class FENCE : public Instruction {
+public:
+    FENCE(uint32_t instruction) : IType::Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+
+    static constexpr uint8_t getInstructionDescriptor() { return 0x0; }
+};
+
+class FENCE_I : public Instruction {
+public:
+    FENCE_I(uint32_t instruction) : IType::Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+
+    static constexpr uint8_t getInstructionDescriptor() { return 0x1; }
+};
+
 } // namespace IType

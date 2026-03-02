@@ -24,8 +24,10 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
 {
     static const std::unordered_map<uint8_t, std::function<std::unique_ptr<Instruction>(uint32_t)>> instructionMap = {
         { IType::ArithmeticInstructionFactory::getInstructionDescription(), [](uint32_t ins) { return IType::ArithmeticInstructionFactory::create(ins); }},
+        { IType     ::FenceInstructionFactory::getInstructionDescription(), [](uint32_t ins) { return IType     ::FenceInstructionFactory::create(ins); }},
         { IType      ::LoadInstructionFactory::getInstructionDescription(), [](uint32_t ins) { return IType      ::LoadInstructionFactory::create(ins); }},
         { RType          ::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return RType          ::InstructionFactory::create(ins); }},
+        { 0x2F, [](uint32_t ins) { return RType          ::InstructionFactory::create(ins); }},
         { SType          ::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return SType          ::InstructionFactory::create(ins); }},
         { BType          ::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return BType          ::InstructionFactory::create(ins); }},
         { System         ::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return System         ::InstructionFactory::create(ins); }},

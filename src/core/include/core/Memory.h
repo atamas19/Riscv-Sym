@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <unordered_map>
 #include <array>
+#include <vector>
 #include <memory>
 
 class Memory {
@@ -19,6 +20,12 @@ public:
 public:
     static Memory& getInstance();
 
+    void loadDiskImage(const std::string& path);
+
+    // --- Controlul MMU ---
+    // Chemat de RiscvCpu de fiecare dată când valoarea din registrul SATP se schimbă
+    void setSATP(uint32_t satp);
+
     void write32(uint32_t address, uint32_t value);
     uint32_t read32(uint32_t address);
 
@@ -32,12 +39,29 @@ public:
 
 private:
     bool handleMMIO(uint32_t address, uint32_t value);
+    bool handleMMIORead(uint32_t address, uint8_t& outValue);
 
     uint8_t* getMemoryPtr(uint32_t address, bool allocateIfNeeded);
+    
+    // --- MMU (Paginare Sv32) ---
+    uint32_t translateAddress(uint32_t vaddr);
+    uint32_t read32Physical(uint32_t paddr); // Citire brută, folosită de MMU pentru Page Tables
 
 private:
     using Page = std::array<uint8_t, PAGE_SIZE>;
     std::unordered_map<uint32_t, std::unique_ptr<Page>> _pages;
+
+    std::vector<uint8_t> _disk;
+    
+    uint32_t _currentSatp = 0; // Păstrăm starea MMU-ului
+
+    int _spiState = 0;             
+    uint8_t _spiCmd = 0;
+    uint32_t _spiArg = 0;          
+    int _spiArgBytesReceived = 0;  
+    int _spiDataBytesTransferred = 0;
+    uint8_t _spiReadBuffer = 0xFF;
+    uint16_t _spiCurrentCrc = 0;
 };
 
 struct MemoryCell {

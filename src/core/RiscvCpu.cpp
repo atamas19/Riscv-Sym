@@ -25,7 +25,7 @@ CsrUnit& RiscvCpu::getCsr() {
 }
 
 PrivilegeMode RiscvCpu::getPrivilegeMode() const {
-    return _priviledgeMode;
+    return _privilegeMode;
 }
 
 void RiscvCpu::setPc(uint32_t pcValue) {
@@ -41,7 +41,7 @@ void RiscvCpu::setRegister(uint8_t registerIndex, uint32_t registerValue) {
 }
 
 void RiscvCpu::setPrivilegeMode(PrivilegeMode mode) {
-    _priviledgeMode = mode;
+    _privilegeMode = mode;
 }
 
 int RiscvCpu::executeAsmCommand(const std::string& command, InstructionOutput& instructionOutput) {
@@ -110,7 +110,7 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
         auto instruction = InstructionFactory::create(binaryInstruction);
 
         if (!instruction) {
-             std::cout << "Unknown instruction at PC: " << std::hex << _pc << "\n";
+             std::cout << "Unknown instruction " << std::hex << binaryInstruction << " at PC: " << std::hex << _pc << "\n";
              break;
         }
         
@@ -122,6 +122,99 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
     }
 
     return true;
+}
+
+void RiscvCpu::takeTrap(ExceptionCause cause, uint32_t trapValue) {
+    uint32_t causeCode = static_cast<uint32_t>(cause);
+    
+    // 1. Verificăm dacă excepția trebuie delegată către Supervisor Mode (S-Mode)
+    // Condiții pentru delegare:
+    // - Nu suntem deja în M-Mode.
+    // - Bitul corespunzător excepției este setat în registrul MEDELEG.
+    bool delegateToS = (_privilegeMode <= PrivilegeMode::Supervisor) && 
+                       ((_csrUnit.read(CsrAddress::MEDELEG) & (1 << causeCode)) != 0);
+
+    if (delegateToS) {
+        // --- TRAP CĂTRE SUPERVISOR MODE ---
+        
+        // Salvăm PC-ul actual (unde s-a întâmplat excepția)
+        _csrUnit.write(CsrAddress::SEPC, _pc);
+        
+        // Salvăm motivul și o eventuală valoare ajutătoare (ex: adresa de memorie greșită)
+        _csrUnit.write(CsrAddress::SCAUSE, causeCode);
+        _csrUnit.write(CsrAddress::STVAL, trapValue);
+
+        // Salvăm modul de privilegiu din care venim (în SPP)
+        uint32_t mstatus = _csrUnit.read(CsrAddress::MSTATUS);
+        uint32_t spp_bit = (static_cast<uint32_t>(_privilegeMode) & 1) << 8;
+        
+        // Mutăm SIE (Supervisor Interrupt Enable) în SPIE, apoi dezactivăm SIE
+        uint32_t sie_bit = (mstatus >> 1) & 1;
+        uint32_t spie_bit = sie_bit << 5;
+        
+        mstatus = (mstatus & ~0x00000122) | spp_bit | spie_bit; // Mask golim SPP, SPIE, SIE
+        _csrUnit.write(CsrAddress::MSTATUS, mstatus);
+
+        // Schimbăm privilegiul și sărim la funcția de tratare a erorilor
+        _privilegeMode = PrivilegeMode::Supervisor;
+        
+        // stvec poate avea ultimii 2 biți ca mod (0 = Direct, 1 = Vectored)
+        // Pentru simplitate, mascăm ultimii 2 biți ca să obținem adresa de bază curată
+        _pc = _csrUnit.read(CsrAddress::STVEC) & ~0x3; 
+
+    } else {
+        // --- TRAP CĂTRE MACHINE MODE ---
+        
+        _csrUnit.write(CsrAddress::MEPC, _pc);
+        _csrUnit.write(CsrAddress::MCAUSE, causeCode);
+        _csrUnit.write(CsrAddress::MTVAL, trapValue);
+
+        uint32_t mstatus = _csrUnit.read(CsrAddress::MSTATUS);
+        
+        // Salvăm modul din care venim în MPP (biții 12:11)
+        uint32_t mpp_bits = (static_cast<uint32_t>(_privilegeMode) & 3) << 11;
+        
+        // Mutăm MIE în MPIE, apoi dezactivăm MIE
+        uint32_t mie_bit = (mstatus >> 3) & 1;
+        uint32_t mpie_bit = mie_bit << 7;
+        
+        mstatus = (mstatus & ~0x00001888) | mpp_bits | mpie_bit; // Mask golim MPP, MPIE, MIE
+        _csrUnit.write(CsrAddress::MSTATUS, mstatus);
+
+        _privilegeMode = PrivilegeMode::Machine;
+        _pc = _csrUnit.read(CsrAddress::MTVEC) & ~0x3;
+    }
+}
+
+void RiscvCpu::returnFromTrap(PrivilegeMode retMode) {
+    uint32_t mstatus = _csrUnit.read(CsrAddress::MSTATUS);
+
+    if (retMode == PrivilegeMode::Supervisor) {
+        _pc = _csrUnit.read(CsrAddress::SEPC);
+
+        uint8_t previousPrivilege = (mstatus >> 8) & 1;
+        _privilegeMode = static_cast<PrivilegeMode>(previousPrivilege);
+        
+        // Restaurăm întreruperile (Mutăm SPIE în SIE, și setăm SPIE pe 1)
+        uint32_t spie_bit = (mstatus >> 5) & 1;
+        uint32_t sie_bit = spie_bit << 1;
+        
+        // Resetăm SPP la 0 (User Mode) conform specificației
+        mstatus = (mstatus & ~0x00000122) | sie_bit | (1 << 5); 
+        _csrUnit.write(CsrAddress::MSTATUS, mstatus);
+
+    } else if (retMode == PrivilegeMode::Machine) {
+        _pc = _csrUnit.read(CsrAddress::MEPC);
+
+        uint8_t previousPrivilege = (mstatus >> 11) & 3;
+        _privilegeMode = static_cast<PrivilegeMode>(previousPrivilege);
+
+        uint32_t mpie_bit = (mstatus >> 7) & 1;
+        uint32_t mie_bit = mpie_bit << 3;
+
+        mstatus = (mstatus & ~0x00001888) | mie_bit | (1 << 7);
+        _csrUnit.write(CsrAddress::MSTATUS, mstatus);
+    }
 }
 
 bool RiscvCpu::loadBinFileToMemory(const std::string& filename, uint32_t startAddr) {
@@ -148,7 +241,7 @@ void RiscvCpu::reset() {
     constexpr uint32_t ram_base = 0x80000000;
     constexpr uint32_t stack_size = 1024 * 1024;
 
-    _priviledgeMode = PrivilegeMode::Machine;
+    _privilegeMode = PrivilegeMode::Machine;
 
     _regs.fill(0);
     _pc = ram_base;
