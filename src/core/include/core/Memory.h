@@ -62,6 +62,7 @@ private:
     int _spiDataBytesTransferred = 0;
     uint8_t _spiReadBuffer = 0xFF;
     uint16_t _spiCurrentCrc = 0;
+    int _uartInputChar = -1;
 };
 
 struct MemoryCell {

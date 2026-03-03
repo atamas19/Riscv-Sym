@@ -64,6 +64,11 @@ void CSRRW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     }
 
     csr.write(csr_addr, rs1_value);
+
+    if (csr_addr == 0x180) {
+        Memory::getInstance().setSATP(csr.read(0x180));
+    }
+
     cpu.setPc(cpu.getPc() + 4);
 
     instructionOutput.consoleLog = "CSRRW: CSR[0x" + std::to_string(csr_addr) + "]";
@@ -85,6 +90,10 @@ void CSRRS::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
 
     if (isWrite) {
         csr.write(csr_addr, old_val | rs1_val);
+
+        if (csr_addr == 0x180) {
+            Memory::getInstance().setSATP(csr.read(0x180));
+        }
     }
     
     cpu.setRegister(rd, old_val);
@@ -108,6 +117,10 @@ void CSRRC::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
 
     if (isWrite) {
         csr.write(csr_addr, old_val & ~rs1_val);
+
+        if (csr_addr == 0x180) {
+            Memory::getInstance().setSATP(csr.read(0x180));
+        }
     }
 
     cpu.setRegister(rd, old_val);
@@ -132,6 +145,10 @@ void CSRRWI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     }
     csr.write(csr_addr, uimm);
 
+    if (csr_addr == 0x180) {
+        Memory::getInstance().setSATP(csr.read(0x180));
+    }
+
     cpu.setPc(cpu.getPc() + 4);
 
     instructionOutput.consoleLog = "CSRRWI: CSR[0x" + std::to_string(csr_addr) + "]";
@@ -152,6 +169,10 @@ void CSRRSI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
 
     if (isWrite) {
         csr.write(csr_addr, old_val | uimm);
+
+        if (csr_addr == 0x180) {
+            Memory::getInstance().setSATP(csr.read(0x180));
+        }
     }
 
     cpu.setRegister(rd, old_val);
@@ -175,6 +196,10 @@ void CSRRCI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
 
     if (isWrite) {
         csr.write(csr_addr, old_val & ~uimm);
+
+        if (csr_addr == 0x180) {
+            Memory::getInstance().setSATP(csr.read(0x180));
+        }
     }
 
     cpu.setRegister(rd, old_val);
