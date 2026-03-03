@@ -169,7 +169,7 @@ public:
     AMOSWAP(uint32_t instruction) : Instruction(instruction) { decode(); }
     void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
-    static const InstructionDescriptor getInstructionDescriptor() { return {0x2, 0x06}; } 
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x2, 0x06}; }
 };
 
 } // namespace RType

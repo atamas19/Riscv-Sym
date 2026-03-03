@@ -16,12 +16,12 @@ namespace {
     constexpr uint32_t MSTATUS_SUM  = 1 << 18; // Supervisor User Memory Access
 
     // Masca pentru scrierile în mstatus (ce biți pot fi modificați din M-Mode)
-    constexpr uint32_t MSTATUS_MASK = MSTATUS_SIE | MSTATUS_MIE | MSTATUS_SPIE | 
-                                      MSTATUS_MPIE | MSTATUS_SPP | MSTATUS_MPP | 
+    constexpr uint32_t MSTATUS_MASK = MSTATUS_SIE | MSTATUS_MIE | MSTATUS_SPIE |
+                                      MSTATUS_MPIE | MSTATUS_SPP | MSTATUS_MPP |
                                       MSTATUS_FS | MSTATUS_SUM;
 
     // Masca pentru sstatus (ce vede Supervisor Mode din mstatus)
-    constexpr uint32_t SSTATUS_MASK = MSTATUS_SIE | MSTATUS_SPIE | MSTATUS_SPP | 
+    constexpr uint32_t SSTATUS_MASK = MSTATUS_SIE | MSTATUS_SPIE | MSTATUS_SPP |
                                       MSTATUS_FS | MSTATUS_SUM;
 
     // --- Biți pentru misa ---
@@ -41,10 +41,10 @@ void CsrUnit::reset() {
     _csrs.fill(0);
 
     // Inițializăm capabilitățile procesorului (RV32IMASU)
-    _csrs[CsrAddress::MISA] = MISA_RV32 | MISA_I | MISA_M | MISA_A | MISA_S | MISA_U; 
-    
+    _csrs[CsrAddress::MISA] = MISA_RV32 | MISA_I | MISA_M | MISA_A | MISA_S | MISA_U;
+
     // La boot, pornim în Machine Mode (MPP = 3)
-    _csrs[CsrAddress::MSTATUS] = MSTATUS_MPP; 
+    _csrs[CsrAddress::MSTATUS] = MSTATUS_MPP;
 
     _csrs[CsrAddress::MHARTID] = 0; // Suntem core-ul 0
 }
@@ -56,23 +56,23 @@ uint32_t CsrUnit::read(uint16_t address) const {
         // Folosim o variabilă statică pe care o creștem masiv la fiecare citire.
         // Așa, msleep() va trece instantaneu!
         static uint32_t fake_time = 0;
-        fake_time += 10000; 
+        fake_time += 10000;
         return fake_time;
     }
     if (address == 0xC80) { // CYCLEH (High 32 bits)
         // Pentru simplitate, zicem că nu a depășit încă 32 de biți
-        return 0; 
+        return 0;
     }
 
     switch (address) {
         // --- Alias-uri Supervisor Mode ---
         case CsrAddress::SSTATUS:
             return _csrs[CsrAddress::MSTATUS] & SSTATUS_MASK;
-        
+
         case CsrAddress::SIE:
             // S-Mode vede doar întreruperile care i-au fost delegate
             return _csrs[CsrAddress::MIE] & _csrs[CsrAddress::MIDELEG];
-            
+
         case CsrAddress::SIP:
             return _csrs[CsrAddress::MIP] & _csrs[CsrAddress::MIDELEG];
 
@@ -87,7 +87,7 @@ void CsrUnit::write(uint16_t address, uint32_t value) {
 
     if (isReadOnly(address)) {
         #if DEBUG
-        std::cout << "[CSR] Warning: Attempted write to Read-Only CSR 0x" 
+        std::cout << "[CSR] Warning: Attempted write to Read-Only CSR 0x"
                   << std::hex << address << std::dec << "\n";
         #endif
         return; // Ignorăm scrierea
@@ -97,12 +97,12 @@ void CsrUnit::write(uint16_t address, uint32_t value) {
         // --- M-Mode Status ---
         case CsrAddress::MSTATUS: {
             uint32_t val = value & MSTATUS_MASK;
-            
+
             // Regula RISC-V: MPP nu are voie să fie 0b10 (Reserved)
             if ((val & MSTATUS_MPP) == (2 << 11)) {
                 val &= ~MSTATUS_MPP; // Îl forțăm la 0 (User Mode) dacă e invalid
             }
-            
+
             _csrs[address] = val;
             break;
         }
@@ -128,7 +128,7 @@ void CsrUnit::write(uint16_t address, uint32_t value) {
             uint32_t current_mip = _csrs[CsrAddress::MIP];
             uint32_t deleg_mask = _csrs[CsrAddress::MIDELEG];
             // Mască extra: de obicei software-ul poate scrie doar în Software Interrupts (bitul 1)
-            uint32_t writable_mask = deleg_mask & 0x0222; 
+            uint32_t writable_mask = deleg_mask & 0x0222;
             _csrs[CsrAddress::MIP] = (current_mip & ~writable_mask) | (value & writable_mask);
             break;
         }
@@ -144,7 +144,7 @@ void CsrUnit::write(uint16_t address, uint32_t value) {
         case CsrAddress::SATP: {
             // SATP: Mode (bit 31), ASID (biții 22-30), PPN (biții 0-21)
             _csrs[address] = value;
-            // TODO: Aici va trebui anunțat MMU-ul să facă flush la TLB 
+            // TODO: Aici va trebui anunțat MMU-ul să facă flush la TLB
             // ex: if (mmu) mmu->flushTlb();
             break;
         }
@@ -177,7 +177,7 @@ void CsrUnit::clearBit(uint16_t address, uint32_t bitMask) {
 
 bool CsrUnit::canAccess(uint16_t address, PrivilegeMode currentMode, bool isWrite) const {
     uint8_t minPrivilegeRequired = (address >> 8) & 0x3;
-    
+
     // Verificăm dacă CPU-ul are nivelul necesar
     if (static_cast<uint8_t>(currentMode) < minPrivilegeRequired) {
         return false; // Acces respins (Privilege Violation)

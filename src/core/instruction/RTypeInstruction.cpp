@@ -197,7 +197,7 @@ void SRL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 #if DEBUG
     std::cout << cpu.getRegister(rd);
-#endif   
+#endif
 }
 
 void SRA::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -219,7 +219,7 @@ void SRA::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 #if DEBUG
     std::cout << cpu.getRegister(rd);
-#endif   
+#endif
 }
 
 void OR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -239,7 +239,7 @@ void OR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 #if DEBUG
     std::cout << cpu.getRegister(rd);
-#endif   
+#endif
 }
 
 void AND::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -259,7 +259,7 @@ void AND::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 #if DEBUG
     std::cout << cpu.getRegister(rd);
-#endif   
+#endif
 }
 
 void AMOSWAP::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -269,7 +269,7 @@ void AMOSWAP::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     uint32_t memory_address = cpu.getRegister(rs1);
     uint32_t value_to_write = cpu.getRegister(rs2);
 
-    // Citim valoarea veche din memorie 
+    // Citim valoarea veche din memorie
     // (Folosim read32/write32. Dacă ai doar citeșteOctet, combină 4 octeți)
     // Presupunem că ai mem.read32(addr) și mem.write32(addr, val)
     uint32_t old_value = mem.read32(memory_address);
@@ -284,15 +284,15 @@ void AMOSWAP::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     cpu.setPc(cpu.getPc() + 4);
 
-    instructionOutput.consoleLog = "Performed AMOSWAP.W: Mem[0x" + std::to_string(memory_address) + 
-                                   "] <- x" + std::to_string(rs2) + " (" + std::to_string(value_to_write) + 
+    instructionOutput.consoleLog = "Performed AMOSWAP.W: Mem[0x" + std::to_string(memory_address) +
+                                   "] <- x" + std::to_string(rs2) + " (" + std::to_string(value_to_write) +
                                    "), old_val -> x" + std::to_string(rd);
-                                   
+
     instructionOutput.setRegisters({rs1, rs2, rd});
 
 #if DEBUG
     std::cout << "AMOSWAP at 0x" << std::hex << memory_address << std::dec << "\n";
-#endif   
+#endif
 }
 
 } // namespace RType

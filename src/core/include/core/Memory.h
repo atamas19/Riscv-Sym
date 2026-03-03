@@ -42,7 +42,7 @@ private:
     bool handleMMIORead(uint32_t address, uint8_t& outValue);
 
     uint8_t* getMemoryPtr(uint32_t address, bool allocateIfNeeded);
-    
+
     // --- MMU (Paginare Sv32) ---
     uint32_t translateAddress(uint32_t vaddr);
     uint32_t read32Physical(uint32_t paddr); // Citire brută, folosită de MMU pentru Page Tables
@@ -52,13 +52,13 @@ private:
     std::unordered_map<uint32_t, std::unique_ptr<Page>> _pages;
 
     std::vector<uint8_t> _disk;
-    
+
     uint32_t _currentSatp = 0; // Păstrăm starea MMU-ului
 
-    int _spiState = 0;             
+    int _spiState = 0;
     uint8_t _spiCmd = 0;
-    uint32_t _spiArg = 0;          
-    int _spiArgBytesReceived = 0;  
+    uint32_t _spiArg = 0;
+    int _spiArgBytesReceived = 0;
     int _spiDataBytesTransferred = 0;
     uint8_t _spiReadBuffer = 0xFF;
     uint16_t _spiCurrentCrc = 0;

@@ -58,7 +58,7 @@ uint32_t Memory::read32Physical(uint32_t paddr) {
     uint8_t* p1 = getMemoryPtr(paddr + 1, false);
     uint8_t* p2 = getMemoryPtr(paddr + 2, false);
     uint8_t* p3 = getMemoryPtr(paddr + 3, false);
-    
+
     uint32_t b0 = p0 ? *p0 : 0;
     uint32_t b1 = p1 ? *p1 : 0;
     uint32_t b2 = p2 ? *p2 : 0;
@@ -70,11 +70,11 @@ uint32_t Memory::read32Physical(uint32_t paddr) {
 uint32_t Memory::translateAddress(uint32_t vaddr) {
     // 1. Verificăm dacă MMU este oprit (Bit 31 = 0)
     if ((_currentSatp & 0x80000000) == 0) {
-        return vaddr; 
+        return vaddr;
     }
 
     // 2. Extragem PPN-ul din SATP pentru a găsi Root Page Table
-    uint32_t root_ppn = _currentSatp & 0x3FFFFF; 
+    uint32_t root_ppn = _currentSatp & 0x3FFFFF;
     uint32_t root_table_addr = root_ppn * PAGE_SIZE;
 
     // 3. Extragem părțile din adresa virtuală
@@ -84,7 +84,7 @@ uint32_t Memory::translateAddress(uint32_t vaddr) {
 
     // 4. Citim PTE Nivel 1
     uint32_t pte1_addr = root_table_addr + (vpn1 * 4);
-    uint32_t pte1 = read32Physical(pte1_addr); 
+    uint32_t pte1 = read32Physical(pte1_addr);
 
     if ((pte1 & 0x1) == 0) return 0; // Page Fault! (Bitul V=0)
     // (Aici am putea adăuga verificarea pentru Megapages, dar xv6 Sv32 nu le folosește standard)
@@ -92,7 +92,7 @@ uint32_t Memory::translateAddress(uint32_t vaddr) {
     // 5. Citim PTE Nivel 0
     uint32_t pte1_ppn = (pte1 >> 10) & 0x3FFFFF;
     uint32_t leaf_table_addr = pte1_ppn * PAGE_SIZE;
-    
+
     uint32_t pte0_addr = leaf_table_addr + (vpn0 * 4);
     uint32_t pte0 = read32Physical(pte0_addr);
 
@@ -137,55 +137,55 @@ bool Memory::handleMMIO(uint32_t address, uint32_t value) {
                 _spiArg = 0;
                 _spiArgBytesReceived = 0;
             }
-        } 
+        }
         else if (_spiState == 1) {
             _spiArg = (_spiArg << 8) | byteVal;
             _spiArgBytesReceived++;
             if (_spiArgBytesReceived == 4) _spiState = 2;
         }
         else if (_spiState == 2) {
-            _spiReadBuffer = 0x00; 
+            _spiReadBuffer = 0x00;
             if (_spiCmd == 17) {
-                _spiState = 3; 
+                _spiState = 3;
                 _spiDataBytesTransferred = 0;
             } else if (_spiCmd == 24) {
-                _spiState = 4; 
+                _spiState = 4;
                 _spiDataBytesTransferred = 0;
             } else {
                 _spiState = 0;
             }
         }
-        else if (_spiState == 3) { 
+        else if (_spiState == 3) {
             if (_spiDataBytesTransferred == 0) {
-                _spiReadBuffer = 0x00; 
+                _spiReadBuffer = 0x00;
                 uint32_t diskOffset = _spiArg * 512;
                 _spiCurrentCrc = (diskOffset + 512 <= _disk.size()) ? getCRC16(&_disk[diskOffset], 512) : 0;
                 _spiDataBytesTransferred++;
             } else if (_spiDataBytesTransferred == 1) {
-                _spiReadBuffer = 0xFE; 
+                _spiReadBuffer = 0xFE;
                 _spiDataBytesTransferred++;
-            } else if (_spiDataBytesTransferred <= 513) { 
+            } else if (_spiDataBytesTransferred <= 513) {
                 uint32_t diskOffset = (_spiArg * 512) + (_spiDataBytesTransferred - 2);
                 _spiReadBuffer = (diskOffset < _disk.size()) ? _disk[diskOffset] : 0;
                 _spiDataBytesTransferred++;
             } else if (_spiDataBytesTransferred == 514) {
-                _spiReadBuffer = (_spiCurrentCrc >> 8) & 0xFF; 
+                _spiReadBuffer = (_spiCurrentCrc >> 8) & 0xFF;
                 _spiDataBytesTransferred++;
             } else if (_spiDataBytesTransferred == 515) {
                 _spiReadBuffer = _spiCurrentCrc & 0xFF;
                 _spiDataBytesTransferred++;
             } else {
                 _spiReadBuffer = 0xFF;
-                _spiState = 0; 
+                _spiState = 0;
             }
         }
-        else if (_spiState == 4) { 
+        else if (_spiState == 4) {
             if (_spiDataBytesTransferred == 0) {
                 static int clock_count = 0;
-                if (clock_count == 0) { _spiReadBuffer = 0x00; clock_count++; } 
+                if (clock_count == 0) { _spiReadBuffer = 0x00; clock_count++; }
                 else { _spiReadBuffer = 0xFF; }
-                
-                if (byteVal == 0xFE) { 
+
+                if (byteVal == 0xFE) {
                     _spiDataBytesTransferred = 1;
                     clock_count = 0;
                 }
@@ -194,9 +194,9 @@ bool Memory::handleMMIO(uint32_t address, uint32_t value) {
                 if (diskOffset < _disk.size()) _disk[diskOffset] = byteVal;
                 _spiDataBytesTransferred++;
             } else if (_spiDataBytesTransferred <= 514) {
-                _spiDataBytesTransferred++; 
+                _spiDataBytesTransferred++;
             } else {
-                _spiReadBuffer = 0x05; 
+                _spiReadBuffer = 0x05;
                 _spiState = 0;
             }
         }
@@ -221,7 +221,7 @@ void Memory::loadDiskImage(const std::string& path) {
     }
     std::streamsize size = file.tellg();
     file.seekg(0, std::ios::beg);
-    
+
     _disk.resize(size);
     if (file.read(reinterpret_cast<char*>(_disk.data()), size)) {
         std::cout << "[Simulator] Disk image încărcată: " << size << " bytes.\n";
@@ -273,7 +273,7 @@ void Memory::write16(uint32_t address, uint16_t value) {
 uint16_t Memory::read16(uint32_t address) {
     uint32_t paddr = translateAddress(address);
     if (paddr == 0) return 0;
-    
+
     uint8_t mmioValue;
     if (handleMMIORead(paddr, mmioValue)) return mmioValue;
 
