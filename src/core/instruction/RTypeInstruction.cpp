@@ -32,8 +32,7 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
         { SRL::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<SRL> (ins); }},
         { SRA::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<SRA> (ins); }},
         { AND::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<AND> (ins); }},
-        { OR::getInstructionDescriptor  (), [](uint32_t ins) { return std::make_unique<OR>  (ins); }},
-        { AMOSWAP::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<AMOSWAP>(ins); }}
+        { OR::getInstructionDescriptor  (), [](uint32_t ins) { return std::make_unique<OR>  (ins); }}
     };
 
     uint8_t funct3 = getBits(encodedInstruction, 12, 14);

@@ -22,8 +22,6 @@ public:
 
     void loadDiskImage(const std::string& path);
 
-    // --- Controlul MMU ---
-    // Chemat de RiscvCpu de fiecare dată când valoarea din registrul SATP se schimbă
     void setSATP(uint32_t satp);
 
     void write32(uint32_t address, uint32_t value);
@@ -43,9 +41,9 @@ private:
 
     uint8_t* getMemoryPtr(uint32_t address, bool allocateIfNeeded);
 
-    // --- MMU (Paginare Sv32) ---
+    // --- MMU (Sv32) ---
     uint32_t translateAddress(uint32_t vaddr);
-    uint32_t read32Physical(uint32_t paddr); // Citire brută, folosită de MMU pentru Page Tables
+    uint32_t read32Physical(uint32_t paddr);
 
 private:
     using Page = std::array<uint8_t, PAGE_SIZE>;
@@ -53,7 +51,7 @@ private:
 
     std::vector<uint8_t> _disk;
 
-    uint32_t _currentSatp = 0; // Păstrăm starea MMU-ului
+    uint32_t _currentSatp = 0;
 
     int _spiState = 0;
     uint8_t _spiCmd = 0;
