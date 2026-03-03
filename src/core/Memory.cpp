@@ -29,12 +29,10 @@ uint8_t* Memory::getMemoryPtr(uint32_t address, bool allocateIfNeeded) {
     return nullptr;
 }
 
-// --- Setarea SATP ---
 void Memory::setSATP(uint32_t satp) {
     _currentSatp = satp;
 }
 
-// --- Citire fizică bypass (Folosită DOAR intern de MMU) ---
 uint32_t Memory::read32Physical(uint32_t paddr) {
     uint8_t mmioValue;
     if (handleMMIORead(paddr, mmioValue)) return mmioValue;
@@ -53,7 +51,6 @@ uint32_t Memory::read32Physical(uint32_t paddr) {
         }
     }
 
-    // Unaligned physical read - fallback la citire octet cu octet (tot fizic)
     uint8_t* p0 = getMemoryPtr(paddr, false);
     uint8_t* p1 = getMemoryPtr(paddr + 1, false);
     uint8_t* p2 = getMemoryPtr(paddr + 2, false);
@@ -66,30 +63,22 @@ uint32_t Memory::read32Physical(uint32_t paddr) {
     return b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
 }
 
-// --- TRADUCEREA ADRESELOR (MMU - Sv32) ---
 uint32_t Memory::translateAddress(uint32_t vaddr) {
-    // 1. Verificăm dacă MMU este oprit (Bit 31 = 0)
-    if ((_currentSatp & 0x80000000) == 0) {
-        return vaddr;
-    }
+    if ((_currentSatp & 0x80000000) == 0) return vaddr;
 
-    // 2. Extragem PPN-ul din SATP pentru a găsi Root Page Table
     uint32_t root_ppn = _currentSatp & 0x3FFFFF;
     uint32_t root_table_addr = root_ppn * PAGE_SIZE;
 
-    // 3. Extragem părțile din adresa virtuală
     uint32_t vpn1 = (vaddr >> 22) & 0x3FF; // Top 10 bits
     uint32_t vpn0 = (vaddr >> 12) & 0x3FF; // Mid 10 bits
     uint32_t offset = vaddr & 0xFFF;       // Lower 12 bits
 
-    // 4. Citim PTE Nivel 1
     uint32_t pte1_addr = root_table_addr + (vpn1 * 4);
     uint32_t pte1 = read32Physical(pte1_addr);
 
     if ((pte1 & 0x1) == 0) return 0; // Page Fault! (Bitul V=0)
-    // (Aici am putea adăuga verificarea pentru Megapages, dar xv6 Sv32 nu le folosește standard)
+    // Here would be the Megapasses checks, but xv64 Sv32 doesn't use them by default
 
-    // 5. Citim PTE Nivel 0
     uint32_t pte1_ppn = (pte1 >> 10) & 0x3FFFFF;
     uint32_t leaf_table_addr = pte1_ppn * PAGE_SIZE;
 
@@ -98,14 +87,13 @@ uint32_t Memory::translateAddress(uint32_t vaddr) {
 
     if ((pte0 & 0x1) == 0) return 0; // Page Fault!
 
-    // 6. Asamblăm adresa fizică
     uint32_t final_ppn = (pte0 >> 10) & 0x3FFFFF;
     uint32_t physical_address = (final_ppn * PAGE_SIZE) + offset;
 
     return physical_address;
 }
 
-static uint16_t getCRC16(const uint8_t* message, int length) {
+static inline uint16_t getCRC16(const uint8_t* message, int length) {
     uint32_t crc = 0x0000;
     for (int i = 0; i < length; i++) {
         crc ^= (message[i] << 8);
@@ -216,7 +204,7 @@ bool Memory::handleMMIORead(uint32_t address, uint8_t& outValue) {
 void Memory::loadDiskImage(const std::string& path) {
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
-        std::cerr << "Eroare: Nu am putut deschide fs.img!\n";
+        std::cerr << "Error: Couldn't load fs.img!\n";
         return;
     }
     std::streamsize size = file.tellg();
@@ -224,15 +212,13 @@ void Memory::loadDiskImage(const std::string& path) {
 
     _disk.resize(size);
     if (file.read(reinterpret_cast<char*>(_disk.data()), size)) {
-        std::cout << "[Simulator] Disk image încărcată: " << size << " bytes.\n";
+        std::cout << "[Simulator] Disk image loaded: " << size << " bytes.\n";
     }
 }
 
-// --- Rutarea Accesului prin MMU ---
-
 void Memory::write32(uint32_t address, uint32_t value) {
     uint32_t paddr = translateAddress(address);
-    if (paddr == 0) return; // Ignorăm scrierea în caz de Page Fault
+    if (paddr == 0) return;
     if (handleMMIO(paddr, value)) return;
 
     uint32_t pageIndex = paddr >> PAGE_SHIFT;
@@ -250,7 +236,7 @@ void Memory::write32(uint32_t address, uint32_t value) {
 
 uint32_t Memory::read32(uint32_t address) {
     uint32_t paddr = translateAddress(address);
-    if (paddr == 0) return 0; // Page Fault returnează instrucțiunea 0x0
+    if (paddr == 0) return 0;
     return read32Physical(paddr);
 }
 

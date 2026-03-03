@@ -23,7 +23,6 @@ public:
     };
 
     // Getters
-    uint8_t getOpcode() const { return opcode; }
     uint8_t getFunct3() const { return funct3; }
     uint8_t getFunct7() const { return funct7; }
 
@@ -38,7 +37,6 @@ public:
     }
 
 private:
-    const uint8_t opcode = 0x33;
     uint8_t funct3;
     uint8_t funct7;
 };
@@ -60,7 +58,7 @@ class InstructionFactory
 public:
     static std::unique_ptr<Instruction> create(uint32_t encodedInstruction);
 
-    static const uint8_t getInstructionDescription() { return 0x33; }
+    static constexpr uint8_t getInstructionDescription() { return 0x33; }
 };
 
 // Add
@@ -163,6 +161,15 @@ public:
     static const InstructionDescriptor getInstructionDescriptor() { return {0x7, 0x0}; }
 };
 
+class AtomicInstructionFactory
+{
+public:
+    static std::unique_ptr<Instruction> create(uint32_t encodedInstruction);
+
+    static constexpr uint8_t getInstructionDescription() { return 0x2F; }
+};
+
+// Atomic Memory Operation Swap
 class AMOSWAP : public Instruction
 {
 public:

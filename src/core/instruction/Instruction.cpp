@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <functional>
 
-uint32_t getBits(uint32_t instruction, uint8_t x, uint8_t y) 
+uint32_t getBits(uint32_t instruction, uint8_t x, uint8_t y)
 {
     if (x > y || y >= 32)
         throw std::out_of_range("Invalid bit range");
@@ -26,8 +26,10 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
         { IType::ArithmeticInstructionFactory::getInstructionDescription(), [](uint32_t ins) { return IType::ArithmeticInstructionFactory::create(ins); }},
         { IType     ::FenceInstructionFactory::getInstructionDescription(), [](uint32_t ins) { return IType     ::FenceInstructionFactory::create(ins); }},
         { IType      ::LoadInstructionFactory::getInstructionDescription(), [](uint32_t ins) { return IType      ::LoadInstructionFactory::create(ins); }},
+
+        { RType    ::AtomicInstructionFactory::getInstructionDescription(), [](uint32_t ins) { return RType    ::AtomicInstructionFactory::create(ins); }},
         { RType          ::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return RType          ::InstructionFactory::create(ins); }},
-        { 0x2F, [](uint32_t ins) { return RType          ::InstructionFactory::create(ins); }},
+
         { SType          ::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return SType          ::InstructionFactory::create(ins); }},
         { BType          ::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return BType          ::InstructionFactory::create(ins); }},
         { System         ::InstructionFactory::getInstructionDescription(), [](uint32_t ins) { return System         ::InstructionFactory::create(ins); }},

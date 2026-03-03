@@ -49,15 +49,13 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
 void CSRRW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     CsrUnit& csr = cpu.getCsr();
 
-    // CSRRW mereu suprascrie CSR-ul, deci isWrite = true
     if (!csr.canAccess(csr_addr, cpu.getPrivilegeMode(), true)) {
-        // TODO: cpu.takeTrap(Exception::IllegalInstruction);
+        cpu.takeTrap(ExceptionCause::IllegalInstruction);
         return;
     }
 
     uint32_t rs1_value = cpu.getRegister(rs1);
 
-    // Citim valoarea veche doar dacă rd != 0 (altfel generăm efecte secundare degeaba)
     if (rd != 0) {
         uint32_t old_value = csr.read(csr_addr);
         cpu.setRegister(rd, old_value);
@@ -77,11 +75,10 @@ void CSRRW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
 void CSRRS::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     CsrUnit& csr = cpu.getCsr();
 
-    // Dacă rs1 == 0, instrucțiunea nu modifică CSR-ul (este doar un read)
     bool isWrite = (rs1 != 0);
 
     if (!csr.canAccess(csr_addr, cpu.getPrivilegeMode(), isWrite)) {
-        // TODO: cpu.takeTrap(Exception::IllegalInstruction);
+        cpu.takeTrap(ExceptionCause::IllegalInstruction);
         return;
     }
 
@@ -108,7 +105,7 @@ void CSRRC::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     bool isWrite = (rs1 != 0);
 
     if (!csr.canAccess(csr_addr, cpu.getPrivilegeMode(), isWrite)) {
-        // TODO: cpu.takeTrap(Exception::IllegalInstruction);
+        cpu.takeTrap(ExceptionCause::IllegalInstruction);
         return;
     }
 
@@ -133,7 +130,7 @@ void CSRRWI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     CsrUnit& csr = cpu.getCsr();
 
     if (!csr.canAccess(csr_addr, cpu.getPrivilegeMode(), true)) {
-        // TODO: cpu.takeTrap(Exception::IllegalInstruction);
+        cpu.takeTrap(ExceptionCause::IllegalInstruction);
         return;
     }
 
@@ -161,7 +158,7 @@ void CSRRSI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     bool isWrite = (uimm != 0);
 
     if (!csr.canAccess(csr_addr, cpu.getPrivilegeMode(), isWrite)) {
-        // TODO: cpu.takeTrap(Exception::IllegalInstruction);
+        cpu.takeTrap(ExceptionCause::IllegalInstruction);
         return;
     }
 
@@ -188,7 +185,7 @@ void CSRRCI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     bool isWrite = (uimm != 0);
 
     if (!csr.canAccess(csr_addr, cpu.getPrivilegeMode(), isWrite)) {
-        // TODO: cpu.takeTrap(Exception::IllegalInstruction);
+        cpu.takeTrap(ExceptionCause::IllegalInstruction);
         return;
     }
 
@@ -211,13 +208,15 @@ void CSRRCI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
 void ECALL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     instructionOutput.consoleLog = "ECALL triggered";
 
-    // Cauza depinde de modul din care se apelează
     PrivilegeMode currentMode = cpu.getPrivilegeMode();
     ExceptionCause cause;
 
-    if (currentMode == PrivilegeMode::User)        cause = ExceptionCause::EnvironmentCallFromUMode;
-    else if (currentMode == PrivilegeMode::Supervisor) cause = ExceptionCause::EnvironmentCallFromSMode;
-    else                                           cause = ExceptionCause::EnvironmentCallFromMMode;
+    if (currentMode == PrivilegeMode::User)
+        cause = ExceptionCause::EnvironmentCallFromUMode;
+    else if (currentMode == PrivilegeMode::Supervisor)
+        cause = ExceptionCause::EnvironmentCallFromSMode;
+    else
+        cause = ExceptionCause::EnvironmentCallFromMMode;
 
     cpu.takeTrap(cause);
 }
@@ -246,7 +245,7 @@ void SRET::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
 }
 
 void SFENCE_VMA::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
-    // În viitor, dacă implementezi un cache TLB, aici vei apela mmu.flushTLB()
+    // If I'll implement a cache TLB, here I'll call mmu.flushTLB()
     cpu.setPc(cpu.getPc() + 4);
     instructionOutput.consoleLog = "SFENCE.VMA: TLB Flushed";
 };

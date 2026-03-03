@@ -262,6 +262,29 @@ void AND::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 #endif
 }
 
+std::unique_ptr<Instruction> AtomicInstructionFactory::create(uint32_t encodedInstruction)
+{
+    static const std::unordered_map<InstructionDescriptor, std::function<std::unique_ptr<Instruction>(uint32_t)>, InstructionDescriptor::InstructionDescriptorHash> instructionMap = {
+        { AMOSWAP::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<AMOSWAP>(ins); }}
+    };
+
+    uint8_t funct3 = getBits(encodedInstruction, 12, 14);
+    uint8_t funct7 = getBits(encodedInstruction, 25, 31);
+
+#if DEBUG
+    std::cout << "funct3: " << std::bitset<8>(funct3) << std::endl;
+    std::cout << "funct7: " << std::bitset<8>(funct7) << std::endl;
+#endif
+
+    InstructionDescriptor descriptor{funct3, funct7};
+
+    auto it = instructionMap.find(descriptor);
+    if (it != instructionMap.end())
+        return it->second(encodedInstruction);
+
+    return nullptr;
+}
+
 void AMOSWAP::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
     Memory& mem = Memory::getInstance();
@@ -269,15 +292,9 @@ void AMOSWAP::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     uint32_t memory_address = cpu.getRegister(rs1);
     uint32_t value_to_write = cpu.getRegister(rs2);
 
-    // Citim valoarea veche din memorie
-    // (Folosim read32/write32. Dacă ai doar citeșteOctet, combină 4 octeți)
-    // Presupunem că ai mem.read32(addr) și mem.write32(addr, val)
     uint32_t old_value = mem.read32(memory_address);
-
-    // Scriem noua valoare atomic (în emulator e implicit atomic)
     mem.write32(memory_address, value_to_write);
 
-    // Salvăm valoarea veche în rd (destinație)
     if (rd != 0) {
         cpu.setRegister(rd, old_value);
     }
