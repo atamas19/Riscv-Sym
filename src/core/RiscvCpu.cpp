@@ -97,28 +97,40 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
     InstructionOutput test;
 
     for (int i{0}; true; ++i) {
-        #if DEBUG
-        std::cout << "PC: " << std::to_string(this->_pc) << " executed for " << i << "\n";
-        #endif
-        uint32_t binaryInstruction = _mem.read32(this->_pc);
+        try {
+            #if DEBUG
+            std::cout << "PC: " << std::to_string(this->_pc) << " executed for " << i << "\n";
+            #endif
+            uint32_t binaryInstruction = _mem.read32(this->_pc, true);
 
-        if (binaryInstruction == 0) {
-            std::cout << "End of code reached (0x0 instruction).\n";
-            break;
+            if (binaryInstruction == 0 && this->_pc == 0) {
+                 std::cout << "Halted at PC=0\n"; break;
+            }
+
+            auto instruction = InstructionFactory::create(binaryInstruction);
+            if (!instruction) {
+                takeTrap(ExceptionCause::IllegalInstruction, binaryInstruction);
+                continue;
+            }
+
+            instruction->execute(*this, test);
+
+            #if DEBUG
+            std::cout << "\nConsole log: " << test.consoleLog << "\n";
+            #endif
+
+        } catch (const PageFaultException& e) {
+            ExceptionCause cause;
+            if (e.accessType == AccessType::InstructionFetch) {
+                cause = ExceptionCause::InstructionPageFault;
+            } else if (e.accessType == AccessType::Load) {
+                cause = ExceptionCause::LoadPageFault;
+            } else {
+                cause = ExceptionCause::StorePageFault;
+            }
+
+            takeTrap(cause, e.faultingAddress);
         }
-
-        auto instruction = InstructionFactory::create(binaryInstruction);
-
-        if (!instruction) {
-             std::cout << "Unknown instruction " << std::hex << binaryInstruction << " at PC: " << std::hex << _pc << "\n";
-             break;
-        }
-
-        instruction->execute(*this, test);
-
-        #if DEBUG
-        std::cout << "\nConsole log: " << test.consoleLog << "\n";
-        #endif
     }
 
     return true;

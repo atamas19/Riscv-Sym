@@ -63,7 +63,7 @@ uint32_t Memory::read32Physical(uint32_t paddr) {
     return b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
 }
 
-uint32_t Memory::translateAddress(uint32_t vaddr) {
+uint32_t Memory::translateAddress(uint32_t vaddr, AccessType type) {
     if ((_currentSatp & 0x80000000) == 0) return vaddr;
 
     uint32_t root_ppn = _currentSatp & 0x3FFFFF;
@@ -76,8 +76,8 @@ uint32_t Memory::translateAddress(uint32_t vaddr) {
     uint32_t pte1_addr = root_table_addr + (vpn1 * 4);
     uint32_t pte1 = read32Physical(pte1_addr);
 
-    if ((pte1 & 0x1) == 0) return 0; // Page Fault! (Bitul V=0)
-    // Here would be the Megapasses checks, but xv64 Sv32 doesn't use them by default
+    if ((pte1 & 0x1) == 0) throw PageFaultException(vaddr, type);
+    // Here would be the megapage checks, but xv6 Sv32 doesn't use them by default
 
     uint32_t pte1_ppn = (pte1 >> 10) & 0x3FFFFF;
     uint32_t leaf_table_addr = pte1_ppn * PAGE_SIZE;
@@ -85,7 +85,15 @@ uint32_t Memory::translateAddress(uint32_t vaddr) {
     uint32_t pte0_addr = leaf_table_addr + (vpn0 * 4);
     uint32_t pte0 = read32Physical(pte0_addr);
 
-    if ((pte0 & 0x1) == 0) return 0; // Page Fault!
+    // Check leaf PTE validity and permissions according to Sv32:
+    if ((pte0 & 0x1) == 0) throw PageFaultException(vaddr, type);
+    bool r = (pte0 & 0x2) != 0; // Read
+    bool w = (pte0 & 0x4) != 0; // Write
+    bool x = (pte0 & 0x8) != 0; // Execute
+    // Invalid leaf PTE if neither R nor X is set, or if W is set without R.
+    if ((!r && !x) || (w && !r)) {
+        return 0; // Page Fault: permission/configuration error
+    }
 
     uint32_t final_ppn = (pte0 >> 10) & 0x3FFFFF;
     uint32_t physical_address = (final_ppn * PAGE_SIZE) + offset;
@@ -204,7 +212,7 @@ bool Memory::handleMMIORead(uint32_t address, uint8_t& outValue) {
 void Memory::loadDiskImage(const std::string& path) {
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
-        std::cerr << "Error: Couldn't load fs.img!\n";
+        std::cerr << "Error: Couldn't load image from " << path << "\n";
         return;
     }
     std::streamsize size = file.tellg();
@@ -217,7 +225,7 @@ void Memory::loadDiskImage(const std::string& path) {
 }
 
 void Memory::write32(uint32_t address, uint32_t value) {
-    uint32_t paddr = translateAddress(address);
+    uint32_t paddr = translateAddress(address, AccessType::Store);
     if (paddr == 0) return;
     if (handleMMIO(paddr, value)) return;
 
@@ -234,14 +242,15 @@ void Memory::write32(uint32_t address, uint32_t value) {
     write8(paddr + 2, (value >> 16) & 0xFF); write8(paddr + 3, (value >> 24) & 0xFF);
 }
 
-uint32_t Memory::read32(uint32_t address) {
-    uint32_t paddr = translateAddress(address);
-    if (paddr == 0) return 0;
+uint32_t Memory::read32(uint32_t address, bool isInstruction) {
+    AccessType type = isInstruction ? AccessType::InstructionFetch : AccessType::Load;
+    uint32_t paddr = translateAddress(address, type);
+
     return read32Physical(paddr);
 }
 
 void Memory::write16(uint32_t address, uint16_t value) {
-    uint32_t paddr = translateAddress(address);
+    uint32_t paddr = translateAddress(address, AccessType::Store);
     if (paddr == 0) return;
     if (handleMMIO(paddr, value)) return;
 
@@ -257,8 +266,8 @@ void Memory::write16(uint32_t address, uint16_t value) {
 }
 
 uint16_t Memory::read16(uint32_t address) {
-    uint32_t paddr = translateAddress(address);
-    if (paddr == 0) return 0;
+    uint32_t paddr = translateAddress(address, AccessType::Load);
+
 
     uint8_t mmioValue;
     if (handleMMIORead(paddr, mmioValue)) return mmioValue;
@@ -275,7 +284,7 @@ uint16_t Memory::read16(uint32_t address) {
 }
 
 void Memory::write8(uint32_t address, uint8_t value) {
-    uint32_t paddr = translateAddress(address);
+    uint32_t paddr = translateAddress(address, AccessType::Store);
     if (paddr == 0) return;
     if (handleMMIO(paddr, value)) return;
 
@@ -284,8 +293,8 @@ void Memory::write8(uint32_t address, uint8_t value) {
 }
 
 uint8_t Memory::read8(uint32_t address) {
-    uint32_t paddr = translateAddress(address);
-    if (paddr == 0) return 0;
+    uint32_t paddr = translateAddress(address, AccessType::Load);
+
 
     uint8_t mmioValue;
     if (handleMMIORead(paddr, mmioValue)) return mmioValue;

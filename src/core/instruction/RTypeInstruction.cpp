@@ -270,12 +270,14 @@ std::unique_ptr<Instruction> AtomicInstructionFactory::create(uint32_t encodedIn
     uint8_t funct3 = getBits(encodedInstruction, 12, 14);
     uint8_t funct7 = getBits(encodedInstruction, 25, 31);
 
+    uint8_t amo_op = funct7 >> 2;
+
 #if DEBUG
     std::cout << "funct3: " << std::bitset<8>(funct3) << std::endl;
     std::cout << "funct7: " << std::bitset<8>(funct7) << std::endl;
 #endif
 
-    InstructionDescriptor descriptor{funct3, funct7};
+    InstructionDescriptor descriptor{funct3, amo_op};
 
     auto it = instructionMap.find(descriptor);
     if (it != instructionMap.end())

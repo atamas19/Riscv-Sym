@@ -4,7 +4,23 @@
 #include <unordered_map>
 #include <array>
 #include <vector>
+#include <string>
 #include <memory>
+#include <stdexcept>
+
+enum class AccessType {
+    InstructionFetch,
+    Load,
+    Store
+};
+
+struct PageFaultException : public std::runtime_error {
+    uint32_t faultingAddress;
+    AccessType accessType;
+
+    PageFaultException(uint32_t vaddr, AccessType type)
+        : std::runtime_error("Page Fault"), faultingAddress(vaddr), accessType(type) {}
+};
 
 class Memory {
 public:
@@ -25,7 +41,7 @@ public:
     void setSATP(uint32_t satp);
 
     void write32(uint32_t address, uint32_t value);
-    uint32_t read32(uint32_t address);
+    uint32_t read32(uint32_t address, bool isInstruction = false);
 
     void write16(uint32_t address, uint16_t value);
     uint16_t read16(uint32_t address);
@@ -42,7 +58,7 @@ private:
     uint8_t* getMemoryPtr(uint32_t address, bool allocateIfNeeded);
 
     // --- MMU (Sv32) ---
-    uint32_t translateAddress(uint32_t vaddr);
+    uint32_t translateAddress(uint32_t vaddr, AccessType type);
     uint32_t read32Physical(uint32_t paddr);
 
 private:
