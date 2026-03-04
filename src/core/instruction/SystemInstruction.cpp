@@ -236,7 +236,16 @@ void MRET::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
 }
 
 void SRET::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
-    if (cpu.getPrivilegeMode() < PrivilegeMode::Supervisor) {
+    PrivilegeMode currentMode = cpu.getPrivilegeMode();
+    if (currentMode == PrivilegeMode::User) {
+        cpu.takeTrap(ExceptionCause::IllegalInstruction, instruction);
+        return;
+    }
+
+    uint32_t mstatus = cpu.getCsr().read(CsrAddress::MSTATUS);
+    bool tsr = (mstatus & (1 << 22)) != 0;
+
+    if (cpu.getPrivilegeMode() == PrivilegeMode::Supervisor && tsr) {
         cpu.takeTrap(ExceptionCause::IllegalInstruction, instruction);
         return;
     }

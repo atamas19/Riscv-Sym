@@ -92,7 +92,25 @@ uint32_t Memory::translateAddress(uint32_t vaddr, AccessType type) {
     bool x = (pte0 & 0x8) != 0; // Execute
     // Invalid leaf PTE if neither R nor X is set, or if W is set without R.
     if ((!r && !x) || (w && !r)) {
-        return 0; // Page Fault: permission/configuration error
+        throw PageFaultException(vaddr, type); // Page Fault: permission/configuration error
+    }
+
+    switch (type) {
+        case AccessType::InstructionFetch:
+            if (!x) {
+                throw PageFaultException(vaddr, type);
+            }
+            break;
+        case AccessType::Load:
+            if (!r) {
+                throw PageFaultException(vaddr, type);
+            }
+            break;
+        case AccessType::Store:
+            if (!w) {
+                throw PageFaultException(vaddr, type);
+            }
+            break;
     }
 
     uint32_t final_ppn = (pte0 >> 10) & 0x3FFFFF;
@@ -226,7 +244,7 @@ void Memory::loadDiskImage(const std::string& path) {
 
 void Memory::write32(uint32_t address, uint32_t value) {
     uint32_t paddr = translateAddress(address, AccessType::Store);
-    if (paddr == 0) return;
+
     if (handleMMIO(paddr, value)) return;
 
     uint32_t pageIndex = paddr >> PAGE_SHIFT;
@@ -251,7 +269,7 @@ uint32_t Memory::read32(uint32_t address, bool isInstruction) {
 
 void Memory::write16(uint32_t address, uint16_t value) {
     uint32_t paddr = translateAddress(address, AccessType::Store);
-    if (paddr == 0) return;
+
     if (handleMMIO(paddr, value)) return;
 
     uint32_t pageIndex = paddr >> PAGE_SHIFT;
@@ -285,7 +303,7 @@ uint16_t Memory::read16(uint32_t address) {
 
 void Memory::write8(uint32_t address, uint8_t value) {
     uint32_t paddr = translateAddress(address, AccessType::Store);
-    if (paddr == 0) return;
+
     if (handleMMIO(paddr, value)) return;
 
     uint8_t* ptr = getMemoryPtr(paddr, true);
