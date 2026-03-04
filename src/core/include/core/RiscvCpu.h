@@ -10,11 +10,21 @@
 
 #define DEBUG 0
 
-enum class PrivilegeMode : uint8_t {
-    User = 0,
-    Supervisor = 1,
-    Reserved = 2,
-    Machine = 3
+enum class ExceptionCause : uint32_t {
+    InstructionAddressMisaligned = 0,
+    InstructionAccessFault = 1,
+    IllegalInstruction = 2,
+    Breakpoint = 3,
+    LoadAddressMisaligned = 4,
+    LoadAccessFault = 5,
+    StoreAddressMisaligned = 6,
+    StoreAccessFault = 7,
+    EnvironmentCallFromUMode = 8,
+    EnvironmentCallFromSMode = 9,
+    EnvironmentCallFromMMode = 11,
+    InstructionPageFault = 12,
+    LoadPageFault = 13,
+    StorePageFault = 15
 };
 
 class RiscvCpu {
@@ -39,6 +49,10 @@ public:
     void setRegister(uint8_t registerIndex, uint32_t registerValue);
     void setPrivilegeMode(PrivilegeMode mode);
 
+public:
+    void takeTrap(ExceptionCause cause, uint32_t trapValue = 0);
+    void returnFromTrap(PrivilegeMode retMode);
+
 private:
     RiscvCpu(): _mem(Memory::getInstance()) { reset(); };
     ~RiscvCpu() = default;
@@ -58,5 +72,5 @@ private:
     CsrUnit _csrUnit;
     Memory& _mem;
 
-    PrivilegeMode _priviledgeMode = PrivilegeMode::Machine;
+    PrivilegeMode _privilegeMode = PrivilegeMode::Machine;
 };

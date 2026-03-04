@@ -398,4 +398,30 @@ void JALR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 #endif
 }
 
+std::unique_ptr<Instruction> FenceInstructionFactory::create(uint32_t encodedInstruction)
+{
+    static const std::unordered_map<uint8_t, std::function<std::unique_ptr<Instruction>(uint32_t)>> instructionMap = {
+        { FENCE  ::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<FENCE>  (ins); }},
+        { FENCE_I::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<FENCE_I>(ins); }},
+    };
+
+    uint8_t funct3 = getBits(encodedInstruction, 12, 14);
+
+    auto it = instructionMap.find(funct3);
+    if (it != instructionMap.end())
+        return it->second(encodedInstruction);
+
+    return nullptr;
+}
+
+void FENCE::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+    cpu.setPc(cpu.getPc() + 4);
+    instructionOutput.consoleLog = "FENCE (Memory Barrier) - NOP";
+};
+
+void FENCE_I::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+    cpu.setPc(cpu.getPc() + 4);
+    instructionOutput.consoleLog = "FENCE.I (Instruction Barrier) - NOP";
+}
+
 } // namespace IType

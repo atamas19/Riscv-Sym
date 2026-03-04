@@ -25,7 +25,7 @@ CsrUnit& RiscvCpu::getCsr() {
 }
 
 PrivilegeMode RiscvCpu::getPrivilegeMode() const {
-    return _priviledgeMode;
+    return _privilegeMode;
 }
 
 void RiscvCpu::setPc(uint32_t pcValue) {
@@ -41,7 +41,7 @@ void RiscvCpu::setRegister(uint8_t registerIndex, uint32_t registerValue) {
 }
 
 void RiscvCpu::setPrivilegeMode(PrivilegeMode mode) {
-    _priviledgeMode = mode;
+    _privilegeMode = mode;
 }
 
 int RiscvCpu::executeAsmCommand(const std::string& command, InstructionOutput& instructionOutput) {
@@ -97,31 +97,117 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
     InstructionOutput test;
 
     for (int i{0}; true; ++i) {
-        #if DEBUG
-        std::cout << "PC: " << std::to_string(this->_pc) << " executed for " << i << "\n";
-        #endif
-        uint32_t binaryInstruction = _mem.read32(this->_pc);
+        try {
+            #if DEBUG
+            std::cout << "PC: " << std::to_string(this->_pc) << " executed for " << i << "\n";
+            #endif
+            uint32_t binaryInstruction = _mem.read32(this->_pc, true);
 
-        if (binaryInstruction == 0) {
-            std::cout << "End of code reached (0x0 instruction).\n";
-            break;
+            if (binaryInstruction == 0 && this->_pc == 0) {
+                 std::cout << "Halted at PC=0\n"; break;
+            }
+
+            auto instruction = InstructionFactory::create(binaryInstruction);
+            if (!instruction) {
+                takeTrap(ExceptionCause::IllegalInstruction, binaryInstruction);
+                continue;
+            }
+
+            instruction->execute(*this, test);
+
+            #if DEBUG
+            std::cout << "\nConsole log: " << test.consoleLog << "\n";
+            #endif
+
+        } catch (const PageFaultException& e) {
+            ExceptionCause cause;
+            if (e.accessType == AccessType::InstructionFetch) {
+                cause = ExceptionCause::InstructionPageFault;
+            } else if (e.accessType == AccessType::Load) {
+                cause = ExceptionCause::LoadPageFault;
+            } else {
+                cause = ExceptionCause::StorePageFault;
+            }
+
+            takeTrap(cause, e.faultingAddress);
         }
-
-        auto instruction = InstructionFactory::create(binaryInstruction);
-
-        if (!instruction) {
-             std::cout << "Unknown instruction at PC: " << std::hex << _pc << "\n";
-             break;
-        }
-        
-        instruction->execute(*this, test);
-
-        #if DEBUG
-        std::cout << "\nConsole log: " << test.consoleLog << "\n";
-        #endif
     }
 
     return true;
+}
+
+void RiscvCpu::takeTrap(ExceptionCause cause, uint32_t trapValue) {
+    uint32_t causeCode = static_cast<uint32_t>(cause);
+
+    bool delegateToS = (_privilegeMode <= PrivilegeMode::Supervisor) &&
+                       ((_csrUnit.read(CsrAddress::MEDELEG) & (1 << causeCode)) != 0);
+
+    if (delegateToS) {
+        _csrUnit.write(CsrAddress::SEPC, _pc);
+
+        _csrUnit.write(CsrAddress::SCAUSE, causeCode);
+        _csrUnit.write(CsrAddress::STVAL, trapValue);
+
+        uint32_t mstatus = _csrUnit.read(CsrAddress::MSTATUS);
+        uint32_t spp_bit = (static_cast<uint32_t>(_privilegeMode) & 1) << 8;
+
+        uint32_t sie_bit = (mstatus >> 1) & 1;
+        uint32_t spie_bit = sie_bit << 5;
+
+        mstatus = (mstatus & ~0x00000122) | spp_bit | spie_bit;
+        _csrUnit.write(CsrAddress::MSTATUS, mstatus);
+
+        _privilegeMode = PrivilegeMode::Supervisor;
+
+        _pc = _csrUnit.read(CsrAddress::STVEC) & ~0x3;
+
+    } else {
+        _csrUnit.write(CsrAddress::MEPC, _pc);
+        _csrUnit.write(CsrAddress::MCAUSE, causeCode);
+        _csrUnit.write(CsrAddress::MTVAL, trapValue);
+
+        uint32_t mstatus = _csrUnit.read(CsrAddress::MSTATUS);
+
+        uint32_t mpp_bits = (static_cast<uint32_t>(_privilegeMode) & 3) << 11;
+
+        uint32_t mie_bit = (mstatus >> 3) & 1;
+        uint32_t mpie_bit = mie_bit << 7;
+
+        mstatus = (mstatus & ~0x00001888) | mpp_bits | mpie_bit;
+        _csrUnit.write(CsrAddress::MSTATUS, mstatus);
+
+        _privilegeMode = PrivilegeMode::Machine;
+        _pc = _csrUnit.read(CsrAddress::MTVEC) & ~0x3;
+    }
+}
+
+void RiscvCpu::returnFromTrap(PrivilegeMode retMode) {
+    uint32_t mstatus = _csrUnit.read(CsrAddress::MSTATUS);
+
+    if (retMode == PrivilegeMode::Supervisor) {
+        _pc = _csrUnit.read(CsrAddress::SEPC);
+
+        uint8_t previousPrivilege = (mstatus >> 8) & 1;
+        _privilegeMode = static_cast<PrivilegeMode>(previousPrivilege);
+
+        uint32_t spie_bit = (mstatus >> 5) & 1;
+        uint32_t sie_bit = spie_bit << 1;
+
+        mstatus = (mstatus & ~0x00000122) | sie_bit | (1 << 5);
+        _csrUnit.write(CsrAddress::MSTATUS, mstatus);
+
+    } else if (retMode == PrivilegeMode::Machine) {
+        _pc = _csrUnit.read(CsrAddress::MEPC);
+
+        uint8_t previousPrivilege = (mstatus >> 11) & 3;
+        _privilegeMode = static_cast<PrivilegeMode>(previousPrivilege);
+
+        uint32_t mpie_bit = (mstatus >> 7) & 1;
+        uint32_t mie_bit = mpie_bit << 3;
+
+        mstatus = (mstatus & ~0x00001888) | mie_bit | (1 << 7);
+        _csrUnit.write(CsrAddress::MSTATUS, mstatus);
+    }
 }
 
 bool RiscvCpu::loadBinFileToMemory(const std::string& filename, uint32_t startAddr) {
@@ -140,7 +226,7 @@ bool RiscvCpu::loadBinFileToMemory(const std::string& filename, uint32_t startAd
         // TODO: consider loading bigger blocks of memory in the future
         _mem.write8(startAddr + i, buffer[i]);
     }
-    
+
     return true;
 }
 
@@ -148,7 +234,7 @@ void RiscvCpu::reset() {
     constexpr uint32_t ram_base = 0x80000000;
     constexpr uint32_t stack_size = 1024 * 1024;
 
-    _priviledgeMode = PrivilegeMode::Machine;
+    _privilegeMode = PrivilegeMode::Machine;
 
     _regs.fill(0);
     _pc = ram_base;

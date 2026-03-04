@@ -119,4 +119,12 @@ public:
     static constexpr uint16_t getInstructionDescriptor() { return 0x102; }
 };
 
+class SFENCE_VMA : public Instruction {
+public:
+    SFENCE_VMA(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+
+    static constexpr uint16_t getInstructionDescriptor() { return 0x09; }
+};
+
 } // namespace System

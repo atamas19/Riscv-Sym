@@ -6,7 +6,7 @@
 namespace System {
 
 void Instruction::decode() {
-    IType::Instruction::decode(); 
+    IType::Instruction::decode();
 
     csr_addr = static_cast<uint16_t>(imm & 0xFFF);
 }
@@ -25,6 +25,11 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
 
     if (funct3 == 0) {
         uint32_t funct12 = getBits(encodedInstruction, 20, 31);
+        uint8_t funct7 = getBits(encodedInstruction, 25, 31);
+        if (funct7 == SFENCE_VMA::getInstructionDescriptor()) {
+            return std::make_unique<SFENCE_VMA>(encodedInstruction);
+        }
+
         switch (funct12) {
             case ECALL::getInstructionDescriptor():  return std::make_unique<ECALL> (encodedInstruction);
             case EBREAK::getInstructionDescriptor(): return std::make_unique<EBREAK>(encodedInstruction);
@@ -43,6 +48,12 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
 
 void CSRRW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     CsrUnit& csr = cpu.getCsr();
+
+    if (!csr.canAccess(csr_addr, cpu.getPrivilegeMode(), true)) {
+        cpu.takeTrap(ExceptionCause::IllegalInstruction, instruction);
+        return;
+    }
+
     uint32_t rs1_value = cpu.getRegister(rs1);
 
     if (rd != 0) {
@@ -51,6 +62,11 @@ void CSRRW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     }
 
     csr.write(csr_addr, rs1_value);
+
+    if (csr_addr == CsrAddress::SATP) {
+        Memory::getInstance().setSATP(csr.read(CsrAddress::SATP));
+    }
+
     cpu.setPc(cpu.getPc() + 4);
 
     instructionOutput.consoleLog = "CSRRW: CSR[0x" + std::to_string(csr_addr) + "]";
@@ -58,13 +74,25 @@ void CSRRW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
 
 void CSRRS::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     CsrUnit& csr = cpu.getCsr();
+
+    bool isWrite = (rs1 != 0);
+
+    if (!csr.canAccess(csr_addr, cpu.getPrivilegeMode(), isWrite)) {
+        cpu.takeTrap(ExceptionCause::IllegalInstruction, instruction);
+        return;
+    }
+
     uint32_t old_val = csr.read(csr_addr);
     uint32_t rs1_val = cpu.getRegister(rs1);
 
-    if (rs1 != 0) {
+    if (isWrite) {
         csr.write(csr_addr, old_val | rs1_val);
+
+        if (csr_addr == CsrAddress::SATP) {
+            Memory::getInstance().setSATP(csr.read(CsrAddress::SATP));
+        }
     }
-    
+
     cpu.setRegister(rd, old_val);
     cpu.setPc(cpu.getPc() + 4);
 
@@ -73,11 +101,23 @@ void CSRRS::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
 
 void CSRRC::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     CsrUnit& csr = cpu.getCsr();
+
+    bool isWrite = (rs1 != 0);
+
+    if (!csr.canAccess(csr_addr, cpu.getPrivilegeMode(), isWrite)) {
+        cpu.takeTrap(ExceptionCause::IllegalInstruction, instruction);
+        return;
+    }
+
     uint32_t old_val = csr.read(csr_addr);
     uint32_t rs1_val = cpu.getRegister(rs1);
 
-    if (rs1 != 0) {
+    if (isWrite) {
         csr.write(csr_addr, old_val & ~rs1_val);
+
+        if (csr_addr == CsrAddress::SATP) {
+            Memory::getInstance().setSATP(csr.read(CsrAddress::SATP));
+        }
     }
 
     cpu.setRegister(rd, old_val);
@@ -88,6 +128,12 @@ void CSRRC::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
 
 void CSRRWI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     CsrUnit& csr = cpu.getCsr();
+
+    if (!csr.canAccess(csr_addr, cpu.getPrivilegeMode(), true)) {
+        cpu.takeTrap(ExceptionCause::IllegalInstruction, instruction);
+        return;
+    }
+
     uint32_t uimm = rs1;
 
     if (rd != 0) {
@@ -96,6 +142,10 @@ void CSRRWI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     }
     csr.write(csr_addr, uimm);
 
+    if (csr_addr == CsrAddress::SATP) {
+        Memory::getInstance().setSATP(csr.read(CsrAddress::SATP));
+    }
+
     cpu.setPc(cpu.getPc() + 4);
 
     instructionOutput.consoleLog = "CSRRWI: CSR[0x" + std::to_string(csr_addr) + "]";
@@ -103,11 +153,23 @@ void CSRRWI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
 
 void CSRRSI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     CsrUnit& csr = cpu.getCsr();
-    uint32_t old_val = csr.read(csr_addr);
     uint32_t uimm = rs1;
 
-    if (uimm != 0) {
+    bool isWrite = (uimm != 0);
+
+    if (!csr.canAccess(csr_addr, cpu.getPrivilegeMode(), isWrite)) {
+        cpu.takeTrap(ExceptionCause::IllegalInstruction, instruction);
+        return;
+    }
+
+    uint32_t old_val = csr.read(csr_addr);
+
+    if (isWrite) {
         csr.write(csr_addr, old_val | uimm);
+
+        if (csr_addr == CsrAddress::SATP) {
+            Memory::getInstance().setSATP(csr.read(CsrAddress::SATP));
+        }
     }
 
     cpu.setRegister(rd, old_val);
@@ -118,11 +180,23 @@ void CSRRSI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
 
 void CSRRCI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     CsrUnit& csr = cpu.getCsr();
-    uint32_t old_val = csr.read(csr_addr);
     uint32_t uimm = rs1;
 
-    if (uimm != 0) {
+    bool isWrite = (uimm != 0);
+
+    if (!csr.canAccess(csr_addr, cpu.getPrivilegeMode(), isWrite)) {
+        cpu.takeTrap(ExceptionCause::IllegalInstruction, instruction);
+        return;
+    }
+
+    uint32_t old_val = csr.read(csr_addr);
+
+    if (isWrite) {
         csr.write(csr_addr, old_val & ~uimm);
+
+        if (csr_addr == CsrAddress::SATP) {
+            Memory::getInstance().setSATP(csr.read(CsrAddress::SATP));
+        }
     }
 
     cpu.setRegister(rd, old_val);
@@ -132,15 +206,62 @@ void CSRRCI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
 }
 
 void ECALL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+    instructionOutput.consoleLog = "ECALL triggered";
+
+    PrivilegeMode currentMode = cpu.getPrivilegeMode();
+    ExceptionCause cause;
+
+    if (currentMode == PrivilegeMode::User)
+        cause = ExceptionCause::EnvironmentCallFromUMode;
+    else if (currentMode == PrivilegeMode::Supervisor)
+        cause = ExceptionCause::EnvironmentCallFromSMode;
+    else
+        cause = ExceptionCause::EnvironmentCallFromMMode;
+
+    cpu.takeTrap(cause);
 }
 
 void EBREAK::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+    instructionOutput.consoleLog = "EBREAK triggered";
+    cpu.takeTrap(ExceptionCause::Breakpoint);
 }
 
 void MRET::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+    if (cpu.getPrivilegeMode() < PrivilegeMode::Machine) {
+        cpu.takeTrap(ExceptionCause::IllegalInstruction, instruction);
+        return;
+    }
+    instructionOutput.consoleLog = "MRET Executed";
+    cpu.returnFromTrap(PrivilegeMode::Machine);
 }
 
 void SRET::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+    PrivilegeMode currentMode = cpu.getPrivilegeMode();
+    if (currentMode == PrivilegeMode::User) {
+        cpu.takeTrap(ExceptionCause::IllegalInstruction, instruction);
+        return;
+    }
+
+    uint32_t mstatus = cpu.getCsr().read(CsrAddress::MSTATUS);
+    bool tsr = (mstatus & (1 << 22)) != 0;
+
+    if (cpu.getPrivilegeMode() == PrivilegeMode::Supervisor && tsr) {
+        cpu.takeTrap(ExceptionCause::IllegalInstruction, instruction);
+        return;
+    }
+    instructionOutput.consoleLog = "SRET Executed";
+    cpu.returnFromTrap(PrivilegeMode::Supervisor);
 }
+
+void SFENCE_VMA::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+    // SFENCE.VMA is not legal in U-mode (and may be further restricted by TVM).
+    if (cpu.getPrivilegeMode() < PrivilegeMode::Supervisor) {
+        cpu.takeTrap(ExceptionCause::IllegalInstruction, instruction);
+        return;
+    }
+    // If I'll implement a cache TLB, here I'll call mmu.flushTLB()
+    cpu.setPc(cpu.getPc() + 4);
+    instructionOutput.consoleLog = "SFENCE.VMA: TLB Flushed";
+};
 
 } // namespace System

@@ -3,9 +3,9 @@
 int main() {
     RiscvCpu& cpu = RiscvCpu::getInstance();
 
-    constexpr const char* path = "/home/atamas19/projects/randomStuff/elfTest/hello.bin";
+    Memory::getInstance().loadDiskImage("fs.img");
 
-    cpu.executeFromBinFile(path);
+    cpu.executeFromBinFile("/home/atamas19/projects/dependencies/xv6-riscv-32bit/kernel/kernel.bin");
 
     return 0;
 }

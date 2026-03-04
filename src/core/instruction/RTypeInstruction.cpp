@@ -196,7 +196,7 @@ void SRL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 #if DEBUG
     std::cout << cpu.getRegister(rd);
-#endif   
+#endif
 }
 
 void SRA::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -218,7 +218,7 @@ void SRA::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 #if DEBUG
     std::cout << cpu.getRegister(rd);
-#endif   
+#endif
 }
 
 void OR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -238,7 +238,7 @@ void OR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 #if DEBUG
     std::cout << cpu.getRegister(rd);
-#endif   
+#endif
 }
 
 void AND::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -258,7 +258,59 @@ void AND::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 #if DEBUG
     std::cout << cpu.getRegister(rd);
-#endif   
+#endif
+}
+
+std::unique_ptr<Instruction> AtomicInstructionFactory::create(uint32_t encodedInstruction)
+{
+    static const std::unordered_map<InstructionDescriptor, std::function<std::unique_ptr<Instruction>(uint32_t)>, InstructionDescriptor::InstructionDescriptorHash> instructionMap = {
+        { AMOSWAP::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<AMOSWAP>(ins); }}
+    };
+
+    uint8_t funct3 = getBits(encodedInstruction, 12, 14);
+    uint8_t funct7 = getBits(encodedInstruction, 25, 31);
+
+    uint8_t amo_op = funct7 >> 2;
+
+#if DEBUG
+    std::cout << "funct3: " << std::bitset<8>(funct3) << std::endl;
+    std::cout << "funct7: " << std::bitset<8>(funct7) << std::endl;
+#endif
+
+    InstructionDescriptor descriptor{funct3, amo_op};
+
+    auto it = instructionMap.find(descriptor);
+    if (it != instructionMap.end())
+        return it->second(encodedInstruction);
+
+    return nullptr;
+}
+
+void AMOSWAP::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+{
+    Memory& mem = Memory::getInstance();
+
+    uint32_t memory_address = cpu.getRegister(rs1);
+    uint32_t value_to_write = cpu.getRegister(rs2);
+
+    uint32_t old_value = mem.read32(memory_address);
+    mem.write32(memory_address, value_to_write);
+
+    if (rd != 0) {
+        cpu.setRegister(rd, old_value);
+    }
+
+    cpu.setPc(cpu.getPc() + 4);
+
+    instructionOutput.consoleLog = "Performed AMOSWAP.W: Mem[0x" + std::to_string(memory_address) +
+                                   "] <- x" + std::to_string(rs2) + " (" + std::to_string(value_to_write) +
+                                   "), old_val -> x" + std::to_string(rd);
+
+    instructionOutput.setRegisters({rs1, rs2, rd});
+
+#if DEBUG
+    std::cout << "AMOSWAP at 0x" << std::hex << memory_address << std::dec << "\n";
+#endif
 }
 
 } // namespace RType

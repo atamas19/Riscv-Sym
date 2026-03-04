@@ -2,7 +2,13 @@
 
 #include <array>
 #include <cstdint>
-#include <iostream>
+
+enum class PrivilegeMode : uint8_t {
+    User = 0,
+    Supervisor = 1,
+    Reserved = 2,
+    Machine = 3
+};
 
 namespace CsrAddress {
     // --- Machine Level (M-Mode) ---
@@ -51,6 +57,8 @@ public:
 
     void setBit(uint16_t address, uint32_t bitMask);
     void clearBit(uint16_t address, uint32_t bitMask);
+
+    bool canAccess(uint16_t address, PrivilegeMode currentMode, bool isWrite) const;
 
 private:
     std::array<uint32_t, 4096> _csrs;
