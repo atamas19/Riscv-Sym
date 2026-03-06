@@ -36,6 +36,10 @@ public:
 public:
     static Memory& getInstance();
 
+    int getUartInputChar() const { return _uartInputChar; }
+
+    void pollKeyboard();
+
     void loadDiskImage(const std::string& path);
 
     void setSATP(uint32_t satp);

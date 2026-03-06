@@ -97,6 +97,22 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
     InstructionOutput test;
 
     for (int i{0}; true; ++i) {
+        if (i % 20000 == 0) {
+            _mem.pollKeyboard();
+        }
+
+        if (_mem.getUartInputChar() != -1) {
+            PrivilegeMode currentMode = getPrivilegeMode();
+            uint32_t sstatus = getCsr().read(0x100);
+            bool sie = (sstatus & 0x2) != 0;
+
+            if (currentMode == PrivilegeMode::User || (currentMode == PrivilegeMode::Supervisor && sie)) {
+
+                takeTrap(static_cast<ExceptionCause>((uint32_t)0x80000009), 0);
+                continue;
+            }
+        }
+
         try {
             #if DEBUG
             std::cout << "PC: " << std::to_string(this->_pc) << " executed for " << i << "\n";

@@ -5,6 +5,11 @@
 #include <cstring>
 #include <cassert>
 #include <fstream>
+#ifdef _WIN32
+    #include <conio.h>
+#else
+    #include <unistd.h>
+#endif
 
 Memory& Memory::getInstance() {
     static Memory instance;
@@ -220,11 +225,60 @@ bool Memory::handleMMIO(uint32_t address, uint32_t value) {
 }
 
 bool Memory::handleMMIORead(uint32_t address, uint8_t& outValue) {
+    // --- UART LSR ---
+    if (address == 0x10000005) {
+        uint8_t lsr = 0x20; // TX Empty
+        if (_uartInputChar != -1) {
+            lsr |= 0x01; // RX Data Ready
+        }
+        outValue = lsr;
+        return true;
+    }
+
+    // --- UART RHR ---
+    if (address == 0x10000000) {
+        if (_uartInputChar != -1) {
+            outValue = _uartInputChar;
+            _uartInputChar = -1;
+        } else {
+            outValue = 0;
+        }
+        return true;
+    }
+
+    // --- PLIC SCLAIM ---
+    if (address == 0x0C201004) {
+        if (_uartInputChar != -1) {
+            outValue = 10; // ID UART
+        } else {
+            outValue = 0;
+        }
+        return true;
+    }
+
     if (address == UART_ADDR + 5) { outValue = 0x20; return true; }
     if (address == UART_ADDR)     { outValue = 0;    return true; }
     if (address == 0x10001004)    { outValue = 0;    return true; }
     if (address == 0x10001000)    { outValue = _spiReadBuffer; return true; }
     return false;
+}
+
+void Memory::pollKeyboard() {
+    if (_uartInputChar == -1) {
+#ifdef _WIN32
+        if (_kbhit()) {
+            char c = _getch();
+            if (c == '\n') c = '\r';
+            _uartInputChar = c;
+        }
+#else
+        char c;
+        if (read(STDIN_FILENO, &c, 1) == 1) {
+            if (c == '\n') c = '\r';
+            _uartInputChar = c;
+        }
+#endif
+    }
 }
 
 void Memory::loadDiskImage(const std::string& path) {
