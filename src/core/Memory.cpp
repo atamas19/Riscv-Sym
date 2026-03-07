@@ -39,7 +39,7 @@ void Memory::setSATP(uint32_t satp) {
 }
 
 uint32_t Memory::read32Physical(uint32_t paddr) {
-    uint8_t mmioValue;
+    uint32_t mmioValue;
     if (handleMMIORead(paddr, mmioValue)) return mmioValue;
 
     uint32_t pageIndex = paddr >> PAGE_SHIFT;
@@ -144,6 +144,8 @@ bool Memory::handleMMIO(uint32_t address, uint32_t value) {
         return true;
     }
 
+    if (address == 0x0c201004) { return true;} // PLIC COMPLETE
+
     if (address == 0x10001004) return true; // SDCARD CTR
     if (address == 0x10001000) {            // SDCARD RW
         uint8_t byteVal = value & 0xFF;
@@ -224,7 +226,7 @@ bool Memory::handleMMIO(uint32_t address, uint32_t value) {
     return false;
 }
 
-bool Memory::handleMMIORead(uint32_t address, uint8_t& outValue) {
+bool Memory::handleMMIORead(uint32_t address, uint32_t& outValue) {
     // --- UART LSR ---
     if (address == 0x10000005) {
         uint8_t lsr = 0x20; // TX Empty
@@ -256,8 +258,6 @@ bool Memory::handleMMIORead(uint32_t address, uint8_t& outValue) {
         return true;
     }
 
-    if (address == UART_ADDR + 5) { outValue = 0x20; return true; }
-    if (address == UART_ADDR)     { outValue = 0;    return true; }
     if (address == 0x10001004)    { outValue = 0;    return true; }
     if (address == 0x10001000)    { outValue = _spiReadBuffer; return true; }
     return false;
@@ -340,8 +340,7 @@ void Memory::write16(uint32_t address, uint16_t value) {
 uint16_t Memory::read16(uint32_t address) {
     uint32_t paddr = translateAddress(address, AccessType::Load);
 
-
-    uint8_t mmioValue;
+    uint32_t mmioValue;
     if (handleMMIORead(paddr, mmioValue)) return mmioValue;
 
     uint32_t pageIndex = paddr >> PAGE_SHIFT;
@@ -368,7 +367,7 @@ uint8_t Memory::read8(uint32_t address) {
     uint32_t paddr = translateAddress(address, AccessType::Load);
 
 
-    uint8_t mmioValue;
+    uint32_t mmioValue;
     if (handleMMIORead(paddr, mmioValue)) return mmioValue;
 
     uint8_t* ptr = getMemoryPtr(paddr, false);

@@ -57,7 +57,7 @@ public:
 
 private:
     bool handleMMIO(uint32_t address, uint32_t value);
-    bool handleMMIORead(uint32_t address, uint8_t& outValue);
+    bool handleMMIORead(uint32_t address, uint32_t& outValue);
 
     uint8_t* getMemoryPtr(uint32_t address, bool allocateIfNeeded);
 
