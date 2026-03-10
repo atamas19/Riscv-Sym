@@ -113,6 +113,10 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
 
                 if (seie && (currentMode == PrivilegeMode::User ||
                             (currentMode == PrivilegeMode::Supervisor && sieGlobal))) {
+                    uint32_t sipCsr = getCsr().read(0x144);
+                    sipCsr |= (1u << 9);
+                    getCsr().write(0x144, sipCsr);
+
                     takeTrap(static_cast<ExceptionCause>((uint32_t)0x80000009), 0);
                     continue;
                 }
@@ -184,7 +188,7 @@ void RiscvCpu::takeTrap(ExceptionCause cause, uint32_t trapValue) {
         uint32_t spp = (static_cast<uint32_t>(_privilegeMode) & 1);
         uint32_t sie = (sstatus >> 1) & 1;
 
-        sstatus = (sstatus & ~(1u << 1)) | (sie << 5) | (spp << 8);
+        sstatus = (sstatus & ~((1u << 1) | (1u << 5) | (1u << 8))) | (sie << 5) | (spp << 8);
         _csrUnit.write(CsrAddress::SSTATUS, sstatus);
 
         _privilegeMode = PrivilegeMode::Supervisor;
@@ -201,7 +205,7 @@ void RiscvCpu::takeTrap(ExceptionCause cause, uint32_t trapValue) {
 
         uint32_t mie = (mstatus >> 3) & 1;
 
-        mstatus = (mstatus & ~(1u << 3)) | (mie << 7) | (mpp << 11);
+        mstatus = (mstatus & ~((1u << 3) | (1u << 7) | (3u << 11))) | (mie << 7) | (mpp << 11);
         _csrUnit.write(CsrAddress::MSTATUS, mstatus);
 
         _privilegeMode = PrivilegeMode::Machine;

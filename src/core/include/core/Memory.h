@@ -33,6 +33,11 @@ public:
     static constexpr uint32_t PAGE_MASK = PAGE_SIZE - 1;
     static constexpr uint32_t PAGE_SHIFT = 12;
 
+    // --- MMIO Addresses ---
+    static constexpr uint32_t UART_RHR_ADDR = 0x10000000; // Receive Holding Register
+    static constexpr uint32_t UART_LSR_ADDR = 0x10000005; // Line Status Register
+    static constexpr uint32_t PLIC_SCLAIM_ADDR = 0x0C201004; // SCLAIM / COMPLETE
+
 public:
     static Memory& getInstance();
 

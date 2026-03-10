@@ -144,7 +144,7 @@ bool Memory::handleMMIO(uint32_t address, uint32_t value) {
         return true;
     }
 
-    if (address == 0x0c201004) { return true;} // PLIC COMPLETE
+    if (address == PLIC_SCLAIM_ADDR) { return true;} // PLIC COMPLETE
 
     if (address == 0x10001004) return true; // SDCARD CTR
     if (address == 0x10001000) {            // SDCARD RW
@@ -228,7 +228,7 @@ bool Memory::handleMMIO(uint32_t address, uint32_t value) {
 
 bool Memory::handleMMIORead(uint32_t address, uint32_t& outValue) {
     // --- UART LSR ---
-    if (address == 0x10000005) {
+    if (address == UART_LSR_ADDR) {
         uint8_t lsr = 0x20; // TX Empty
         if (_uartInputChar != -1) {
             lsr |= 0x01; // RX Data Ready
@@ -238,7 +238,7 @@ bool Memory::handleMMIORead(uint32_t address, uint32_t& outValue) {
     }
 
     // --- UART RHR ---
-    if (address == 0x10000000) {
+    if (address == UART_RHR_ADDR) {
         if (_uartInputChar != -1) {
             outValue = _uartInputChar;
             _uartInputChar = -1;
@@ -249,7 +249,7 @@ bool Memory::handleMMIORead(uint32_t address, uint32_t& outValue) {
     }
 
     // --- PLIC SCLAIM ---
-    if (address == 0x0C201004) {
+    if (address == PLIC_SCLAIM_ADDR) {
         if (_uartInputChar != -1) {
             outValue = 10; // ID UART
         } else {
