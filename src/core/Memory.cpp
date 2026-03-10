@@ -5,6 +5,11 @@
 #include <cstring>
 #include <cassert>
 #include <fstream>
+#ifdef _WIN32
+    #include <conio.h>
+#else
+    #include <unistd.h>
+#endif
 
 Memory& Memory::getInstance() {
     static Memory instance;
@@ -34,7 +39,7 @@ void Memory::setSATP(uint32_t satp) {
 }
 
 uint32_t Memory::read32Physical(uint32_t paddr) {
-    uint8_t mmioValue;
+    uint32_t mmioValue;
     if (handleMMIORead(paddr, mmioValue)) return mmioValue;
 
     uint32_t pageIndex = paddr >> PAGE_SHIFT;
@@ -139,6 +144,8 @@ bool Memory::handleMMIO(uint32_t address, uint32_t value) {
         return true;
     }
 
+    if (address == PLIC_SCLAIM_ADDR) { return true;} // PLIC COMPLETE
+
     if (address == 0x10001004) return true; // SDCARD CTR
     if (address == 0x10001000) {            // SDCARD RW
         uint8_t byteVal = value & 0xFF;
@@ -219,12 +226,59 @@ bool Memory::handleMMIO(uint32_t address, uint32_t value) {
     return false;
 }
 
-bool Memory::handleMMIORead(uint32_t address, uint8_t& outValue) {
-    if (address == UART_ADDR + 5) { outValue = 0x20; return true; }
-    if (address == UART_ADDR)     { outValue = 0;    return true; }
+bool Memory::handleMMIORead(uint32_t address, uint32_t& outValue) {
+    // --- UART LSR ---
+    if (address == UART_LSR_ADDR) {
+        uint8_t lsr = 0x20; // TX Empty
+        if (_uartInputChar != -1) {
+            lsr |= 0x01; // RX Data Ready
+        }
+        outValue = lsr;
+        return true;
+    }
+
+    // --- UART RHR ---
+    if (address == UART_RHR_ADDR) {
+        if (_uartInputChar != -1) {
+            outValue = _uartInputChar;
+            _uartInputChar = -1;
+        } else {
+            outValue = 0;
+        }
+        return true;
+    }
+
+    // --- PLIC SCLAIM ---
+    if (address == PLIC_SCLAIM_ADDR) {
+        if (_uartInputChar != -1) {
+            outValue = 10; // ID UART
+        } else {
+            outValue = 0;
+        }
+        return true;
+    }
+
     if (address == 0x10001004)    { outValue = 0;    return true; }
     if (address == 0x10001000)    { outValue = _spiReadBuffer; return true; }
     return false;
+}
+
+void Memory::pollKeyboard() {
+    if (_uartInputChar == -1) {
+#ifdef _WIN32
+        if (_kbhit()) {
+            char c = _getch();
+            if (c == '\n') c = '\r';
+            _uartInputChar = c;
+        }
+#else
+        char c;
+        if (read(STDIN_FILENO, &c, 1) == 1) {
+            if (c == '\n') c = '\r';
+            _uartInputChar = c;
+        }
+#endif
+    }
 }
 
 void Memory::loadDiskImage(const std::string& path) {
@@ -286,8 +340,7 @@ void Memory::write16(uint32_t address, uint16_t value) {
 uint16_t Memory::read16(uint32_t address) {
     uint32_t paddr = translateAddress(address, AccessType::Load);
 
-
-    uint8_t mmioValue;
+    uint32_t mmioValue;
     if (handleMMIORead(paddr, mmioValue)) return mmioValue;
 
     uint32_t pageIndex = paddr >> PAGE_SHIFT;
@@ -314,7 +367,7 @@ uint8_t Memory::read8(uint32_t address) {
     uint32_t paddr = translateAddress(address, AccessType::Load);
 
 
-    uint8_t mmioValue;
+    uint32_t mmioValue;
     if (handleMMIORead(paddr, mmioValue)) return mmioValue;
 
     uint8_t* ptr = getMemoryPtr(paddr, false);

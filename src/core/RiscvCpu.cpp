@@ -97,6 +97,32 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
     InstructionOutput test;
 
     for (int i{0}; true; ++i) {
+        if (i % 20000 == 0) {
+            _mem.pollKeyboard();
+        }
+
+        if (_mem.getUartInputChar() != -1) {
+            PrivilegeMode currentMode = getPrivilegeMode();
+
+            if (currentMode != PrivilegeMode::Machine) {
+                uint32_t sstatus = getCsr().read(0x100);
+                uint32_t sieCsr = getCsr().read(0x104);
+
+                bool sieGlobal = (sstatus & 0x2) != 0;
+                bool seie = (sieCsr & (1u << 9)) != 0;
+
+                if (seie && (currentMode == PrivilegeMode::User ||
+                            (currentMode == PrivilegeMode::Supervisor && sieGlobal))) {
+                    uint32_t sipCsr = getCsr().read(0x144);
+                    sipCsr |= (1u << 9);
+                    getCsr().write(0x144, sipCsr);
+
+                    takeTrap(static_cast<ExceptionCause>((uint32_t)0x80000009), 0);
+                    continue;
+                }
+            }
+        }
+
         try {
             #if DEBUG
             std::cout << "PC: " << std::to_string(this->_pc) << " executed for " << i << "\n";
@@ -137,43 +163,49 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
 }
 
 void RiscvCpu::takeTrap(ExceptionCause cause, uint32_t trapValue) {
-    uint32_t causeCode = static_cast<uint32_t>(cause);
+    uint32_t rawCause = static_cast<uint32_t>(cause);
+    uint32_t causeIndex = rawCause & 0x7FFFFFFF;
 
-    bool delegateToS = (_privilegeMode <= PrivilegeMode::Supervisor) &&
-                       ((_csrUnit.read(CsrAddress::MEDELEG) & (1 << causeCode)) != 0);
+    bool isInterrupt = (rawCause & 0x80000000) != 0;
+    bool delegateToS = false;
+
+    if (_privilegeMode <= PrivilegeMode::Supervisor) {
+        if (isInterrupt) {
+            uint32_t mideleg = _csrUnit.read(CsrAddress::MIDELEG);
+            delegateToS = (mideleg & (1 << causeIndex)) != 0;
+        } else {
+            uint32_t medeleg = _csrUnit.read(CsrAddress::MEDELEG);
+            delegateToS = (medeleg & (1 << causeIndex)) != 0;
+        }
+    }
 
     if (delegateToS) {
         _csrUnit.write(CsrAddress::SEPC, _pc);
-
-        _csrUnit.write(CsrAddress::SCAUSE, causeCode);
+        _csrUnit.write(CsrAddress::SCAUSE, rawCause);
         _csrUnit.write(CsrAddress::STVAL, trapValue);
 
-        uint32_t mstatus = _csrUnit.read(CsrAddress::MSTATUS);
-        uint32_t spp_bit = (static_cast<uint32_t>(_privilegeMode) & 1) << 8;
+        uint32_t sstatus = _csrUnit.read(CsrAddress::SSTATUS);
+        uint32_t spp = (static_cast<uint32_t>(_privilegeMode) & 1);
+        uint32_t sie = (sstatus >> 1) & 1;
 
-        uint32_t sie_bit = (mstatus >> 1) & 1;
-        uint32_t spie_bit = sie_bit << 5;
-
-        mstatus = (mstatus & ~0x00000122) | spp_bit | spie_bit;
-        _csrUnit.write(CsrAddress::MSTATUS, mstatus);
+        sstatus = (sstatus & ~((1u << 1) | (1u << 5) | (1u << 8))) | (sie << 5) | (spp << 8);
+        _csrUnit.write(CsrAddress::SSTATUS, sstatus);
 
         _privilegeMode = PrivilegeMode::Supervisor;
-
         _pc = _csrUnit.read(CsrAddress::STVEC) & ~0x3;
 
     } else {
         _csrUnit.write(CsrAddress::MEPC, _pc);
-        _csrUnit.write(CsrAddress::MCAUSE, causeCode);
+        _csrUnit.write(CsrAddress::MCAUSE, rawCause);
         _csrUnit.write(CsrAddress::MTVAL, trapValue);
 
         uint32_t mstatus = _csrUnit.read(CsrAddress::MSTATUS);
 
-        uint32_t mpp_bits = (static_cast<uint32_t>(_privilegeMode) & 3) << 11;
+        uint32_t mpp = (static_cast<uint32_t>(_privilegeMode) & 3);
 
-        uint32_t mie_bit = (mstatus >> 3) & 1;
-        uint32_t mpie_bit = mie_bit << 7;
+        uint32_t mie = (mstatus >> 3) & 1;
 
-        mstatus = (mstatus & ~0x00001888) | mpp_bits | mpie_bit;
+        mstatus = (mstatus & ~((1u << 3) | (1u << 7) | (3u << 11))) | (mie << 7) | (mpp << 11);
         _csrUnit.write(CsrAddress::MSTATUS, mstatus);
 
         _privilegeMode = PrivilegeMode::Machine;

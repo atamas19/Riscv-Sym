@@ -33,8 +33,17 @@ public:
     static constexpr uint32_t PAGE_MASK = PAGE_SIZE - 1;
     static constexpr uint32_t PAGE_SHIFT = 12;
 
+    // --- MMIO Addresses ---
+    static constexpr uint32_t UART_RHR_ADDR = 0x10000000; // Receive Holding Register
+    static constexpr uint32_t UART_LSR_ADDR = 0x10000005; // Line Status Register
+    static constexpr uint32_t PLIC_SCLAIM_ADDR = 0x0C201004; // SCLAIM / COMPLETE
+
 public:
     static Memory& getInstance();
+
+    int getUartInputChar() const { return _uartInputChar; }
+
+    void pollKeyboard();
 
     void loadDiskImage(const std::string& path);
 
@@ -53,7 +62,7 @@ public:
 
 private:
     bool handleMMIO(uint32_t address, uint32_t value);
-    bool handleMMIORead(uint32_t address, uint8_t& outValue);
+    bool handleMMIORead(uint32_t address, uint32_t& outValue);
 
     uint8_t* getMemoryPtr(uint32_t address, bool allocateIfNeeded);
 
