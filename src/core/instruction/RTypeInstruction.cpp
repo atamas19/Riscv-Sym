@@ -2,6 +2,7 @@
 #include <core/RiscvCpu.h>
 
 #include <unordered_map>
+#include <iostream>
 
 namespace RType
 {
@@ -11,6 +12,12 @@ void Instruction::decode()
     rd  = getBits(instruction, 7, 11);
     rs1 = getBits(instruction, 15, 19);
     rs2 = getBits(instruction, 20, 24);
+
+#if DEBUG
+    std::cout << "rs1: " << std::bitset<8>(rs1) << std::endl;
+    std::cout << "rs2: " << std::bitset<8>(rs2) << std::endl;
+    std::cout << "rd: "  << std::bitset<8>(rd)  << std::endl;
+#endif
 }
 
 std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruction)
@@ -30,6 +37,11 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
 
     uint8_t funct3 = getBits(encodedInstruction, 12, 14);
     uint8_t funct7 = getBits(encodedInstruction, 25, 31);
+
+#if DEBUG
+    std::cout << "funct3: " << std::bitset<8>(funct3) << std::endl;
+    std::cout << "funct7: " << std::bitset<8>(funct7) << std::endl;
+#endif
 
     InstructionDescriptor descriptor{funct3, funct7};
 
@@ -54,6 +66,10 @@ void ADD::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                     ") + x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) + ").";
     instructionOutput.setRegisters({rs1, rs2, rd});
+
+#if DEBUG
+    std::cout << cpu.getRegister(rd);
+#endif
 }
 
 void SUB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -71,6 +87,10 @@ void SUB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     ") - x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) + ").";
 
     instructionOutput.setRegisters({rs1, rs2, rd});
+
+#if DEBUG
+    std::cout << cpu.getRegister(rd);
+#endif
 }
 
 void SLL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -89,6 +109,10 @@ void SLL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                     ") << x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) + " bits).";
     instructionOutput.setRegisters({rs1, rs2, rd});
+
+#if DEBUG
+    std::cout << cpu.getRegister(rd);
+#endif
 }
 
 void SLT::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -106,6 +130,10 @@ void SLT::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                 ") < x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) +
                                 ")) → " + std::to_string(result) + ".";
     instructionOutput.setRegisters({rs1, rs2, rd});
+
+#if DEBUG
+    std::cout << cpu.getRegister(rd);
+#endif
 }
 
 void SLTU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -123,6 +151,10 @@ void SLTU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                 ") < (unsigned)x" + std::to_string(rs2) + " (" + std::to_string(static_cast<uint32_t>(rs2Value)) +
                                 ")) → " + std::to_string(result) + ".";
     instructionOutput.setRegisters({rs1, rs2, rd});
+
+#if DEBUG
+    std::cout << cpu.getRegister(rd);
+#endif
 }
 
 void XOR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -139,6 +171,10 @@ void XOR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                ") ^ x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) + ").";
     instructionOutput.setRegisters({rs1, rs2, rd});
+
+#if DEBUG
+    std::cout << cpu.getRegister(rd);
+#endif
 }
 
 void SRL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -157,6 +193,10 @@ void SRL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                ") >> x" + std::to_string(rs2) + " (" + std::to_string(shiftValue) + " bits) (logical shift).";
     instructionOutput.setRegisters({rs1, rs2, rd});
+
+#if DEBUG
+    std::cout << cpu.getRegister(rd);
+#endif
 }
 
 void SRA::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -175,6 +215,10 @@ void SRA::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                ") >> x" + std::to_string(rs2) + " (" + std::to_string(shiftValue) + " bits) (arithmetic shift).";
     instructionOutput.setRegisters({rs1, rs2, rd});
+
+#if DEBUG
+    std::cout << cpu.getRegister(rd);
+#endif
 }
 
 void OR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -191,6 +235,10 @@ void OR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                ") | x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) + ").";
     instructionOutput.setRegisters({rs1, rs2, rd});
+
+#if DEBUG
+    std::cout << cpu.getRegister(rd);
+#endif
 }
 
 void AND::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -207,6 +255,10 @@ void AND::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                ") & x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) + ").";
     instructionOutput.setRegisters({rs1, rs2, rd});
+
+#if DEBUG
+    std::cout << cpu.getRegister(rd);
+#endif
 }
 
 std::unique_ptr<Instruction> AtomicInstructionFactory::create(uint32_t encodedInstruction)
@@ -219,6 +271,11 @@ std::unique_ptr<Instruction> AtomicInstructionFactory::create(uint32_t encodedIn
     uint8_t funct7 = getBits(encodedInstruction, 25, 31);
 
     uint8_t amo_op = funct7 >> 2;
+
+#if DEBUG
+    std::cout << "funct3: " << std::bitset<8>(funct3) << std::endl;
+    std::cout << "funct7: " << std::bitset<8>(funct7) << std::endl;
+#endif
 
     InstructionDescriptor descriptor{funct3, amo_op};
 
@@ -250,6 +307,10 @@ void AMOSWAP::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                    "), old_val -> x" + std::to_string(rd);
 
     instructionOutput.setRegisters({rs1, rs2, rd});
+
+#if DEBUG
+    std::cout << "AMOSWAP at 0x" << std::hex << memory_address << std::dec << "\n";
+#endif
 }
 
 } // namespace RType

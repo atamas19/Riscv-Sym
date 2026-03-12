@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <functional>
+#include <iostream>
 #include <algorithm>
 
 static std::optional<uint8_t> registerNameToNumber(const std::string& reg)
@@ -43,6 +44,14 @@ void AssemblyInstruction::parse(const std::string& line)
         if (!operand.empty())
             operands.push_back(operand);
     }
+}
+
+void AssemblyInstruction::print() const
+{
+    std::cout << "Instruction name: " << instructionName << "\nOperands: ";
+    for (const auto& op : operands)
+        std::cout << op << " ";
+    std::cout << "\n";
 }
 
 void AssemblyInstruction::trim(std::string& s)

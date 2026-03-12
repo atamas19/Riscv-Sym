@@ -1,6 +1,6 @@
 #include "core/CsrUnit.h"
 
-#include <spdlog/spdlog.h>
+#include <iostream>
 
 namespace {
     // --- Bits for mstatus ---
@@ -72,7 +72,10 @@ void CsrUnit::write(uint16_t address, uint32_t value) {
     if (address >= 4096) return;
 
     if (isReadOnly(address)) {
-        spdlog::debug("[CSR] Attempted write to Read-Only CSR 0x{:x}", address);
+        #if DEBUG
+        std::cout << "[CSR] Warning: Attempted write to Read-Only CSR 0x"
+                  << std::hex << address << std::dec << "\n";
+        #endif
         return;
     }
 

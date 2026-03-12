@@ -45,7 +45,7 @@ public:
 
     void pollKeyboard();
 
-    bool loadDiskImage(const std::string& path);
+    void loadDiskImage(const std::string& path);
 
     void setSATP(uint32_t satp);
 

@@ -1,8 +1,8 @@
 #include <core/RiscvCpu.h>
 #include <core/AssemblyCompiler.h>
 
-#include <spdlog/spdlog.h>
-
+#include <iostream>
+#include <bitset>
 #include <fstream>
 
 RiscvCpu& RiscvCpu::getInstance()
@@ -68,7 +68,7 @@ int RiscvCpu::executeAsmCommand(const std::string& command, InstructionOutput& i
 std::unique_ptr<Instruction> RiscvCpu::getInstructionFromAsmCommand(const std::string& asmCommand, InstructionOutput& instructionOutput) {
     uint32_t binaryInstruction = AssemblyCompiler::compile(asmCommand, instructionOutput);
 
-    spdlog::debug("Binary Instruction: {:032b}", binaryInstruction);
+    std::cout << "Binary Instruction: " << std::bitset<32>(binaryInstruction) << "\n";
 
     if (binaryInstruction == 0) {
         instructionOutput.consoleLog = "Error converting `" + asmCommand + "` to binary: " + instructionOutput.consoleLog;
@@ -86,15 +86,15 @@ std::unique_ptr<Instruction> RiscvCpu::getInstructionFromAsmCommand(const std::s
 
 bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAddr) {
     if (!loadBinFileToMemory(filePath, startAddr)) {
-        spdlog::error("Couldn't load bin file to memory!");
+        std::cout << "Couldn't load bin file to memory!\n";
         return false;
     }
 
-    spdlog::info("Instructions have been loaded. Starting execution...");
+    std::cout << "Instructions have been loaded. Starting execution...\n";
 
     this->_pc = startAddr;
 
-    InstructionOutput instructionOutput;
+    InstructionOutput test;
 
     for (int i{0}; true; ++i) {
         if (i % 20000 == 0) {
@@ -124,11 +124,13 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
         }
 
         try {
+            #if DEBUG
+            std::cout << "PC: " << std::to_string(this->_pc) << " executed for " << i << "\n";
+            #endif
             uint32_t binaryInstruction = _mem.read32(this->_pc, true);
 
             if (binaryInstruction == 0 && this->_pc == 0) {
-                spdlog::info("Halted at PC=0");
-                break;
+                 std::cout << "Halted at PC=0\n"; break;
             }
 
             auto instruction = InstructionFactory::create(binaryInstruction);
@@ -137,7 +139,11 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
                 continue;
             }
 
-            instruction->execute(*this, instructionOutput);
+            instruction->execute(*this, test);
+
+            #if DEBUG
+            std::cout << "\nConsole log: " << test.consoleLog << "\n";
+            #endif
 
         } catch (const PageFaultException& e) {
             ExceptionCause cause;

@@ -116,6 +116,8 @@ public:
 
     void parse(const std::string& line);
 
+    void print() const;
+
     const std::string& getName() const;
 
     const std::vector<std::string>& getOperands() const;

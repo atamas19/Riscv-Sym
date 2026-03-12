@@ -8,6 +8,4 @@ add_executable(riscv_cli
 
 target_link_libraries(riscv_cli PRIVATE
     riscv_core
-    CLI11::CLI11
-    spdlog::spdlog
 )

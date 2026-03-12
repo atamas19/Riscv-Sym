@@ -8,6 +8,8 @@
 #include <core/Memory.h>
 #include <core/CsrUnit.h>
 
+#define DEBUG 0
+
 enum class ExceptionCause : uint32_t {
     InstructionAddressMisaligned = 0,
     InstructionAccessFault = 1,

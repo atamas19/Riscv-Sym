@@ -3,6 +3,7 @@
 #include <core/Memory.h>
 
 #include <unordered_map>
+#include <iostream>
 #include <functional>
 
 namespace SType
@@ -18,6 +19,12 @@ void Instruction::decode()
         imm = (imm | 0xfffff000);
     else
         imm = (imm & 0xfff);
+
+#if DEBUG
+    std::cout << "rs1: "  << std::bitset<8>(rs1) << std::endl;
+    std::cout << "rs2: "  << std::bitset<8>(rs2) << std::endl;
+    std::cout << "imm: "  << std::bitset<8>(imm) << std::endl;
+#endif
 }
 
 std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruction)
@@ -55,6 +62,10 @@ void SB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                 " (" + std::to_string(rs2Value & 0xFF) + ") [byte].";
     instructionOutput.setRegisters({rs1, rs2});
     instructionOutput.setRamAddresses({{finalAddress, result}});
+
+#if DEBUG
+    std::cout << "Rezultat: " << Memory::getInstance().read8(finalAddress);
+#endif
 }
 
 void SH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -75,6 +86,10 @@ void SH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     " (" + std::to_string(rs2Value & 0xFFFF) + ") [halfword].";
     instructionOutput.setRegisters({rs1, rs2});
     instructionOutput.setRamAddresses({{finalAddress, result}});
+
+#if DEBUG
+    std::cout << "Rezultat: " << Memory::getInstance().read16(finalAddress);
+#endif
 }
 
 void SW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -95,6 +110,10 @@ void SW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                 " (" + std::to_string(rs2Value) + ") [word].";
     instructionOutput.setRegisters({rs1, rs2});
     instructionOutput.setRamAddresses({{finalAddress, result}});
+
+#if DEBUG
+    std::cout << "Rezultat: " << Memory::getInstance().read32(finalAddress);
+#endif
 }
 
 } // namespace SType
