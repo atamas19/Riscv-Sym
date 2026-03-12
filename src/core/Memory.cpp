@@ -296,6 +296,9 @@ bool Memory::loadDiskImage(const std::string& path) {
     if (file.read(reinterpret_cast<char*>(_disk.data()), size)) {
         spdlog::info("Disk image loaded: {} bytes", size);
         return true;
+    } else {
+        spdlog::error("Failed to read disk image from {} ({} bytes requested)", path, size);
+        _disk.clear();
     }
     return false;
 }
