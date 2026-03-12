@@ -1,7 +1,9 @@
 #include "core/Memory.h"
 
-#include <algorithm>
+#include <spdlog/spdlog.h>
+
 #include <iostream>
+#include <algorithm>
 #include <cstring>
 #include <cassert>
 #include <fstream>
@@ -281,19 +283,21 @@ void Memory::pollKeyboard() {
     }
 }
 
-void Memory::loadDiskImage(const std::string& path) {
+bool Memory::loadDiskImage(const std::string& path) {
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
-        std::cerr << "Error: Couldn't load image from " << path << "\n";
-        return;
+        spdlog::error("Couldn't load image from {}", path);
+        return false;
     }
     std::streamsize size = file.tellg();
     file.seekg(0, std::ios::beg);
 
     _disk.resize(size);
     if (file.read(reinterpret_cast<char*>(_disk.data()), size)) {
-        std::cout << "[Simulator] Disk image loaded: " << size << " bytes.\n";
+        spdlog::info("Disk image loaded: {} bytes", size);
+        return true;
     }
+    return false;
 }
 
 void Memory::write32(uint32_t address, uint32_t value) {

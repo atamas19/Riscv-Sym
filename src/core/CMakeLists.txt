@@ -8,4 +8,6 @@ target_include_directories(riscv_core PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+target_link_libraries(riscv_core PRIVATE spdlog::spdlog)
+
 target_compile_features(riscv_core PUBLIC cxx_std_20)

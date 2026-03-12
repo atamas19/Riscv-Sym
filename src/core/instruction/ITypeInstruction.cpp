@@ -2,7 +2,6 @@
 #include <core/RiscvCpu.h>
 #include <core/Memory.h>
 
-#include <iostream>
 #include <unordered_map>
 
 namespace IType
@@ -18,11 +17,6 @@ void Instruction::decode()
         imm |= 0xfffff000;
     else
         imm &= 0xfff;
-
-#if DEBUG
-    std::cout << "rd: "   << std::bitset<8>(rd)  << std::endl;
-    std::cout << "imm: "  << std::bitset<8>(imm) << std::endl;
-#endif
 }
 
 const int8_t Instruction::getShamt() const
@@ -82,10 +76,6 @@ void ADDI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                     ") + imm (" + std::to_string(imm) + ").";
     instructionOutput.setRegisters({rs1, rd});
-
-#if DEBUG
-    std::cout << cpu.getRegister(rd);
-#endif
 }
 
 void SLTI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -101,10 +91,6 @@ void SLTI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     " = (x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                     ") < imm (" + std::to_string(imm) + "))";
     instructionOutput.setRegisters({rs1, rd});
-
-#if DEBUG
-    std::cout << cpu.getRegister(rd);
-#endif
 }
 
 void SLTIU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -121,10 +107,6 @@ void SLTIU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     " = (x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                     ") < imm (" + std::to_string(u_imm) + "))";
     instructionOutput.setRegisters({rs1, rd});
-
-#if DEBUG
-    std::cout << cpu.getRegister(rd);
-#endif
 }
 
 void XORI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -140,10 +122,6 @@ void XORI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                     ") ^ imm (" + std::to_string(imm) + ").";
     instructionOutput.setRegisters({rs1, rd});
-
-#if DEBUG
-    std::cout << cpu.getRegister(rd);
-#endif
 }
 
 void ORI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -159,10 +137,6 @@ void ORI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                     ") | imm (" + std::to_string(imm) + ").";
     instructionOutput.setRegisters({rs1, rd});
-
-#if DEBUG
-    std::cout << cpu.getRegister(rd);
-#endif
 }
 
 void ANDI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -178,10 +152,6 @@ void ANDI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                     ") & imm (" + std::to_string(imm) + ").";
     instructionOutput.setRegisters({rs1, rd});
-
-#if DEBUG
-    std::cout << cpu.getRegister(rd);
-#endif
 }
 
 void SLLI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -198,10 +168,6 @@ void SLLI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                     ") << shamt (" + std::to_string(shamt_i) + ").";
     instructionOutput.setRegisters({rs1, rd});
-
-#if DEBUG
-    std::cout << cpu.getRegister(rd);
-#endif
 }
 
 void SRLI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -218,10 +184,6 @@ void SRLI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                     ") >> shamt (" + std::to_string(shamt_i) + ").";
     instructionOutput.setRegisters({rs1, rd});
-
-#if DEBUG
-    std::cout << cpu.getRegister(rd);
-#endif
 }
 
 void SRAI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -238,10 +200,6 @@ void SRAI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                     ") >> shamt (" + std::to_string(shamt_i) + ").";
     instructionOutput.setRegisters({rs1, rd});
-
-#if DEBUG
-    std::cout << cpu.getRegister(rd);
-#endif
 }
 
 // This create function will handle the IType instructions that are meant for loading memory, they have the 0x3 opcode
@@ -280,11 +238,6 @@ void LB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                    ") + imm (" + std::to_string(imm) + ")] (byte loaded)";
     instructionOutput.setRegisters({rs1, rd});
     instructionOutput.setRamAddresses({{addr, rawByte}});
-
-#if DEBUG
-    std::cout << "Address: " << addr << "\n";
-    std::cout << cpu.getRegister(rd);
-#endif
 }
 
 void LH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -303,11 +256,6 @@ void LH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                    ") + imm (" + std::to_string(imm) + ")] (halfword loaded)";
     instructionOutput.setRegisters({rs1, rd});
     instructionOutput.setRamAddresses({{addr, rawHw}});
-
-#if DEBUG
-    std::cout << "Address: " << addr << "\n";
-    std::cout << cpu.getRegister(rd);
-#endif
 }
 
 void LW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -326,11 +274,6 @@ void LW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                    ") + imm (" + std::to_string(imm) + ")] (word loaded)";
     instructionOutput.setRegisters({rs1, rd});
     instructionOutput.setRamAddresses({{addr, rawWord}});
-
-#if DEBUG
-    std::cout << "Address: " << addr << "\n";
-    std::cout << cpu.getRegister(rd);
-#endif
 }
 
 void LBU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -348,11 +291,6 @@ void LBU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                    ") + imm (" + std::to_string(imm) + ")] (byte loaded, zero-extended)";
     instructionOutput.setRegisters({rs1, rd});
     instructionOutput.setRamAddresses({{addr, memoryValue}});
-
-#if DEBUG
-    std::cout << "Address: " << addr << "\n";
-    std::cout << cpu.getRegister(rd);
-#endif
 }
 
 void LHU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -370,11 +308,6 @@ void LHU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                    ") + imm (" + std::to_string(imm) + ")] (halfword loaded, zero-extended)";
     instructionOutput.setRegisters({rs1, rd});
     instructionOutput.setRamAddresses({{addr, memoryValue}});
-
-#if DEBUG
-    std::cout << "Address: " << addr << "\n";
-    std::cout << cpu.getRegister(rd);
-#endif
 }
 
 void JALR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -391,11 +324,6 @@ void JALR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
         " = PC + 4, jumped to (x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
         ") + imm (" + std::to_string(imm) + ")) & ~1 = " + std::to_string(targetAddress);
     instructionOutput.setRegisters({rs1, rd});
-
-#if DEBUG
-    std::cout << "Address: " << targetAddress << "\n";
-    std::cout << cpu.getRegister(rd);
-#endif
 }
 
 std::unique_ptr<Instruction> FenceInstructionFactory::create(uint32_t encodedInstruction)
