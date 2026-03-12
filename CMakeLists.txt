@@ -10,9 +10,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(ENABLE_GUI "Build the GUI interface" OFF)
 option(ENABLE_CLI "Build the CLI interface" ON)
 
-find_package(spdlog QUIET)
+find_package(spdlog 1.12.0 QUIET)
 if(NOT spdlog_FOUND)
-    message(STATUS "spdlog not found on system. Fetching from GitHub...")
+    message(STATUS "spdlog (>=1.12.0) not found on system. Fetching from GitHub...")
     FetchContent_Declare(
       spdlog
       GIT_REPOSITORY https://github.com/gabime/spdlog.git
@@ -23,9 +23,9 @@ else()
     message(STATUS "Found spdlog installed on system.")
 endif()
 
-find_package(CLI11 QUIET)
+find_package(CLI11 2.5.0 QUIET)
 if(NOT CLI11_FOUND)
-    message(STATUS "CLI11 not found on system. Fetching from GitHub...")
+    message(STATUS "CLI11 (>=2.5.0) not found on system. Fetching from GitHub...")
     FetchContent_Declare(
       cli11
       GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
