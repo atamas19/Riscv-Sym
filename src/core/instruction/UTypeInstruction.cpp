@@ -1,8 +1,6 @@
 #include <core/instruction/UTypeInstruction.h>
 #include <core/RiscvCpu.h>
 
-#include <iostream>
-
 namespace UType
 {
 

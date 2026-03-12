@@ -2,7 +2,6 @@
 
 #include <unordered_map>
 #include <functional>
-#include <iostream>
 #include <algorithm>
 
 static std::optional<uint8_t> registerNameToNumber(const std::string& reg)

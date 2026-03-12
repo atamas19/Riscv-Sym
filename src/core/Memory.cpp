@@ -283,11 +283,11 @@ void Memory::pollKeyboard() {
     }
 }
 
-void Memory::loadDiskImage(const std::string& path) {
+bool Memory::loadDiskImage(const std::string& path) {
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
         spdlog::error("Couldn't load image from {}", path);
-        return;
+        return false;
     }
     std::streamsize size = file.tellg();
     file.seekg(0, std::ios::beg);
@@ -295,7 +295,9 @@ void Memory::loadDiskImage(const std::string& path) {
     _disk.resize(size);
     if (file.read(reinterpret_cast<char*>(_disk.data()), size)) {
         spdlog::info("Disk image loaded: {} bytes", size);
+        return true;
     }
+    return false;
 }
 
 void Memory::write32(uint32_t address, uint32_t value) {

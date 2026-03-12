@@ -2,8 +2,6 @@
 #include <core/RiscvCpu.h>
 #include <core/Memory.h>
 
-#include <iostream>
-
 namespace JType
 {
 

@@ -3,7 +3,6 @@
 #include <core/Memory.h>
 
 #include <unordered_map>
-#include <iostream>
 #include <functional>
 
 namespace SType

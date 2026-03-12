@@ -3,6 +3,8 @@
 #include <CLI/CLI.hpp>
 #include <spdlog/spdlog.h>
 
+#include <map>
+
 #ifndef _WIN32
 #include <termios.h>
 #include <unistd.h>
@@ -56,17 +58,28 @@ void enableRawMode() {
 int main(int argc, char** argv) {
     CLI::App app{"RISC-V 32-bit Emulator capable of booting xv6"};
 
+    const std::map<std::string, spdlog::level::level_enum> log_level_map{
+        {"trace", spdlog::level::trace},
+        {"debug", spdlog::level::debug},
+        {"info", spdlog::level::info},
+        {"warn", spdlog::level::warn},
+        {"error", spdlog::level::err},
+        {"critical", spdlog::level::critical},
+        {"off", spdlog::level::off}
+    };
+
     std::string kernel_path;
     std::string disk_path;
-    std::string log_level = "info";
+    spdlog::level::level_enum log_level = spdlog::level::info;
 
     app.add_option("-k,--kernel", kernel_path, "Path to the kernel binary")->required();
     app.add_option("-d,--disk", disk_path, "Path to the filesystem disk image")->required();
-    app.add_option("-l,--log-level", log_level, "Log level (trace, debug, info, warn, err, critical)");
+    app.add_option("-l,--log-level", log_level, "Set the logging level")
+       ->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
 
     CLI11_PARSE(app, argc, argv);
 
-    spdlog::set_level(spdlog::level::from_str(log_level));
+    spdlog::set_level(log_level);
     spdlog::set_pattern("[%H:%M:%S] [%^%l%$] %v");
 
     spdlog::info("Starting RISC-V Emulator...");
@@ -77,11 +90,13 @@ int main(int argc, char** argv) {
     RiscvCpu& cpu = RiscvCpu::getInstance();
 
     try {
-        Memory::getInstance().loadDiskImage(disk_path);
-        spdlog::info("Booting...");
-
-        cpu.executeFromBinFile(kernel_path);
-
+        if (Memory::getInstance().loadDiskImage(disk_path)) {
+            spdlog::info("Booting...");
+            if (!cpu.executeFromBinFile(kernel_path)) {
+                spdlog::error("Failed to execute kernel binary: {}", kernel_path);
+                return 1;
+            }
+        }
     } catch (const std::exception& e) {
         spdlog::error("Emulator crashed: {}", e.what());
         return 1;

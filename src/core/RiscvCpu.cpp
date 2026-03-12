@@ -3,8 +3,6 @@
 
 #include <spdlog/spdlog.h>
 
-#include <iostream>
-#include <bitset>
 #include <fstream>
 
 RiscvCpu& RiscvCpu::getInstance()

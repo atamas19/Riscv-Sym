@@ -72,7 +72,7 @@ void CsrUnit::write(uint16_t address, uint32_t value) {
     if (address >= 4096) return;
 
     if (isReadOnly(address)) {
-        spdlog::warn("[CSR] Attempted write to Read-Only CSR 0x{:x}", address);
+        spdlog::debug("[CSR] Attempted write to Read-Only CSR 0x{:x}", address);
         return;
     }
 

@@ -2,7 +2,6 @@
 #include <core/RiscvCpu.h>
 #include <core/Memory.h>
 
-#include <iostream>
 #include <unordered_map>
 
 namespace IType

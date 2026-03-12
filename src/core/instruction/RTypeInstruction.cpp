@@ -2,7 +2,6 @@
 #include <core/RiscvCpu.h>
 
 #include <unordered_map>
-#include <iostream>
 
 namespace RType
 {

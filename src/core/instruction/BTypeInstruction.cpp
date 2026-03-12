@@ -2,10 +2,7 @@
 #include <core/RiscvCpu.h>
 #include <core/Memory.h>
 
-#include <spdlog/spdlog.h>
-
 #include <unordered_map>
-#include <iostream>
 #include <functional>
 
 namespace BType
