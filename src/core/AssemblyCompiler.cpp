@@ -46,14 +46,6 @@ void AssemblyInstruction::parse(const std::string& line)
     }
 }
 
-void AssemblyInstruction::print() const
-{
-    std::cout << "Instruction name: " << instructionName << "\nOperands: ";
-    for (const auto& op : operands)
-        std::cout << op << " ";
-    std::cout << "\n";
-}
-
 void AssemblyInstruction::trim(std::string& s)
 {
     size_t start = s.find_first_not_of(" \t");

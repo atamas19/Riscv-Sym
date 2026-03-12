@@ -1,5 +1,8 @@
 #include <core/RiscvCpu.h>
 
+#include <CLI/CLI.hpp>
+#include <spdlog/spdlog.h>
+
 #ifndef _WIN32
 #include <termios.h>
 #include <unistd.h>
@@ -50,14 +53,39 @@ void enableRawMode() {
 }
 #endif
 
-int main() {
-    enableRawMode();
+int main(int argc, char** argv) {
+    CLI::App app{"RISC-V 32-bit Emulator capable of booting xv6"};
 
+    std::string kernel_path;
+    std::string disk_path;
+    std::string log_level = "info";
+
+    app.add_option("-k,--kernel", kernel_path, "Path to the kernel binary")->required();
+    app.add_option("-d,--disk", disk_path, "Path to the filesystem disk image")->required();
+    app.add_option("-l,--log-level", log_level, "Log level (trace, debug, info, warn, err, critical)");
+
+    CLI11_PARSE(app, argc, argv);
+
+    spdlog::set_level(spdlog::level::from_str(log_level));
+    spdlog::set_pattern("[%H:%M:%S] [%^%l%$] %v");
+
+    spdlog::info("Starting RISC-V Emulator...");
+    spdlog::info("Kernel: {}", kernel_path);
+    spdlog::info("Disk: {}", disk_path);
+
+    enableRawMode();
     RiscvCpu& cpu = RiscvCpu::getInstance();
 
-    Memory::getInstance().loadDiskImage("fs.img");
+    try {
+        Memory::getInstance().loadDiskImage(disk_path);
+        spdlog::info("Booting...");
 
-    cpu.executeFromBinFile("/home/atamas19/projects/dependencies/xv6-riscv-32bit/kernel/kernel.bin");
+        cpu.executeFromBinFile(kernel_path);
+
+    } catch (const std::exception& e) {
+        spdlog::error("Emulator crashed: {}", e.what());
+        return 1;
+    }
 
     return 0;
 }

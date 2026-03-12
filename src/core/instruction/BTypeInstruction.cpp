@@ -2,6 +2,8 @@
 #include <core/RiscvCpu.h>
 #include <core/Memory.h>
 
+#include <spdlog/spdlog.h>
+
 #include <unordered_map>
 #include <iostream>
 #include <functional>
@@ -12,8 +14,8 @@ namespace BType
 int32_t Instruction::getImm()
 {
     int32_t tempValue = ((getBits(instruction, 31, 31) << 12) |
-                         (getBits(instruction, 7, 7) << 11)   | 
-                         (getBits(instruction, 25, 30) << 5)  | 
+                         (getBits(instruction, 7, 7) << 11)   |
+                         (getBits(instruction, 25, 30) << 5)  |
                          (getBits(instruction, 8, 11) << 1));
 
     if (getBits(tempValue, 12, 12) == 1)
@@ -29,12 +31,6 @@ void Instruction::decode()
     rs1 = getBits(instruction, 15, 19);
     rs2 = getBits(instruction, 20, 24);
     imm = getImm();
-
-#if DEBUG
-    std::cout << "rs1: "  << std::bitset<8>(rs1) << std::endl;
-    std::cout << "rs2: "  << std::bitset<8>(rs2) << std::endl;
-    std::cout << "imm: "  << std::bitset<32>(imm) << std::endl;
-#endif
 }
 
 std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruction)
@@ -74,11 +70,6 @@ void BEQ::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     : "branch not taken.";
 
     instructionOutput.setRegisters({rs1, rs2});
-
-
-#if DEBUG
-    std::cout << "PC increment: " << pcIncrement << std::endl;
-#endif
 }
 
 void BNE::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -98,10 +89,6 @@ void BNE::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     : "branch not taken.";
 
     instructionOutput.setRegisters({rs1, rs2});
-
-#if DEBUG
-    std::cout << "PC increment: " << pcIncrement << std::endl;
-#endif
 }
 
 void BLT::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -121,10 +108,6 @@ void BLT::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     : "branch not taken.";
 
     instructionOutput.setRegisters({rs1, rs2});
-
-#if DEBUG
-    std::cout << "PC increment: " << pcIncrement << std::endl;
-#endif
 }
 
 void BGE::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -144,10 +127,6 @@ void BGE::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     : "branch not taken.";
 
     instructionOutput.setRegisters({rs1, rs2});
-
-#if DEBUG
-    std::cout << "PC increment: " << pcIncrement << std::endl;
-#endif
 }
 
 void BLTU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -167,10 +146,6 @@ void BLTU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     : "branch not taken.";
 
     instructionOutput.setRegisters({rs1, rs2});
-
-#if DEBUG
-    std::cout << "PC increment: " << pcIncrement << std::endl;
-#endif
 }
 
 void BGEU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -190,10 +165,6 @@ void BGEU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     : "branch not taken.";
 
     instructionOutput.setRegisters({rs1, rs2});
-
-#if DEBUG
-    std::cout << "PC increment: " << pcIncrement << std::endl;
-#endif
 }
 
 } // namespace BType
