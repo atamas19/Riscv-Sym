@@ -276,56 +276,64 @@ uint32_t AssemblyCompiler::assembleAND(const AssemblyInstruction& instruction)
     return assembleRType(instruction, funct3, funct7);
 }
 
-uint32_t AssemblyCompiler::assembleMUL(const AssemblyInstruction& instruction) {
+uint32_t AssemblyCompiler::assembleMUL(const AssemblyInstruction& instruction)
+{
     uint8_t funct3 = 0x0;
     uint8_t funct7 = 0x1;
 
     return assembleRType(instruction, funct3, funct7);
 }
 
-uint32_t AssemblyCompiler::assembleMULH(const AssemblyInstruction& instruction) {
+uint32_t AssemblyCompiler::assembleMULH(const AssemblyInstruction& instruction)
+{
     uint8_t funct3 = 0x1;
     uint8_t funct7 = 0x1;
 
     return assembleRType(instruction, funct3, funct7);
 }
 
-uint32_t AssemblyCompiler::assembleMULHSU(const AssemblyInstruction& instruction) {
+uint32_t AssemblyCompiler::assembleMULHSU(const AssemblyInstruction& instruction)
+{
     uint8_t funct3 = 0x2;
     uint8_t funct7 = 0x1;
 
     return assembleRType(instruction, funct3, funct7);
 }
 
-uint32_t AssemblyCompiler::assembleMULHU(const AssemblyInstruction& instruction) {
+uint32_t AssemblyCompiler::assembleMULHU(const AssemblyInstruction& instruction)
+{
     uint8_t funct3 = 0x3;
     uint8_t funct7 = 0x1;
 
     return assembleRType(instruction, funct3, funct7);
 }
 
-uint32_t AssemblyCompiler::assembleDIV(const AssemblyInstruction& instruction) {
+uint32_t AssemblyCompiler::assembleDIV(const AssemblyInstruction& instruction)
+{
     uint8_t funct3 = 0x4;
     uint8_t funct7 = 0x1;
 
     return assembleRType(instruction, funct3, funct7);
 }
 
-uint32_t AssemblyCompiler::assembleDIVU(const AssemblyInstruction& instruction) {
+uint32_t AssemblyCompiler::assembleDIVU(const AssemblyInstruction& instruction)
+{
     uint8_t funct3 = 0x5;
     uint8_t funct7 = 0x1;
 
     return assembleRType(instruction, funct3, funct7);
 }
 
-uint32_t AssemblyCompiler::assembleREM(const AssemblyInstruction& instruction) {
+uint32_t AssemblyCompiler::assembleREM(const AssemblyInstruction& instruction)
+{
     uint8_t funct3 = 0x6;
     uint8_t funct7 = 0x1;
 
     return assembleRType(instruction, funct3, funct7);
 }
 
-uint32_t AssemblyCompiler::assembleREMU(const AssemblyInstruction& instruction) {
+uint32_t AssemblyCompiler::assembleREMU(const AssemblyInstruction& instruction)
+{
     uint8_t funct3 = 0x7;
     uint8_t funct7 = 0x1;
 

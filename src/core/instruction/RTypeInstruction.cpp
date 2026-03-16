@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <limits>
 
-#include <fmt/core.h>
+#include <spdlog/fmt/fmt.h>
 
 namespace RType
 {
@@ -222,7 +222,8 @@ void AND::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
 // RV32M instructions
 
-void MUL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+void MUL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+{
     uint32_t rs1Value = cpu.getRegister(rs1);
     uint32_t rs2Value = cpu.getRegister(rs2);
 
@@ -238,13 +239,14 @@ void MUL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     instructionOutput.setRegisters({rs1, rs2, rd});
 }
 
-void MULH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+void MULH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+{
     int64_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
     int64_t rs2Value = static_cast<int32_t>(cpu.getRegister(rs2));
 
     int64_t result = rs1Value * rs2Value;
 
-    cpu.setRegister(rd, static_cast<uint32_t>(result >> 32));
+    cpu.setRegister(rd, static_cast<uint32_t>(static_cast<uint64_t>(result) >> 32));
     cpu.setPc(cpu.getPc() + 4);
 
     instructionOutput.consoleLog = fmt::format(
@@ -254,7 +256,8 @@ void MULH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     instructionOutput.setRegisters({rs1, rs2, rd});
 }
 
-void MULHSU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+void MULHSU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+{
     int64_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
     int64_t rs2Value = static_cast<int64_t>(cpu.getRegister(rs2));
 
@@ -270,7 +273,8 @@ void MULHSU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     instructionOutput.setRegisters({rs1, rs2, rd});
 }
 
-void MULHU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+void MULHU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+{
     uint64_t rs1Value = cpu.getRegister(rs1);
     uint64_t rs2Value = cpu.getRegister(rs2);
 
@@ -286,7 +290,8 @@ void MULHU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     instructionOutput.setRegisters({rs1, rs2, rd});
 }
 
-void DIV::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+void DIV::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+{
     int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
     int32_t rs2Value = static_cast<int32_t>(cpu.getRegister(rs2));
     uint32_t result;
@@ -309,7 +314,8 @@ void DIV::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     instructionOutput.setRegisters({rs1, rs2, rd});
 }
 
-void DIVU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+void DIVU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+{
     uint32_t rs1Value = cpu.getRegister(rs1);
     uint32_t rs2Value = cpu.getRegister(rs2);
     uint32_t result;
@@ -330,7 +336,8 @@ void DIVU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     instructionOutput.setRegisters({rs1, rs2, rd});
 }
 
-void REM::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+void REM::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+{
     int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
     int32_t rs2Value = static_cast<int32_t>(cpu.getRegister(rs2));
     uint32_t result;
@@ -353,7 +360,8 @@ void REM::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     instructionOutput.setRegisters({rs1, rs2, rd});
 }
 
-void REMU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+void REMU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+{
     uint32_t rs1Value = cpu.getRegister(rs1);
     uint32_t rs2Value = cpu.getRegister(rs2);
     uint32_t result;
