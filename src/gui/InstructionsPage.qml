@@ -39,6 +39,15 @@ Item {
                     ListElement { name: "SRA"; fullName: "Shift Right Arithmetic"; format: "sra rd, rs1, rs2"; description: "Shifts the value in rs1 right arithmetically by the value in the lower 5 bits of rs2, stores the result in rd." }
                     ListElement { name: "OR"; fullName: "OR"; format: "or rd, rs1, rs2"; description: "Bitwise OR of the values in rs1 and rs2, stores the result in rd." }
                     ListElement { name: "AND"; fullName: "AND"; format: "and rd, rs1, rs2"; description: "Bitwise AND of the values in rs1 and rs2, stores the result in rd." }
+                        // RV32M instructions
+                    ListElement { name: "MUL"; fullName: "Multiply"; format: "mul rd, rs1, rs2"; description: "Multiplies rs1 and rs2, storing the lower 32 bits of the product in rd." }
+                    ListElement { name: "MULH"; fullName: "Multiply High"; format: "mulh rd, rs1, rs2"; description: "Multiplies rs1 and rs2 as signed integers, storing the upper 32 bits of the 64-bit product in rd." }
+                    ListElement { name: "MULHSU"; fullName: "Multiply High Signed-Unsigned"; format: "mulhsu rd, rs1, rs2"; description: "Multiplies signed rs1 by unsigned rs2, storing the upper 32 bits of the 64-bit product in rd." }
+                    ListElement { name: "MULHU"; fullName: "Multiply High Unsigned"; format: "mulhu rd, rs1, rs2"; description: "Multiplies rs1 and rs2 as unsigned integers, storing the upper 32 bits of the 64-bit product in rd." }
+                    ListElement { name: "DIV"; fullName: "Divide"; format: "div rd, rs1, rs2"; description: "Divides signed rs1 by signed rs2, truncating towards zero, and stores the quotient in rd." }
+                    ListElement { name: "DIVU"; fullName: "Divide Unsigned"; format: "divu rd, rs1, rs2"; description: "Divides unsigned rs1 by unsigned rs2, truncating towards zero, and stores the quotient in rd." }
+                    ListElement { name: "REM"; fullName: "Remainder"; format: "rem rd, rs1, rs2"; description: "Divides signed rs1 by signed rs2 and stores the remainder in rd. The sign of the result matches rs1." }
+                    ListElement { name: "REMU"; fullName: "Remainder Unsigned"; format: "remu rd, rs1, rs2"; description: "Divides unsigned rs1 by unsigned rs2 and stores the remainder in rd." }
 
                     // I-Type Instructions
                     ListElement { name: "ADDI"; fullName: "Add Immediate"; format: "addi rd, rs1, imm"; description: "Adds the immediate value to the value of rs1, stores the result in rd." }

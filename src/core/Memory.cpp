@@ -146,7 +146,7 @@ bool Memory::handleMMIO(uint32_t address, uint32_t value) {
         return true;
     }
 
-    if (address == PLIC_SCLAIM_ADDR) { return true;} // PLIC COMPLETE
+    if (address == PLIC_SCLAIM_ADDR) return true; // PLIC COMPLETE
 
     if (address == 0x10001004) return true; // SDCARD CTR
     if (address == 0x10001000) {            // SDCARD RW

@@ -2,6 +2,9 @@
 #include <core/RiscvCpu.h>
 
 #include <unordered_map>
+#include <limits>
+
+#include <fmt/core.h>
 
 namespace RType
 {
@@ -25,9 +28,17 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
         { SRL::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<SRL> (ins); }},
         { SRA::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<SRA> (ins); }},
         { AND::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<AND> (ins); }},
-        { OR::getInstructionDescriptor  (), [](uint32_t ins) { return std::make_unique<OR>  (ins); }}
+        { OR::getInstructionDescriptor  (), [](uint32_t ins) { return std::make_unique<OR>  (ins); }},
+        // RV32M instructions
+        {    MUL::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<MUL>   (ins); }},
+        {   MULH::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<MULH>  (ins); }},
+        { MULHSU::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<MULHSU>(ins); }},
+        {  MULHU::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<MULHU> (ins); }},
+        {    DIV::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<DIV>   (ins); }},
+        {   DIVU::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<DIVU>  (ins); }},
+        {    REM::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<REM>   (ins); }},
+        {   REMU::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<REMU>  (ins); }}
     };
-
     uint8_t funct3 = getBits(encodedInstruction, 12, 14);
     uint8_t funct7 = getBits(encodedInstruction, 25, 31);
 
@@ -208,6 +219,162 @@ void AND::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                ") & x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) + ").";
     instructionOutput.setRegisters({rs1, rs2, rd});
 }
+
+// RV32M instructions
+
+void MUL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
+
+    uint32_t result = rs1Value * rs2Value;
+
+    cpu.setRegister(rd, result);
+    cpu.setPc(cpu.getPc() + 4);
+
+    instructionOutput.consoleLog = fmt::format(
+        "Performed MUL: x{} = x{} ({}) * x{} ({})",
+        rd, rs1, rs1Value, rs2, rs2Value
+    );
+    instructionOutput.setRegisters({rs1, rs2, rd});
+}
+
+void MULH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+    int64_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
+    int64_t rs2Value = static_cast<int32_t>(cpu.getRegister(rs2));
+
+    int64_t result = rs1Value * rs2Value;
+
+    cpu.setRegister(rd, static_cast<uint32_t>(result >> 32));
+    cpu.setPc(cpu.getPc() + 4);
+
+    instructionOutput.consoleLog = fmt::format(
+        "Performed MULH: x{} = x{} ({}) * x{} ({}) [Upper 32 bits].",
+        rd, rs1, rs1Value, rs2, rs2Value
+    );
+    instructionOutput.setRegisters({rs1, rs2, rd});
+}
+
+void MULHSU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+    int64_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
+    int64_t rs2Value = static_cast<int64_t>(cpu.getRegister(rs2));
+
+    int64_t result = rs1Value * rs2Value;
+
+    cpu.setRegister(rd, static_cast<uint32_t>(static_cast<uint64_t>(result) >> 32));
+    cpu.setPc(cpu.getPc() + 4);
+
+    instructionOutput.consoleLog = fmt::format(
+        "Performed MULHSU: x{} = x{} ({}) * x{} ({}) [Upper 32 bits].",
+        rd, rs1, rs1Value, rs2, rs2Value
+    );
+    instructionOutput.setRegisters({rs1, rs2, rd});
+}
+
+void MULHU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+    uint64_t rs1Value = cpu.getRegister(rs1);
+    uint64_t rs2Value = cpu.getRegister(rs2);
+
+    uint64_t result = rs1Value * rs2Value;
+
+    cpu.setRegister(rd, static_cast<uint32_t>(result >> 32));
+    cpu.setPc(cpu.getPc() + 4);
+
+    instructionOutput.consoleLog = fmt::format(
+        "Performed MULHU: x{} = x{} ({}) * x{} ({}) [Upper 32 bits].",
+        rd, rs1, rs1Value, rs2, rs2Value
+    );
+    instructionOutput.setRegisters({rs1, rs2, rd});
+}
+
+void DIV::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+    int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
+    int32_t rs2Value = static_cast<int32_t>(cpu.getRegister(rs2));
+    uint32_t result;
+
+    if (rs2Value == 0) {
+        result = 0xFFFFFFFF;
+    } else if (rs1Value == std::numeric_limits<int32_t>::min() && rs2Value == -1) {
+        result = static_cast<uint32_t>(rs1Value);
+    } else {
+        result = static_cast<uint32_t>(rs1Value / rs2Value);
+    }
+
+    cpu.setRegister(rd, result);
+    cpu.setPc(cpu.getPc() + 4);
+
+    instructionOutput.consoleLog = fmt::format(
+        "Performed DIV: x{} = x{} ({}) / x{} ({})",
+        rd, rs1, rs1Value, rs2, rs2Value
+    );
+    instructionOutput.setRegisters({rs1, rs2, rd});
+}
+
+void DIVU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t result;
+
+    if (rs2Value == 0) {
+        result = 0xFFFFFFFF;
+    } else {
+        result = rs1Value / rs2Value;
+    }
+
+    cpu.setRegister(rd, result);
+    cpu.setPc(cpu.getPc() + 4);
+
+    instructionOutput.consoleLog = fmt::format(
+        "Performed DIVU: x{} = x{} ({}) / x{} ({})",
+        rd, rs1, rs1Value, rs2, rs2Value
+    );
+    instructionOutput.setRegisters({rs1, rs2, rd});
+}
+
+void REM::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+    int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
+    int32_t rs2Value = static_cast<int32_t>(cpu.getRegister(rs2));
+    uint32_t result;
+
+    if (rs2Value == 0) {
+        result = static_cast<uint32_t>(rs1Value);
+    } else if (rs1Value == std::numeric_limits<int32_t>::min() && rs2Value == -1) {
+        result = 0;
+    } else {
+        result = static_cast<uint32_t>(rs1Value % rs2Value);
+    }
+
+    cpu.setRegister(rd, result);
+    cpu.setPc(cpu.getPc() + 4);
+
+    instructionOutput.consoleLog = fmt::format(
+        "Performed REM: x{} = x{} ({}) % x{} ({})",
+        rd, rs1, rs1Value, rs2, rs2Value
+    );
+    instructionOutput.setRegisters({rs1, rs2, rd});
+}
+
+void REMU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
+    uint32_t rs1Value = cpu.getRegister(rs1);
+    uint32_t rs2Value = cpu.getRegister(rs2);
+    uint32_t result;
+
+    if (rs2Value == 0) {
+        result = rs1Value;
+    } else {
+        result = rs1Value % rs2Value;
+    }
+
+    cpu.setRegister(rd, result);
+    cpu.setPc(cpu.getPc() + 4);
+
+    instructionOutput.consoleLog = fmt::format(
+        "Performed REMU: x{} = x{} ({}) % x{} ({})",
+        rd, rs1, rs1Value, rs2, rs2Value
+    );
+    instructionOutput.setRegisters({rs1, rs2, rd});
+}
+
+// RV32A Instructions
 
 std::unique_ptr<Instruction> AtomicInstructionFactory::create(uint32_t encodedInstruction)
 {
