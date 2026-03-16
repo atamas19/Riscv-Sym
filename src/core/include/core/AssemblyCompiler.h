@@ -43,6 +43,16 @@ private:
     uint32_t assembleOR(const AssemblyInstruction& instruction);
     uint32_t assembleAND(const AssemblyInstruction& instruction);
 
+    // RV32M instructions
+    uint32_t assembleMUL(const AssemblyInstruction& instruction);
+    uint32_t assembleMULH(const AssemblyInstruction& instruction);
+    uint32_t assembleMULHSU(const AssemblyInstruction& instruction);
+    uint32_t assembleMULHU(const AssemblyInstruction& instruction);
+    uint32_t assembleDIV(const AssemblyInstruction& instruction);
+    uint32_t assembleDIVU(const AssemblyInstruction& instruction);
+    uint32_t assembleREM(const AssemblyInstruction& instruction);
+    uint32_t assembleREMU(const AssemblyInstruction& instruction);
+
 private:
     uint32_t encodeBType(int16_t imm, uint8_t rs2, uint8_t rs1, uint8_t funct3, uint8_t opcode);
     uint32_t assembleBType(const AssemblyInstruction& instruction, uint8_t funct3);

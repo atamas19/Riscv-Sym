@@ -161,6 +161,88 @@ public:
     static const InstructionDescriptor getInstructionDescriptor() { return {0x7, 0x0}; }
 };
 
+// RV32M instructions
+
+// Multiply
+class MUL : public Instruction
+{
+public:
+    MUL(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x0, 0x1}; }
+};
+
+// Multiply High
+class MULH : public Instruction
+{
+public:
+    MULH(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x1, 0x1}; }
+};
+
+// Multiply High Signed-Unsigned
+class MULHSU : public Instruction
+{
+public:
+    MULHSU(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x2, 0x1}; }
+};
+
+// Multiply High Unsigned
+class MULHU : public Instruction
+{
+public:
+    MULHU(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x3, 0x1}; }
+};
+
+// Divide
+class DIV : public Instruction
+{
+public:
+    DIV(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x4, 0x1}; }
+};
+
+// Divide Unsigned
+class DIVU : public Instruction
+{
+public:
+    DIVU(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x5, 0x1}; }
+};
+
+// Remainder
+class REM : public Instruction
+{
+public:
+    REM(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x6, 0x1}; }
+};
+
+// Remainder Unsigned
+class REMU : public Instruction
+{
+public:
+    REMU(uint32_t instruction) : Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x7, 0x1}; }
+};
+
 class AtomicInstructionFactory
 {
 public:
