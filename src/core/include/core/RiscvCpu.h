@@ -52,6 +52,8 @@ public:
     void returnFromTrap(PrivilegeMode retMode);
 
 public:
+    void notifyStore(uint32_t address, uint32_t size);
+
     void makeReservation(uint32_t address);
     bool checkAndClearReservation(uint32_t address);
     void cancelReservation();
@@ -70,8 +72,8 @@ private:
     bool loadBinFileToMemory(const std::string& filename, uint32_t startAddr);
 
 private:
-    bool reservationValid = false;
-    uint32_t reservationAddress = 0;
+    bool _reservationValid = false;
+    uint32_t _reservationAddress = 0;
 
 private:
     std::array<uint32_t, 32> _regs;

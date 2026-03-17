@@ -387,7 +387,7 @@ void REMU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 std::unique_ptr<Instruction> AtomicInstructionFactory::create(uint32_t encodedInstruction)
 {
     static const std::unordered_map<InstructionDescriptor, std::function<std::unique_ptr<Instruction>(uint32_t)>, InstructionDescriptor::InstructionDescriptorHash> instructionMap = {
-        { LR::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<LR>(ins); }},
+        { LR::getInstructionDescriptor(), [](uint32_t ins) { return getBits(ins, 20, 24) == 0 ? std::make_unique<LR>(ins) : nullptr; }},
         { SC::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<SC>(ins); }},
 
         { AMO::SWAP::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<AMO::SWAP>(ins); }},
@@ -430,6 +430,7 @@ void LR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     instructionOutput.consoleLog = fmt::format(
         "Performed LR.W: x{} <- Mem[0x{:X}], Reservation Set", rd, memory_address
     );
+    instructionOutput.modifiedRamAddresses.push_back({memory_address, value});
     instructionOutput.setRegisters({rs1, rd});
 }
 
@@ -445,6 +446,8 @@ void SC::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
             "Performed SC.W: SUCCESS, Mem[0x{:X}] <- {} (x{}), x{} <- 0",
             memory_address, value_to_write, rs2, rd
         );
+        instructionOutput.modifiedRamAddresses.push_back({memory_address, value_to_write});
+        instructionOutput.setRegisters({rs1, rs2, rd});
     } else {
         if (rd != 0) cpu.setRegister(rd, 1);
 
@@ -465,6 +468,9 @@ void AMO::Instruction::execute(RiscvCpu& cpu, InstructionOutput& instructionOutp
 
     uint32_t old_value = mem.read32(memory_address);
     uint32_t new_value = performAmoOperation(old_value, value_from_rs2);
+
+    cpu.notifyStore(memory_address, 4);
+
     mem.write32(memory_address, new_value);
 
     if (rd != 0) {
@@ -477,6 +483,7 @@ void AMO::Instruction::execute(RiscvCpu& cpu, InstructionOutput& instructionOutp
         "Performed {}.W: Mem[0x{:X}] <- {} (old: {}, rs2: {}), old_val -> x{}",
         getInstructionName(), memory_address, new_value, old_value, value_from_rs2, rd
     );
+    instructionOutput.modifiedRamAddresses.push_back({memory_address, new_value});
     instructionOutput.setRegisters({rs1, rs2, rd});
 }
 

@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <functional>
+#include <algorithm>
 
 namespace RType
 {

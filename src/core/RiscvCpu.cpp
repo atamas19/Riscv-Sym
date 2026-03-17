@@ -238,19 +238,29 @@ void RiscvCpu::returnFromTrap(PrivilegeMode retMode) {
     }
 }
 
+void RiscvCpu::notifyStore(uint32_t address, uint32_t size) {
+    if (!_reservationValid) {
+        return;
+    }
+
+    if (address < _reservationAddress + 4 && address + size > _reservationAddress) {
+        _reservationValid = false;
+    }
+}
+
 void RiscvCpu::makeReservation(uint32_t address) {
-    reservationAddress = address;
-    reservationValid = true;
+    _reservationAddress = address;
+    _reservationValid = true;
 }
 
 bool RiscvCpu::checkAndClearReservation(uint32_t address) {
-    bool isValid = reservationValid && (reservationAddress == address);
-    reservationValid = false;
+    bool isValid = _reservationValid && (_reservationAddress == address);
+    _reservationValid = false;
     return isValid;
 }
 
 void RiscvCpu::cancelReservation() {
-    reservationValid = false;
+    _reservationValid = false;
 }
 
 bool RiscvCpu::loadBinFileToMemory(const std::string& filename, uint32_t startAddr) {
