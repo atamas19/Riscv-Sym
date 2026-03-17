@@ -51,6 +51,11 @@ public:
     void takeTrap(ExceptionCause cause, uint32_t trapValue = 0);
     void returnFromTrap(PrivilegeMode retMode);
 
+public:
+    void makeReservation(uint32_t address);
+    bool checkAndClearReservation(uint32_t address);
+    void cancelReservation();
+
 private:
     RiscvCpu(): _mem(Memory::getInstance()) { reset(); };
     ~RiscvCpu() = default;
@@ -63,6 +68,10 @@ private:
     std::unique_ptr<Instruction> getInstructionFromAsmCommand(const std::string& asmCommand, InstructionOutput& instructionOutput);
 
     bool loadBinFileToMemory(const std::string& filename, uint32_t startAddr);
+
+private:
+    bool reservationValid = false;
+    uint32_t reservationAddress = 0;
 
 private:
     std::array<uint32_t, 32> _regs;

@@ -157,6 +157,8 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
 }
 
 void RiscvCpu::takeTrap(ExceptionCause cause, uint32_t trapValue) {
+    cancelReservation();
+
     uint32_t rawCause = static_cast<uint32_t>(cause);
     uint32_t causeIndex = rawCause & 0x7FFFFFFF;
 
@@ -234,6 +236,21 @@ void RiscvCpu::returnFromTrap(PrivilegeMode retMode) {
         mstatus = (mstatus & ~0x00001888) | mie_bit | (1 << 7);
         _csrUnit.write(CsrAddress::MSTATUS, mstatus);
     }
+}
+
+void RiscvCpu::makeReservation(uint32_t address) {
+    reservationAddress = address;
+    reservationValid = true;
+}
+
+bool RiscvCpu::checkAndClearReservation(uint32_t address) {
+    bool isValid = reservationValid && (reservationAddress == address);
+    reservationValid = false;
+    return isValid;
+}
+
+void RiscvCpu::cancelReservation() {
+    reservationValid = false;
 }
 
 bool RiscvCpu::loadBinFileToMemory(const std::string& filename, uint32_t startAddr) {
