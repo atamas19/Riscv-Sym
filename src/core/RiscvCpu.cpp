@@ -157,6 +157,8 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
 }
 
 void RiscvCpu::takeTrap(ExceptionCause cause, uint32_t trapValue) {
+    cancelReservation();
+
     uint32_t rawCause = static_cast<uint32_t>(cause);
     uint32_t causeIndex = rawCause & 0x7FFFFFFF;
 
@@ -234,6 +236,35 @@ void RiscvCpu::returnFromTrap(PrivilegeMode retMode) {
         mstatus = (mstatus & ~0x00001888) | mie_bit | (1 << 7);
         _csrUnit.write(CsrAddress::MSTATUS, mstatus);
     }
+}
+
+void RiscvCpu::notifyStore(uint32_t address, uint32_t size) {
+    if (!_reservationValid) {
+        return;
+    }
+    const uint64_t storeStart = static_cast<uint64_t>(address);
+    const uint64_t storeEnd   = storeStart + size;
+    const uint64_t resStart   = static_cast<uint64_t>(_reservationAddress);
+    const uint64_t resEnd     = resStart + 4ULL;
+
+    if (storeStart < resEnd && storeEnd > resStart) {
+        _reservationValid = false;
+    }
+}
+
+void RiscvCpu::makeReservation(uint32_t physicalAddress) {
+    _reservationAddress = physicalAddress;
+    _reservationValid = true;
+}
+
+bool RiscvCpu::checkAndClearReservation(uint32_t physicalAddress) {
+    bool isValid = _reservationValid && (_reservationAddress == physicalAddress);
+    _reservationValid = false;
+    return isValid;
+}
+
+void RiscvCpu::cancelReservation() {
+    _reservationValid = false;
 }
 
 bool RiscvCpu::loadBinFileToMemory(const std::string& filename, uint32_t startAddr) {

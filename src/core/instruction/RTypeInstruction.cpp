@@ -387,7 +387,18 @@ void REMU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 std::unique_ptr<Instruction> AtomicInstructionFactory::create(uint32_t encodedInstruction)
 {
     static const std::unordered_map<InstructionDescriptor, std::function<std::unique_ptr<Instruction>(uint32_t)>, InstructionDescriptor::InstructionDescriptorHash> instructionMap = {
-        { AMOSWAP::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<AMOSWAP>(ins); }}
+        { LR::getInstructionDescriptor(), [](uint32_t ins) { return getBits(ins, 20, 24) == 0 ? std::make_unique<LR>(ins) : nullptr; }},
+        { SC::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<SC>(ins); }},
+
+        { AMO::SWAP::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<AMO::SWAP>(ins); }},
+        {  AMO::ADD::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<AMO::ADD> (ins); }},
+        {  AMO::XOR::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<AMO::XOR> (ins); }},
+        {  AMO::AND::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<AMO::AND> (ins); }},
+        {   AMO::OR::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<AMO::OR>  (ins); }},
+        {  AMO::MIN::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<AMO::MIN> (ins); }},
+        {  AMO::MAX::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<AMO::MAX> (ins); }},
+        { AMO::MINU::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<AMO::MINU>(ins); }},
+        { AMO::MAXU::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<AMO::MAXU>(ins); }}
     };
 
     uint8_t funct3 = getBits(encodedInstruction, 12, 14);
@@ -404,15 +415,71 @@ std::unique_ptr<Instruction> AtomicInstructionFactory::create(uint32_t encodedIn
     return nullptr;
 }
 
-void AMOSWAP::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+void LR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 {
+    Memory& mem = Memory::getInstance();
+    uint32_t virtual_address = cpu.getRegister(rs1);
+    uint32_t value = mem.read32(virtual_address);
+
+    uint32_t physical_address = mem.translateAddress(virtual_address, AccessType::Load);
+
+    cpu.makeReservation(physical_address);
+
+    if (rd != 0) {
+        cpu.setRegister(rd, value);
+    }
+
+    cpu.setPc(cpu.getPc() + 4);
+
+    instructionOutput.consoleLog = fmt::format(
+        "Performed LR.W: x{} <- Mem[0x{:X}], Reservation Set", rd, virtual_address
+    );
+    instructionOutput.modifiedRamAddresses.push_back({virtual_address, value});
+    instructionOutput.setRegisters({rs1, rd});
+}
+
+void SC::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+{
+    uint32_t virtual_address = cpu.getRegister(rs1);
+    Memory& mem = Memory::getInstance();
+
+    uint32_t physical_address = mem.translateAddress(virtual_address, AccessType::Load);
+
+    if (cpu.checkAndClearReservation(physical_address)) {
+        uint32_t value_to_write = cpu.getRegister(rs2);
+        mem.write32(virtual_address, value_to_write);
+        if (rd != 0) cpu.setRegister(rd, 0);
+
+        instructionOutput.consoleLog = fmt::format(
+            "Performed SC.W: SUCCESS, Mem[0x{:X}] <- {} (x{}), x{} <- 0",
+            virtual_address, value_to_write, rs2, rd
+        );
+        instructionOutput.modifiedRamAddresses.push_back({virtual_address, value_to_write});
+        instructionOutput.setRegisters({rs1, rs2, rd});
+    } else {
+        if (rd != 0) cpu.setRegister(rd, 1);
+
+        instructionOutput.consoleLog = fmt::format(
+            "Performed SC.W: FAILED (Reservation lost or mismatch), x{} <- 1", rd
+        );
+        instructionOutput.setRegisters({rs1, rd});
+    }
+
+    cpu.setPc(cpu.getPc() + 4);
+}
+
+void AMO::Instruction::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     Memory& mem = Memory::getInstance();
 
     uint32_t memory_address = cpu.getRegister(rs1);
-    uint32_t value_to_write = cpu.getRegister(rs2);
+    uint32_t value_from_rs2 = cpu.getRegister(rs2);
 
     uint32_t old_value = mem.read32(memory_address);
-    mem.write32(memory_address, value_to_write);
+    uint32_t new_value = performAmoOperation(old_value, value_from_rs2);
+
+    cpu.notifyStore(memory_address, 4);
+
+    mem.write32(memory_address, new_value);
 
     if (rd != 0) {
         cpu.setRegister(rd, old_value);
@@ -420,10 +487,11 @@ void AMOSWAP::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     cpu.setPc(cpu.getPc() + 4);
 
-    instructionOutput.consoleLog = "Performed AMOSWAP.W: Mem[0x" + std::to_string(memory_address) +
-                                   "] <- x" + std::to_string(rs2) + " (" + std::to_string(value_to_write) +
-                                   "), old_val -> x" + std::to_string(rd);
-
+    instructionOutput.consoleLog = fmt::format(
+        "Performed {}.W: Mem[0x{:X}] <- {} (old: {}, rs2: {}), old_val -> x{}",
+        getInstructionName(), memory_address, new_value, old_value, value_from_rs2, rd
+    );
+    instructionOutput.modifiedRamAddresses.push_back({memory_address, new_value});
     instructionOutput.setRegisters({rs1, rs2, rd});
 }
 

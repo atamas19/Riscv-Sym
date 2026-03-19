@@ -46,6 +46,8 @@ void SB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     uint8_t result = static_cast<uint8_t>(rs2Value);
 
+    cpu.notifyStore(finalAddress, 1);
+
     Memory::getInstance().write8(finalAddress, result);
 
     cpu.setPc(cpu.getPc() + 4);
@@ -66,6 +68,8 @@ void SH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     uint16_t result = static_cast<uint16_t>(rs2Value);
 
+    cpu.notifyStore(finalAddress, 2);
+
     Memory::getInstance().write16(finalAddress, result);
 
     cpu.setPc(cpu.getPc() + 4);
@@ -85,6 +89,8 @@ void SW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     uint32_t finalAddress = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(imm);
 
     uint32_t result = static_cast<uint32_t>(rs2Value);
+
+    cpu.notifyStore(finalAddress, 4);
 
     Memory::getInstance().write32(finalAddress, result);
 

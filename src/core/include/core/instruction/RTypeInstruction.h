@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <functional>
+#include <algorithm>
 
 namespace RType
 {
@@ -251,14 +252,136 @@ public:
     static constexpr uint8_t getInstructionDescription() { return 0x2F; }
 };
 
-// Atomic Memory Operation Swap
-class AMOSWAP : public Instruction
-{
+// Load Reserved
+class LR : public Instruction {
 public:
-    AMOSWAP(uint32_t instruction) : Instruction(instruction) { decode(); }
+    LR(uint32_t ins) : Instruction(ins) { decode(); }
     void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
 
-    static const InstructionDescriptor getInstructionDescriptor() { return {0x2, 0x1}; }
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x2, 0x2}; }
 };
+
+// Store Conditional
+class SC : public Instruction {
+public:
+    SC(uint32_t ins) : Instruction(ins) { decode(); }
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x2, 0x3}; }
+};
+
+// Atomic Memory Operation
+namespace AMO
+{
+
+class Instruction : public RType::Instruction {
+public:
+    Instruction(uint32_t instruction) : RType::Instruction(instruction) { decode(); }
+    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+protected:
+    virtual uint32_t performAmoOperation(uint32_t oldValue, uint32_t rs2Value) const = 0;
+    virtual std::string getInstructionName() const = 0;
+};
+
+// Atomic Memory Operation Swap
+class SWAP : public Instruction {
+public:
+    SWAP(uint32_t ins) : Instruction(ins) {}
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x2, 0x1}; }
+protected:
+    uint32_t performAmoOperation(uint32_t oldValue, uint32_t rs2Value) const override { return rs2Value; }
+    std::string getInstructionName() const override { return "AMOSWAP"; }
+};
+
+// Atomic Memory Operation Add
+class ADD : public Instruction {
+public:
+    ADD(uint32_t ins) : Instruction(ins) {}
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x2, 0x0}; }
+protected:
+    uint32_t performAmoOperation(uint32_t oldValue, uint32_t rs2Value) const override { return oldValue + rs2Value; }
+    std::string getInstructionName() const override { return "AMOADD"; }
+};
+
+// Atomic Memory Operation XOR
+class XOR : public Instruction {
+public:
+    XOR(uint32_t ins) : Instruction(ins) {}
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x2, 0x4}; }
+protected:
+    uint32_t performAmoOperation(uint32_t oldValue, uint32_t rs2Value) const override { return oldValue ^ rs2Value; }
+    std::string getInstructionName() const override { return "AMOXOR"; }
+};
+
+// Atomic Memory Operation AND
+class AND : public Instruction {
+public:
+    AND(uint32_t ins) : Instruction(ins) {}
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x2, 0xC}; }
+protected:
+    uint32_t performAmoOperation(uint32_t oldValue, uint32_t rs2Value) const override { return oldValue & rs2Value; }
+    std::string getInstructionName() const override { return "AMOAND"; }
+};
+
+// Atomic Memory Operation OR
+class OR : public Instruction {
+public:
+    OR(uint32_t ins) : Instruction(ins) {}
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x2, 0x8}; }
+protected:
+    uint32_t performAmoOperation(uint32_t oldValue, uint32_t rs2Value) const override { return oldValue | rs2Value; }
+    std::string getInstructionName() const override { return "AMOOR"; }
+};
+
+// Atomic Memory Operation Min
+class MIN : public Instruction {
+public:
+    MIN(uint32_t ins) : Instruction(ins) {}
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x2, 0x10}; }
+protected:
+    uint32_t performAmoOperation(uint32_t oldValue, uint32_t rs2Value) const override {
+        int32_t v1 = static_cast<int32_t>(oldValue);
+        int32_t v2 = static_cast<int32_t>(rs2Value);
+        return static_cast<uint32_t>(std::min(v1, v2));
+    }
+    std::string getInstructionName() const override { return "AMOMIN"; }
+};
+
+// Atomic Memory Operation Max
+class MAX : public Instruction {
+public:
+    MAX(uint32_t ins) : Instruction(ins) {}
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x2, 0x14}; }
+protected:
+    uint32_t performAmoOperation(uint32_t oldValue, uint32_t rs2Value) const override {
+        int32_t v1 = static_cast<int32_t>(oldValue);
+        int32_t v2 = static_cast<int32_t>(rs2Value);
+        return static_cast<uint32_t>(std::max(v1, v2));
+    }
+    std::string getInstructionName() const override { return "AMOMAX"; }
+};
+
+// Atomic Memory Operation Min Unsigned
+class MINU : public Instruction {
+public:
+    MINU(uint32_t ins) : Instruction(ins) {}
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x2, 0x18}; }
+protected:
+    uint32_t performAmoOperation(uint32_t oldValue, uint32_t rs2Value) const override { return std::min(oldValue, rs2Value); }
+    std::string getInstructionName() const override { return "AMOMINU"; }
+};
+
+// Atomic Memory Operation Max Unsigned
+class MAXU : public Instruction {
+public:
+    MAXU(uint32_t ins) : Instruction(ins) {}
+    static const InstructionDescriptor getInstructionDescriptor() { return {0x2, 0x1C}; }
+protected:
+    uint32_t performAmoOperation(uint32_t oldValue, uint32_t rs2Value) const override { return std::max(oldValue, rs2Value); }
+    std::string getInstructionName() const override { return "AMOMAXU"; }
+};
+
+} // namespace AMO
+
 
 } // namespace RType

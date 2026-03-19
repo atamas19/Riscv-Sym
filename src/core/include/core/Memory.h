@@ -66,6 +66,7 @@ private:
 
     uint8_t* getMemoryPtr(uint32_t address, bool allocateIfNeeded);
 
+public:
     // --- MMU (Sv32) ---
     uint32_t translateAddress(uint32_t vaddr, AccessType type);
     uint32_t read32Physical(uint32_t paddr);
