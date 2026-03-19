@@ -23,7 +23,7 @@ class LUI : public Instruction
 {
 public:
     LUI(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+    void execute(RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x37; }
 };
@@ -33,7 +33,7 @@ class AUIPC : public Instruction
 {
 public:
     AUIPC(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+    void execute(RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x17; }
 };

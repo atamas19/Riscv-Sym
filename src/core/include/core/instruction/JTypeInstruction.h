@@ -25,7 +25,7 @@ class JAL : public Instruction
 {
 public:
     JAL(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+    void execute(RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr) override;
 
     static const uint8_t getInstructionDescriptor() { return 0x6f; }
 };

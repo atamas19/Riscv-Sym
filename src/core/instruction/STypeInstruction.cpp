@@ -55,7 +55,7 @@ void SB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     instructionOutput.consoleLog = "Performed SB: mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                 ") + " + std::to_string(imm) + "] = x" + std::to_string(rs2) +
                                 " (" + std::to_string(rs2Value & 0xFF) + ") [byte].";
-    instructionOutput.setRegisters({rs1, rs2});
+    instructionOutput->setRegisters({rs1, rs2});
     instructionOutput.setRamAddresses({{finalAddress, result}});
 }
 
@@ -77,7 +77,7 @@ void SH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     instructionOutput.consoleLog = "Performed SH: mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                     ") + " + std::to_string(imm) + "] = x" + std::to_string(rs2) +
                                     " (" + std::to_string(rs2Value & 0xFFFF) + ") [halfword].";
-    instructionOutput.setRegisters({rs1, rs2});
+    instructionOutput->setRegisters({rs1, rs2});
     instructionOutput.setRamAddresses({{finalAddress, result}});
 }
 
@@ -99,7 +99,7 @@ void SW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     instructionOutput.consoleLog = "Performed SW: mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                 ") + " + std::to_string(imm) + "] = x" + std::to_string(rs2) +
                                 " (" + std::to_string(rs2Value) + ") [word].";
-    instructionOutput.setRegisters({rs1, rs2});
+    instructionOutput->setRegisters({rs1, rs2});
     instructionOutput.setRamAddresses({{finalAddress, result}});
 }
 

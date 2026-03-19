@@ -17,7 +17,7 @@ void LUI::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     instructionOutput.consoleLog = "Performed LUI: x" + std::to_string(rd) +
                                " = " + std::to_string(imm) + ".";
-    instructionOutput.setRegisters({rd});
+    instructionOutput->setRegisters({rd});
 }
 
 void AUIPC::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -31,7 +31,7 @@ void AUIPC::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     instructionOutput.consoleLog = "Performed AUIPC: x" + std::to_string(rd) +
                                " = PC (" + std::to_string(pc) + ") + " +
                                std::to_string(imm) + " = " + std::to_string(resultValue) + ".";
-    instructionOutput.setRegisters({rd});
+    instructionOutput->setRegisters({rd});
 }
 
 } // namespace UType

@@ -38,7 +38,7 @@ void JAL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     instructionOutput.consoleLog = "Performed JAL: x" + std::to_string(rd) +
         " = PC + 4, PC += " + std::to_string(imm) + ".";
 
-    instructionOutput.setRegisters({rd});
+    instructionOutput->setRegisters({rd});
 }
 
 } // namespace JType

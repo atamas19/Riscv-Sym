@@ -64,7 +64,7 @@ void ADD::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     instructionOutput.consoleLog = "Performed ADD: x" + std::to_string(rd) +
                                     " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                     ") + x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) + ").";
-    instructionOutput.setRegisters({rs1, rs2, rd});
+    instructionOutput->setRegisters({rs1, rs2, rd});
 }
 
 void SUB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -81,7 +81,7 @@ void SUB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                     " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                     ") - x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) + ").";
 
-    instructionOutput.setRegisters({rs1, rs2, rd});
+    instructionOutput->setRegisters({rs1, rs2, rd});
 }
 
 void SLL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -99,7 +99,7 @@ void SLL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     instructionOutput.consoleLog = "Performed SLL: x" + std::to_string(rd) +
                                     " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                     ") << x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) + " bits).";
-    instructionOutput.setRegisters({rs1, rs2, rd});
+    instructionOutput->setRegisters({rs1, rs2, rd});
 }
 
 void SLT::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -116,7 +116,7 @@ void SLT::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                 " = (x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                 ") < x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) +
                                 ")) → " + std::to_string(result) + ".";
-    instructionOutput.setRegisters({rs1, rs2, rd});
+    instructionOutput->setRegisters({rs1, rs2, rd});
 }
 
 void SLTU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -133,7 +133,7 @@ void SLTU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
                                 " = (unsigned)x" + std::to_string(rs1) + " (" + std::to_string(static_cast<uint32_t>(rs1Value)) +
                                 ") < (unsigned)x" + std::to_string(rs2) + " (" + std::to_string(static_cast<uint32_t>(rs2Value)) +
                                 ")) → " + std::to_string(result) + ".";
-    instructionOutput.setRegisters({rs1, rs2, rd});
+    instructionOutput->setRegisters({rs1, rs2, rd});
 }
 
 void XOR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -149,7 +149,7 @@ void XOR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     instructionOutput.consoleLog = "Performed XOR: x" + std::to_string(rd) +
                                " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                ") ^ x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) + ").";
-    instructionOutput.setRegisters({rs1, rs2, rd});
+    instructionOutput->setRegisters({rs1, rs2, rd});
 }
 
 void SRL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -167,7 +167,7 @@ void SRL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     instructionOutput.consoleLog = "Performed SRL: x" + std::to_string(rd) +
                                " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                ") >> x" + std::to_string(rs2) + " (" + std::to_string(shiftValue) + " bits) (logical shift).";
-    instructionOutput.setRegisters({rs1, rs2, rd});
+    instructionOutput->setRegisters({rs1, rs2, rd});
 }
 
 void SRA::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -185,7 +185,7 @@ void SRA::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     instructionOutput.consoleLog = "Performed SRA: x" + std::to_string(rd) +
                                " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                ") >> x" + std::to_string(rs2) + " (" + std::to_string(shiftValue) + " bits) (arithmetic shift).";
-    instructionOutput.setRegisters({rs1, rs2, rd});
+    instructionOutput->setRegisters({rs1, rs2, rd});
 }
 
 void OR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -201,7 +201,7 @@ void OR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     instructionOutput.consoleLog = "Performed OR: x" + std::to_string(rd) +
                                " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                ") | x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) + ").";
-    instructionOutput.setRegisters({rs1, rs2, rd});
+    instructionOutput->setRegisters({rs1, rs2, rd});
 }
 
 void AND::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -217,7 +217,7 @@ void AND::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
     instructionOutput.consoleLog = "Performed AND: x" + std::to_string(rd) +
                                " = x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
                                ") & x" + std::to_string(rs2) + " (" + std::to_string(rs2Value) + ").";
-    instructionOutput.setRegisters({rs1, rs2, rd});
+    instructionOutput->setRegisters({rs1, rs2, rd});
 }
 
 // RV32M instructions
@@ -236,7 +236,7 @@ void MUL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
         "Performed MUL: x{} = x{} ({}) * x{} ({})",
         rd, rs1, rs1Value, rs2, rs2Value
     );
-    instructionOutput.setRegisters({rs1, rs2, rd});
+    instructionOutput->setRegisters({rs1, rs2, rd});
 }
 
 void MULH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -253,7 +253,7 @@ void MULH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
         "Performed MULH: x{} = x{} ({}) * x{} ({}) [Upper 32 bits].",
         rd, rs1, rs1Value, rs2, rs2Value
     );
-    instructionOutput.setRegisters({rs1, rs2, rd});
+    instructionOutput->setRegisters({rs1, rs2, rd});
 }
 
 void MULHSU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -270,7 +270,7 @@ void MULHSU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
         "Performed MULHSU: x{} = x{} ({}) * x{} ({}) [Upper 32 bits].",
         rd, rs1, rs1Value, rs2, rs2Value
     );
-    instructionOutput.setRegisters({rs1, rs2, rd});
+    instructionOutput->setRegisters({rs1, rs2, rd});
 }
 
 void MULHU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -287,7 +287,7 @@ void MULHU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
         "Performed MULHU: x{} = x{} ({}) * x{} ({}) [Upper 32 bits].",
         rd, rs1, rs1Value, rs2, rs2Value
     );
-    instructionOutput.setRegisters({rs1, rs2, rd});
+    instructionOutput->setRegisters({rs1, rs2, rd});
 }
 
 void DIV::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -311,7 +311,7 @@ void DIV::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
         "Performed DIV: x{} = x{} ({}) / x{} ({})",
         rd, rs1, rs1Value, rs2, rs2Value
     );
-    instructionOutput.setRegisters({rs1, rs2, rd});
+    instructionOutput->setRegisters({rs1, rs2, rd});
 }
 
 void DIVU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -333,7 +333,7 @@ void DIVU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
         "Performed DIVU: x{} = x{} ({}) / x{} ({})",
         rd, rs1, rs1Value, rs2, rs2Value
     );
-    instructionOutput.setRegisters({rs1, rs2, rd});
+    instructionOutput->setRegisters({rs1, rs2, rd});
 }
 
 void REM::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -357,7 +357,7 @@ void REM::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
         "Performed REM: x{} = x{} ({}) % x{} ({})",
         rd, rs1, rs1Value, rs2, rs2Value
     );
-    instructionOutput.setRegisters({rs1, rs2, rd});
+    instructionOutput->setRegisters({rs1, rs2, rd});
 }
 
 void REMU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -379,7 +379,7 @@ void REMU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
         "Performed REMU: x{} = x{} ({}) % x{} ({})",
         rd, rs1, rs1Value, rs2, rs2Value
     );
-    instructionOutput.setRegisters({rs1, rs2, rd});
+    instructionOutput->setRegisters({rs1, rs2, rd});
 }
 
 // RV32A Instructions
@@ -435,7 +435,7 @@ void LR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
         "Performed LR.W: x{} <- Mem[0x{:X}], Reservation Set", rd, virtual_address
     );
     instructionOutput.modifiedRamAddresses.push_back({virtual_address, value});
-    instructionOutput.setRegisters({rs1, rd});
+    instructionOutput->setRegisters({rs1, rd});
 }
 
 void SC::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
@@ -455,14 +455,14 @@ void SC::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
             virtual_address, value_to_write, rs2, rd
         );
         instructionOutput.modifiedRamAddresses.push_back({virtual_address, value_to_write});
-        instructionOutput.setRegisters({rs1, rs2, rd});
+        instructionOutput->setRegisters({rs1, rs2, rd});
     } else {
         if (rd != 0) cpu.setRegister(rd, 1);
 
         instructionOutput.consoleLog = fmt::format(
             "Performed SC.W: FAILED (Reservation lost or mismatch), x{} <- 1", rd
         );
-        instructionOutput.setRegisters({rs1, rd});
+        instructionOutput->setRegisters({rs1, rd});
     }
 
     cpu.setPc(cpu.getPc() + 4);
@@ -492,7 +492,7 @@ void AMO::Instruction::execute(RiscvCpu& cpu, InstructionOutput& instructionOutp
         getInstructionName(), memory_address, new_value, old_value, value_from_rs2, rd
     );
     instructionOutput.modifiedRamAddresses.push_back({memory_address, new_value});
-    instructionOutput.setRegisters({rs1, rs2, rd});
+    instructionOutput->setRegisters({rs1, rs2, rd});
 }
 
 } // namespace RType
