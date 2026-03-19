@@ -141,7 +141,7 @@ void SLTU::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
 
     if (instructionOutput) {
         instructionOutput->consoleLog = fmt::format(
-            "Performed SLTU: x{} = (unsigned)x{} ({}) < (unsigned)x{} ({})) → {}.",
+            "Performed SLTU: x{} = (unsigned)x{} ({}) < (unsigned)x{} ({}) → {}.",
             rd, rs1, rs1Value, rs2, rs2Value, result
         );
         instructionOutput->setRegisters({rs1, rs2, rd});

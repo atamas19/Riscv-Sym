@@ -84,7 +84,7 @@ void BNE::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
         instructionOutput->consoleLog = fmt::format(
             "Performed BNE: x{} ({}) != x{} ({}) -> {}",
             rs1, rs1Value, rs2, rs2Value,
-            (rs1Value == rs2Value) ? fmt::format("branch taken to PC + {}.", imm) : "branch not taken."
+            (rs1Value != rs2Value) ? fmt::format("branch taken to PC + {}.", imm) : "branch not taken."
         );
         instructionOutput->setRegisters({rs1, rs2});
     }
@@ -103,7 +103,7 @@ void BLT::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
         instructionOutput->consoleLog = fmt::format(
             "Performed BLT: x{} ({}) < x{} ({}) -> {}",
             rs1, rs1Value, rs2, rs2Value,
-            (rs1Value == rs2Value) ? fmt::format("branch taken to PC + {}.", imm) : "branch not taken."
+            (rs1Value < rs2Value) ? fmt::format("branch taken to PC + {}.", imm) : "branch not taken."
         );
         instructionOutput->setRegisters({rs1, rs2});
     }
@@ -120,9 +120,9 @@ void BGE::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
 
     if (instructionOutput) {
         instructionOutput->consoleLog = fmt::format(
-            "Performed BEQ: x{} ({}) >= x{} ({}) -> {}",
+            "Performed BGE: x{} ({}) >= x{} ({}) -> {}",
             rs1, rs1Value, rs2, rs2Value,
-            (rs1Value == rs2Value) ? fmt::format("branch taken to PC + {}.", imm) : "branch not taken."
+            (rs1Value >= rs2Value) ? fmt::format("branch taken to PC + {}.", imm) : "branch not taken."
         );
         instructionOutput->setRegisters({rs1, rs2});
     }
@@ -141,7 +141,7 @@ void BLTU::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
         instructionOutput->consoleLog = fmt::format(
             "Performed BLTU: x{} ({}) < x{} ({}) -> {}",
             rs1, rs1Value, rs2, rs2Value,
-            (rs1Value == rs2Value) ? fmt::format("branch taken to PC + {}.", imm) : "branch not taken."
+            (rs1Value < rs2Value) ? fmt::format("branch taken to PC + {}.", imm) : "branch not taken."
         );
         instructionOutput->setRegisters({rs1, rs2});
     }
@@ -160,7 +160,7 @@ void BGEU::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
         instructionOutput->consoleLog = fmt::format(
             "Performed BGEU: x{} ({}) >= x{} ({}) -> {}",
             rs1, rs1Value, rs2, rs2Value,
-            (rs1Value == rs2Value) ? fmt::format("branch taken to PC + {}.", imm) : "branch not taken."
+            (rs1Value >= rs2Value) ? fmt::format("branch taken to PC + {}.", imm) : "branch not taken."
         );
         instructionOutput->setRegisters({rs1, rs2});
     }
