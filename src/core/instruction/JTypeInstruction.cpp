@@ -2,6 +2,8 @@
 #include <core/RiscvCpu.h>
 #include <core/Memory.h>
 
+#include <spdlog/fmt/fmt.h>
+
 namespace JType
 {
 
@@ -26,7 +28,7 @@ void Instruction::decode()
     imm = getImm();
 }
 
-void JAL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+void JAL::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
 {
     uint32_t targetAddress = cpu.getPc() + imm;
 
@@ -35,10 +37,10 @@ void JAL::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     cpu.setPc(targetAddress);
 
-    instructionOutput.consoleLog = "Performed JAL: x" + std::to_string(rd) +
-        " = PC + 4, PC += " + std::to_string(imm) + ".";
-
-    instructionOutput->setRegisters({rd});
+    if (instructionOutput) {
+        instructionOutput->consoleLog = fmt::format("Performed JAL: x{} = PC + 4, PC += {}.", rd, imm);
+        instructionOutput->setRegisters({rd});
+    }
 }
 
 } // namespace JType
