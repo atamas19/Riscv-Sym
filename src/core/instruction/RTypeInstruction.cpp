@@ -415,11 +415,15 @@ std::unique_ptr<Instruction> AtomicInstructionFactory::create(uint32_t encodedIn
     return nullptr;
 }
 
-void LR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
-    uint32_t memory_address = cpu.getRegister(rs1);
-    uint32_t value = Memory::getInstance().read32(memory_address);
+void LR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+{
+    Memory& mem = Memory::getInstance();
+    uint32_t virtual_address = cpu.getRegister(rs1);
+    uint32_t value = mem.read32(virtual_address);
 
-    cpu.makeReservation(memory_address);
+    uint32_t physical_address = mem.translateAddress(virtual_address, AccessType::Load);
+
+    cpu.makeReservation(physical_address);
 
     if (rd != 0) {
         cpu.setRegister(rd, value);
@@ -428,25 +432,29 @@ void LR::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
     cpu.setPc(cpu.getPc() + 4);
 
     instructionOutput.consoleLog = fmt::format(
-        "Performed LR.W: x{} <- Mem[0x{:X}], Reservation Set", rd, memory_address
+        "Performed LR.W: x{} <- Mem[0x{:X}], Reservation Set", rd, virtual_address
     );
-    instructionOutput.modifiedRamAddresses.push_back({memory_address, value});
+    instructionOutput.modifiedRamAddresses.push_back({virtual_address, value});
     instructionOutput.setRegisters({rs1, rd});
 }
 
-void SC::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
-    uint32_t memory_address = cpu.getRegister(rs1);
+void SC::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+{
+    uint32_t virtual_address = cpu.getRegister(rs1);
+    Memory& mem = Memory::getInstance();
 
-    if (cpu.checkAndClearReservation(memory_address)) {
+    uint32_t physical_address = mem.translateAddress(virtual_address, AccessType::Load);
+
+    if (cpu.checkAndClearReservation(physical_address)) {
         uint32_t value_to_write = cpu.getRegister(rs2);
-        Memory::getInstance().write32(memory_address, value_to_write);
+        mem.write32(virtual_address, value_to_write);
         if (rd != 0) cpu.setRegister(rd, 0);
 
         instructionOutput.consoleLog = fmt::format(
             "Performed SC.W: SUCCESS, Mem[0x{:X}] <- {} (x{}), x{} <- 0",
-            memory_address, value_to_write, rs2, rd
+            virtual_address, value_to_write, rs2, rd
         );
-        instructionOutput.modifiedRamAddresses.push_back({memory_address, value_to_write});
+        instructionOutput.modifiedRamAddresses.push_back({virtual_address, value_to_write});
         instructionOutput.setRegisters({rs1, rs2, rd});
     } else {
         if (rd != 0) cpu.setRegister(rd, 1);
@@ -454,10 +462,10 @@ void SC::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {
         instructionOutput.consoleLog = fmt::format(
             "Performed SC.W: FAILED (Reservation lost or mismatch), x{} <- 1", rd
         );
+        instructionOutput.setRegisters({rs1, rd});
     }
 
     cpu.setPc(cpu.getPc() + 4);
-    instructionOutput.setRegisters({rs1, rs2, rd});
 }
 
 void AMO::Instruction::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) {

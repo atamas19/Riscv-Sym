@@ -242,19 +242,23 @@ void RiscvCpu::notifyStore(uint32_t address, uint32_t size) {
     if (!_reservationValid) {
         return;
     }
+    const uint64_t storeStart = static_cast<uint64_t>(address);
+    const uint64_t storeEnd   = storeStart + size;
+    const uint64_t resStart   = static_cast<uint64_t>(_reservationAddress);
+    const uint64_t resEnd     = resStart + 4ULL;
 
-    if (address < _reservationAddress + 4 && address + size > _reservationAddress) {
+    if (storeStart < resEnd && storeEnd > resStart) {
         _reservationValid = false;
     }
 }
 
-void RiscvCpu::makeReservation(uint32_t address) {
-    _reservationAddress = address;
+void RiscvCpu::makeReservation(uint32_t physicalAddress) {
+    _reservationAddress = physicalAddress;
     _reservationValid = true;
 }
 
-bool RiscvCpu::checkAndClearReservation(uint32_t address) {
-    bool isValid = _reservationValid && (_reservationAddress == address);
+bool RiscvCpu::checkAndClearReservation(uint32_t physicalAddress) {
+    bool isValid = _reservationValid && (_reservationAddress == physicalAddress);
     _reservationValid = false;
     return isValid;
 }

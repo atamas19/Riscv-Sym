@@ -54,8 +54,8 @@ public:
 public:
     void notifyStore(uint32_t address, uint32_t size);
 
-    void makeReservation(uint32_t address);
-    bool checkAndClearReservation(uint32_t address);
+    void makeReservation(uint32_t physicalAddress);
+    bool checkAndClearReservation(uint32_t physicalAddress);
     void cancelReservation();
 
 private:
