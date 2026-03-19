@@ -29,7 +29,7 @@ public:
 class CSRRW final : public Instruction {
 public:
     CSRRW(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+    void execute(RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr) override;
 
     static constexpr uint8_t getInstructionDescriptor() { return 0x1; }
 };
@@ -38,7 +38,7 @@ public:
 class CSRRS final : public Instruction {
 public:
     CSRRS(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+    void execute(RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr) override;
 
     static constexpr uint8_t getInstructionDescriptor() { return 0x2; }
 };
@@ -47,7 +47,7 @@ public:
 class CSRRC final : public Instruction {
 public:
     CSRRC(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+    void execute(RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr) override;
 
     static constexpr uint8_t getInstructionDescriptor() { return 0x3; }
 };
@@ -56,7 +56,7 @@ public:
 class CSRRWI final : public Instruction {
 public:
     CSRRWI(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+    void execute(RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr) override;
 
     static constexpr uint8_t getInstructionDescriptor() { return 0x5; }
 };
@@ -65,7 +65,7 @@ public:
 class CSRRSI final : public Instruction {
 public:
     CSRRSI(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+    void execute(RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr) override;
 
     static constexpr uint8_t getInstructionDescriptor() { return 0x6; }
 };
@@ -74,7 +74,7 @@ public:
 class CSRRCI final : public Instruction {
 public:
     CSRRCI(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+    void execute(RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr) override;
 
     static constexpr uint8_t getInstructionDescriptor() { return 0x7; }
 };
@@ -85,7 +85,7 @@ public:
 class ECALL final : public Instruction {
 public:
     ECALL(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+    void execute(RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr) override;
 
     static constexpr uint8_t getInstructionDescriptor() { return 0x0; }
 };
@@ -94,7 +94,7 @@ public:
 class EBREAK final : public Instruction {
 public:
     EBREAK(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+    void execute(RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr) override;
 
     static constexpr uint8_t getInstructionDescriptor() { return 0x1; }
 };
@@ -105,7 +105,7 @@ public:
 class MRET final : public Instruction {
 public:
     MRET(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+    void execute(RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr) override;
 
     static constexpr uint16_t getInstructionDescriptor() { return 0x302; }
 };
@@ -114,7 +114,7 @@ public:
 class SRET final : public Instruction {
 public:
     SRET(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+    void execute(RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr) override;
 
     static constexpr uint16_t getInstructionDescriptor() { return 0x102; }
 };
@@ -122,7 +122,7 @@ public:
 class SFENCE_VMA : public Instruction {
 public:
     SFENCE_VMA(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) override;
+    void execute(RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr) override;
 
     static constexpr uint16_t getInstructionDescriptor() { return 0x09; }
 };

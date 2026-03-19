@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <functional>
 
+#include <spdlog/fmt/fmt.h>
+
 namespace SType
 {
 
@@ -37,7 +39,7 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
     return nullptr;
 }
 
-void SB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+void SB::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
 {
     uint32_t rs1Value = cpu.getRegister(rs1);
     uint32_t rs2Value = cpu.getRegister(rs2);
@@ -52,14 +54,17 @@ void SB::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     cpu.setPc(cpu.getPc() + 4);
 
-    instructionOutput.consoleLog = "Performed SB: mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
-                                ") + " + std::to_string(imm) + "] = x" + std::to_string(rs2) +
-                                " (" + std::to_string(rs2Value & 0xFF) + ") [byte].";
-    instructionOutput.setRegisters({rs1, rs2});
-    instructionOutput.setRamAddresses({{finalAddress, result}});
+    if (instructionOutput) {
+        instructionOutput->consoleLog = fmt::format(
+            "Performed SB: mem[x{} ({}) + {}] = x{} ({}) [byte].",
+            rs1, rs1Value, imm, rs2, (rs2Value & 0xFF)
+        );
+        instructionOutput->setRegisters({rs1, rs2});
+        instructionOutput->setRamAddresses({{finalAddress, result}});
+    }
 }
 
-void SH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+void SH::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
 {
     uint32_t rs1Value = cpu.getRegister(rs1);
     uint32_t rs2Value = cpu.getRegister(rs2);
@@ -74,14 +79,17 @@ void SH::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     cpu.setPc(cpu.getPc() + 4);
 
-    instructionOutput.consoleLog = "Performed SH: mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
-                                    ") + " + std::to_string(imm) + "] = x" + std::to_string(rs2) +
-                                    " (" + std::to_string(rs2Value & 0xFFFF) + ") [halfword].";
-    instructionOutput.setRegisters({rs1, rs2});
-    instructionOutput.setRamAddresses({{finalAddress, result}});
+    if (instructionOutput) {
+        instructionOutput->consoleLog = fmt::format(
+            "Performed SH: mem[x{} ({}) + {}] = x{} ({}) [halfword].",
+            rs1, rs1Value, imm, rs2, (rs2Value & 0xFFFF)
+        );
+        instructionOutput->setRegisters({rs1, rs2});
+        instructionOutput->setRamAddresses({{finalAddress, result}});
+    }
 }
 
-void SW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+void SW::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
 {
     uint32_t rs1Value = cpu.getRegister(rs1);
     uint32_t rs2Value = cpu.getRegister(rs2);
@@ -96,11 +104,14 @@ void SW::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     cpu.setPc(cpu.getPc() + 4);
 
-    instructionOutput.consoleLog = "Performed SW: mem[x" + std::to_string(rs1) + " (" + std::to_string(rs1Value) +
-                                ") + " + std::to_string(imm) + "] = x" + std::to_string(rs2) +
-                                " (" + std::to_string(rs2Value) + ") [word].";
-    instructionOutput.setRegisters({rs1, rs2});
-    instructionOutput.setRamAddresses({{finalAddress, result}});
+    if (instructionOutput) {
+        instructionOutput->consoleLog = fmt::format(
+            "Performed SW: mem[x{} ({}) + {}] = x{} ({}) [word].",
+            rs1, rs1Value, imm, rs2, rs2Value
+        );
+        instructionOutput->setRegisters({rs1, rs2});
+        instructionOutput->setRamAddresses({{finalAddress, result}});
+    }
 }
 
 } // namespace SType

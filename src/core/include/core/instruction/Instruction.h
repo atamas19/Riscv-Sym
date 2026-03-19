@@ -17,7 +17,7 @@ uint32_t getBits(uint32_t instruction, uint8_t x, uint8_t y);
 class Instruction
 {
 public:
-    virtual void execute(RiscvCpu& cpu, InstructionOutput& instructionOutput) = 0;
+    virtual void execute(RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr) = 0;
     virtual ~Instruction() = default;
 protected:
     virtual void decode() = 0;

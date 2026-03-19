@@ -53,7 +53,7 @@ int RiscvCpu::executeAsmCommand(const std::string& command, InstructionOutput& i
     }
 
     try {
-        instruction->execute(*this, instructionOutput);
+        instruction->execute(*this, &instructionOutput);
         instructionOutput.exitCode = 0;
     } catch(const std::exception& e) {
         instructionOutput.consoleLog = "Error executing `" + command + "`: " + std::string{e.what()};
@@ -93,8 +93,6 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
     spdlog::info("Instructions have been loaded. Starting execution...");
 
     this->_pc = startAddr;
-
-    InstructionOutput instructionOutput;
 
     for (int i{0}; true; ++i) {
         if (i % 20000 == 0) {
@@ -137,7 +135,7 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
                 continue;
             }
 
-            instruction->execute(*this, instructionOutput);
+            instruction->execute(*this);
 
         } catch (const PageFaultException& e) {
             ExceptionCause cause;

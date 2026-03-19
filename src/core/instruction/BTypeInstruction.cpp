@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <functional>
 
+#include <spdlog/fmt/fmt.h>
+
 namespace BType
 {
 
@@ -50,7 +52,7 @@ std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruct
     return nullptr;
 }
 
-void BEQ::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+void BEQ::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
 {
     uint32_t rs1Value = cpu.getRegister(rs1);
     uint32_t rs2Value = cpu.getRegister(rs2);
@@ -59,17 +61,17 @@ void BEQ::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     cpu.setPc(cpu.getPc() + pcIncrement);
 
-    instructionOutput.consoleLog = "Performed BEQ: x" + std::to_string(rs1) +
-                               " (" + std::to_string(rs1Value) + ") == x" + std::to_string(rs2) +
-                               " (" + std::to_string(rs2Value) + ") -> ";
-    instructionOutput.consoleLog += (rs1Value == rs2Value)
-                                    ? "branch taken to PC + " + std::to_string(imm) + "."
-                                    : "branch not taken.";
-
-    instructionOutput.setRegisters({rs1, rs2});
+    if (instructionOutput) {
+        instructionOutput->consoleLog = fmt::format(
+            "Performed BEQ: x{} ({}) == x{} ({}) -> {}",
+            rs1, rs1Value, rs2, rs2Value,
+            (rs1Value == rs2Value) ? fmt::format("branch taken to PC + {}.", imm) : "branch not taken."
+        );
+        instructionOutput->setRegisters({rs1, rs2});
+    }
 }
 
-void BNE::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+void BNE::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
 {
     uint32_t rs1Value = cpu.getRegister(rs1);
     uint32_t rs2Value = cpu.getRegister(rs2);
@@ -78,17 +80,17 @@ void BNE::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     cpu.setPc(cpu.getPc() + pcIncrement);
 
-    instructionOutput.consoleLog = "Performed BNE: x" + std::to_string(rs1) +
-                               " (" + std::to_string(rs1Value) + ") != x" + std::to_string(rs2) +
-                               " (" + std::to_string(rs2Value) + ") -> ";
-    instructionOutput.consoleLog += (rs1Value != rs2Value)
-                                    ? "branch taken to PC + " + std::to_string(imm) + "."
-                                    : "branch not taken.";
-
-    instructionOutput.setRegisters({rs1, rs2});
+    if (instructionOutput) {
+        instructionOutput->consoleLog = fmt::format(
+            "Performed BNE: x{} ({}) != x{} ({}) -> {}",
+            rs1, rs1Value, rs2, rs2Value,
+            (rs1Value != rs2Value) ? fmt::format("branch taken to PC + {}.", imm) : "branch not taken."
+        );
+        instructionOutput->setRegisters({rs1, rs2});
+    }
 }
 
-void BLT::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+void BLT::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
 {
     int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
     int32_t rs2Value = static_cast<int32_t>(cpu.getRegister(rs2));
@@ -97,17 +99,17 @@ void BLT::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     cpu.setPc(cpu.getPc() + pcIncrement);
 
-    instructionOutput.consoleLog = "Performed BLT: x" + std::to_string(rs1) +
-                               " (" + std::to_string(rs1Value) + ") < x" + std::to_string(rs2) +
-                               " (" + std::to_string(rs2Value) + ") -> ";
-    instructionOutput.consoleLog += (rs1Value < rs2Value)
-                                    ? "branch taken to PC + " + std::to_string(imm) + "."
-                                    : "branch not taken.";
-
-    instructionOutput.setRegisters({rs1, rs2});
+    if (instructionOutput) {
+        instructionOutput->consoleLog = fmt::format(
+            "Performed BLT: x{} ({}) < x{} ({}) -> {}",
+            rs1, rs1Value, rs2, rs2Value,
+            (rs1Value < rs2Value) ? fmt::format("branch taken to PC + {}.", imm) : "branch not taken."
+        );
+        instructionOutput->setRegisters({rs1, rs2});
+    }
 }
 
-void BGE::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+void BGE::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
 {
     int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
     int32_t rs2Value = static_cast<int32_t>(cpu.getRegister(rs2));
@@ -116,17 +118,17 @@ void BGE::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     cpu.setPc(cpu.getPc() + pcIncrement);
 
-    instructionOutput.consoleLog = "Performed BGE: x" + std::to_string(rs1) +
-                                " (" + std::to_string(rs1Value) + ") >= x" + std::to_string(rs2) +
-                                " (" + std::to_string(rs2Value) + ") -> ";
-    instructionOutput.consoleLog += (rs1Value >= rs2Value)
-                                    ? "branch taken to PC + " + std::to_string(imm) + "."
-                                    : "branch not taken.";
-
-    instructionOutput.setRegisters({rs1, rs2});
+    if (instructionOutput) {
+        instructionOutput->consoleLog = fmt::format(
+            "Performed BGE: x{} ({}) >= x{} ({}) -> {}",
+            rs1, rs1Value, rs2, rs2Value,
+            (rs1Value >= rs2Value) ? fmt::format("branch taken to PC + {}.", imm) : "branch not taken."
+        );
+        instructionOutput->setRegisters({rs1, rs2});
+    }
 }
 
-void BLTU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+void BLTU::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
 {
     uint32_t rs1Value = cpu.getRegister(rs1);
     uint32_t rs2Value = cpu.getRegister(rs2);
@@ -135,17 +137,17 @@ void BLTU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     cpu.setPc(cpu.getPc() + pcIncrement);
 
-    instructionOutput.consoleLog = "Performed BLTU: x" + std::to_string(rs1) +
-                                " (" + std::to_string(rs1Value) + ") < x" + std::to_string(rs2) +
-                                " (" + std::to_string(rs2Value) + ") -> ";
-    instructionOutput.consoleLog += (rs1Value < rs2Value)
-                                    ? "branch taken to PC + " + std::to_string(imm) + "."
-                                    : "branch not taken.";
-
-    instructionOutput.setRegisters({rs1, rs2});
+    if (instructionOutput) {
+        instructionOutput->consoleLog = fmt::format(
+            "Performed BLTU: x{} ({}) < x{} ({}) -> {}",
+            rs1, rs1Value, rs2, rs2Value,
+            (rs1Value < rs2Value) ? fmt::format("branch taken to PC + {}.", imm) : "branch not taken."
+        );
+        instructionOutput->setRegisters({rs1, rs2});
+    }
 }
 
-void BGEU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
+void BGEU::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
 {
     uint32_t rs1Value = cpu.getRegister(rs1);
     uint32_t rs2Value = cpu.getRegister(rs2);
@@ -154,14 +156,14 @@ void BGEU::execute(RiscvCpu& cpu, InstructionOutput& instructionOutput)
 
     cpu.setPc(cpu.getPc() + pcIncrement);
 
-    instructionOutput.consoleLog = "Performed BGEU: x" + std::to_string(rs1) +
-                               " (" + std::to_string(rs1Value) + ") >= x" + std::to_string(rs2) +
-                               " (" + std::to_string(rs2Value) + ") -> ";
-    instructionOutput.consoleLog += (rs1Value >= rs2Value)
-                                    ? "branch taken to PC + " + std::to_string(imm) + "."
-                                    : "branch not taken.";
-
-    instructionOutput.setRegisters({rs1, rs2});
+    if (instructionOutput) {
+        instructionOutput->consoleLog = fmt::format(
+            "Performed BGEU: x{} ({}) >= x{} ({}) -> {}",
+            rs1, rs1Value, rs2, rs2Value,
+            (rs1Value >= rs2Value) ? fmt::format("branch taken to PC + {}.", imm) : "branch not taken."
+        );
+        instructionOutput->setRegisters({rs1, rs2});
+    }
 }
 
 } // namespace BType
