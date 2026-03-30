@@ -297,6 +297,8 @@ void RiscvCpu::reset() {
 
     _mem.reset();
     _csrUnit.reset();
+
+    cancelReservation();
 }
 
 void RiscvCpu::resetGUI() {

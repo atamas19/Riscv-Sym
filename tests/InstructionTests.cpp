@@ -11,6 +11,7 @@ protected:
 
     void SetUp() override {
         cpu = &RiscvCpu::getInstance();
+        cpu->reset();
         cpu->setPc(0x1000);
         for (int i = 0; i < 32; i++) {
             cpu->setRegister(i, 0);

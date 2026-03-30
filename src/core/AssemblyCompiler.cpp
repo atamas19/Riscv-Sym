@@ -380,15 +380,17 @@ uint32_t AssemblyCompiler::assembleAMOType(const AssemblyInstruction& instructio
         return 0;
 
     const std::string& memOperand = operands[2];
-    size_t openParen = memOperand.find('(');
-    size_t closeParen = memOperand.find(')');
 
-    std::string rs1Str;
-    if (openParen != std::string::npos && closeParen != std::string::npos && closeParen > openParen + 1) {
-        rs1Str = memOperand.substr(openParen + 1, closeParen - openParen - 1);
-    } else {
-        rs1Str = memOperand;
+    if (memOperand.empty() || memOperand.front() != '(' || memOperand.back() != ')')
+    {
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "AMO memory operand must be strictly in the form (rs1) with no offset.";
+            instructionOutput->exitCode = -1;
+        }
+        return 0;
     }
+
+    std::string rs1Str = memOperand.substr(1, memOperand.size() - 2);
 
     auto rs1 = registerNameToNumber(rs1Str);
     if (!validateRegister(rs1, rs1Str))
@@ -415,18 +417,16 @@ uint32_t AssemblyCompiler::assembleLRType(const AssemblyInstruction& instruction
         return 0;
 
     const std::string& memOperand = operands[1];
-    size_t openParen = memOperand.find('(');
-    size_t closeParen = memOperand.find(')');
 
-    std::string rs1Str;
-    if (openParen != std::string::npos && closeParen != std::string::npos && closeParen > openParen + 1)
+    if (memOperand.empty() || memOperand.front() != '(' || memOperand.back() != ')')
     {
-        rs1Str = memOperand.substr(openParen + 1, closeParen - openParen - 1);
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "LR memory operand must be strictly in the form (rs1) with no offset.";
+            instructionOutput->exitCode = -1;
+        }
+        return 0;
     }
-    else
-    {
-        rs1Str = memOperand;
-    }
+    std::string rs1Str = memOperand.substr(1, memOperand.size() - 2);
 
     auto rs1 = registerNameToNumber(rs1Str);
     if (!validateRegister(rs1, rs1Str))
