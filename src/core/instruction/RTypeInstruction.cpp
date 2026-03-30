@@ -425,7 +425,6 @@ void REMU::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
     }
 }
 
-// Pana aici i-am dat la gemini
 // RV32A Instructions
 
 std::unique_ptr<Instruction> AtomicInstructionFactory::create(uint32_t encodedInstruction)

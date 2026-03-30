@@ -244,6 +244,8 @@ public:
     static const InstructionDescriptor getInstructionDescriptor() { return {0x7, 0x1}; }
 };
 
+// RV32A Instructions
+
 class AtomicInstructionFactory
 {
 public:

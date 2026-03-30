@@ -66,7 +66,7 @@ int RiscvCpu::executeAsmCommand(const std::string& command, InstructionOutput& i
 }
 
 std::unique_ptr<Instruction> RiscvCpu::getInstructionFromAsmCommand(const std::string& asmCommand, InstructionOutput& instructionOutput) {
-    uint32_t binaryInstruction = AssemblyCompiler::compile(asmCommand, instructionOutput);
+    uint32_t binaryInstruction = AssemblyCompiler::compile(asmCommand, &instructionOutput);
 
     spdlog::debug("Binary Instruction: {:032b}", binaryInstruction);
 

@@ -5,7 +5,6 @@
 #include <QDebug>
 
 #include <core/RiscvCpu.h>
-#include <core/AssemblyCompiler.h>
 
 class CpuWrapper : public QObject
 {
