@@ -26,9 +26,9 @@ AssemblyCompiler& AssemblyCompiler::getInstance()
     return instance;
 }
 
-void AssemblyCompiler::setInstructionOutput(InstructionOutput& instructionOutput)
+void AssemblyCompiler::setInstructionOutput(InstructionOutput* instructionOutput)
 {
-    this->instructionOutput = &instructionOutput;
+    this->instructionOutput = instructionOutput;
 }
 
 void AssemblyInstruction::parse(const std::string& line)
@@ -64,16 +64,17 @@ const std::vector<std::string>& AssemblyInstruction::getOperands() const
 
 bool AssemblyCompiler::validateRegister(const std::optional<uint8_t>& reg, const std::string& name)
 {
-    if (!reg)
-    {
-        instructionOutput->consoleLog = name + " is not a valid register.";
-        instructionOutput->exitCode = -1;
+    if (!reg) {
+        if (instructionOutput) {
+            instructionOutput->consoleLog = name + " is not a valid register.";
+            instructionOutput->exitCode = -1;
+        }
         return false;
     }
     return true;
 };
 
-uint32_t AssemblyCompiler::compile(const std::string& asmCode, InstructionOutput& instructionOutput)
+uint32_t AssemblyCompiler::compile(const std::string& asmCode, InstructionOutput* instructionOutput)
 {
     auto& assemblyCompiler = AssemblyCompiler::getInstance();
 
@@ -107,6 +108,19 @@ uint32_t AssemblyCompiler::getInstruction(const std::string& instructionString)
         {"divu",  [this](const AssemblyInstruction& ins) { return assembleDIVU(ins);  }},
         {"rem",   [this](const AssemblyInstruction& ins) { return assembleREM(ins);   }},
         {"remu",  [this](const AssemblyInstruction& ins) { return assembleREMU(ins);  }},
+            // RV32A instructions
+        {"lr.w", [this](const AssemblyInstruction& ins) { return assembleLR(ins); }},
+        {"sc.w", [this](const AssemblyInstruction& ins) { return assembleSC(ins); }},
+
+        {"amoswap.w", [this](const AssemblyInstruction& ins) { return assembleAMOSWAP(ins); }},
+        {"amoadd.w",  [this](const AssemblyInstruction& ins) { return assembleAMOADD(ins);  }},
+        {"amoxor.w",  [this](const AssemblyInstruction& ins) { return assembleAMOXOR(ins);  }},
+        {"amoand.w",  [this](const AssemblyInstruction& ins) { return assembleAMOAND(ins);  }},
+        {"amoor.w",   [this](const AssemblyInstruction& ins) { return assembleAMOOR(ins);   }},
+        {"amomin.w",  [this](const AssemblyInstruction& ins) { return assembleAMOMIN(ins);  }},
+        {"amomax.w",  [this](const AssemblyInstruction& ins) { return assembleAMOMAX(ins);  }},
+        {"amominu.w", [this](const AssemblyInstruction& ins) { return assembleAMOMINU(ins); }},
+        {"amomaxu.w", [this](const AssemblyInstruction& ins) { return assembleAMOMAXU(ins); }},
         // BType instructions
         {"beq",  [this](const AssemblyInstruction& ins) { return assembleBEQ(ins);  }},
         {"bne",  [this](const AssemblyInstruction& ins) { return assembleBNE(ins);  }},
@@ -144,7 +158,9 @@ uint32_t AssemblyCompiler::getInstruction(const std::string& instructionString)
     };
     if (instructionString.empty())
     {
-        instructionOutput->consoleLog = "Cannot execute an empty instruction.";
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Cannot execute an empty instruction.";
+        }
         return 0;
     }
     AssemblyInstruction instruction{instructionString};
@@ -159,7 +175,9 @@ uint32_t AssemblyCompiler::getInstruction(const std::string& instructionString)
         return it->second(instruction);
     else
     {
-        instructionOutput->consoleLog = "Instruction is invalid or not implemented.";
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Instruction is invalid or not implemented.";
+        }
         return 0;
     }
 }
@@ -182,8 +200,10 @@ uint32_t AssemblyCompiler::assembleRType(const AssemblyInstruction& instruction,
     auto& operands = instruction.getOperands();
     if (operands.size() != 3)
     {
-        instructionOutput->consoleLog = "Not the right number of operands, should be exactly 3!";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Not the right number of operands, should be exactly 3!";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
@@ -340,6 +360,125 @@ uint32_t AssemblyCompiler::assembleREMU(const AssemblyInstruction& instruction)
     return assembleRType(instruction, funct3, funct7);
 }
 
+uint32_t AssemblyCompiler::assembleAMOType(const AssemblyInstruction& instruction, uint8_t funct7)
+{
+    const auto& operands = instruction.getOperands();
+
+    if (operands.size() != 3)
+    {
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "AMO instructions require exactly 3 operands (rd, rs2, (rs1))";
+            instructionOutput->exitCode = -1;
+        }
+        return 0;
+    }
+
+    auto rd = registerNameToNumber(operands[0]);
+    auto rs2 = registerNameToNumber(operands[1]);
+
+    if (!validateRegister(rd, operands[0]) || !validateRegister(rs2, operands[1]))
+        return 0;
+
+    const std::string& memOperand = operands[2];
+
+    if (memOperand.empty() || memOperand.front() != '(' || memOperand.back() != ')')
+    {
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "AMO memory operand must be strictly in the form (rs1) with no offset.";
+            instructionOutput->exitCode = -1;
+        }
+        return 0;
+    }
+
+    std::string rs1Str = memOperand.substr(1, memOperand.size() - 2);
+
+    auto rs1 = registerNameToNumber(rs1Str);
+    if (!validateRegister(rs1, rs1Str))
+        return 0;
+
+    return encodeRType(funct7, *rs2, *rs1, 0x2, *rd, 0x2F);
+}
+
+uint32_t AssemblyCompiler::assembleLRType(const AssemblyInstruction& instruction, uint8_t funct7)
+{
+    const auto& operands = instruction.getOperands();
+
+    if (operands.size() != 2)
+    {
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "LR instruction requires exactly 2 operands (rd, (rs1))";
+            instructionOutput->exitCode = -1;
+        }
+        return 0;
+    }
+
+    auto rd = registerNameToNumber(operands[0]);
+    if (!validateRegister(rd, operands[0]))
+        return 0;
+
+    const std::string& memOperand = operands[1];
+
+    if (memOperand.empty() || memOperand.front() != '(' || memOperand.back() != ')')
+    {
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "LR memory operand must be strictly in the form (rs1) with no offset.";
+            instructionOutput->exitCode = -1;
+        }
+        return 0;
+    }
+    std::string rs1Str = memOperand.substr(1, memOperand.size() - 2);
+
+    auto rs1 = registerNameToNumber(rs1Str);
+    if (!validateRegister(rs1, rs1Str))
+        return 0;
+
+    return encodeRType(funct7, 0, *rs1, 0x2, *rd, 0x2F);
+}
+
+uint32_t AssemblyCompiler::assembleLR(const AssemblyInstruction& instruction) {
+    return assembleLRType(instruction, 0x2 << 2);
+}
+
+uint32_t AssemblyCompiler::assembleSC(const AssemblyInstruction& instruction) {
+    return assembleAMOType(instruction, 0x3 << 2);
+}
+
+uint32_t AssemblyCompiler::assembleAMOSWAP(const AssemblyInstruction& instruction) {
+    return assembleAMOType(instruction, 0x1 << 2);
+}
+
+uint32_t AssemblyCompiler::assembleAMOADD(const AssemblyInstruction& instruction) {
+    return assembleAMOType(instruction, 0x0 << 2);
+}
+
+uint32_t AssemblyCompiler::assembleAMOXOR(const AssemblyInstruction& instruction) {
+    return assembleAMOType(instruction, 0x4 << 2);
+}
+
+uint32_t AssemblyCompiler::assembleAMOAND(const AssemblyInstruction& instruction) {
+    return assembleAMOType(instruction, 0xC << 2);
+}
+
+uint32_t AssemblyCompiler::assembleAMOOR(const AssemblyInstruction& instruction) {
+    return assembleAMOType(instruction, 0x8 << 2);
+}
+
+uint32_t AssemblyCompiler::assembleAMOMIN(const AssemblyInstruction& instruction) {
+    return assembleAMOType(instruction, 0x10 << 2);
+}
+
+uint32_t AssemblyCompiler::assembleAMOMAX(const AssemblyInstruction& instruction) {
+    return assembleAMOType(instruction, 0x14 << 2);
+}
+
+uint32_t AssemblyCompiler::assembleAMOMINU(const AssemblyInstruction& instruction) {
+    return assembleAMOType(instruction, 0x18 << 2);
+}
+
+uint32_t AssemblyCompiler::assembleAMOMAXU(const AssemblyInstruction& instruction) {
+    return assembleAMOType(instruction, 0x1C << 2);
+}
+
 uint32_t AssemblyCompiler::encodeBType(int16_t imm, uint8_t rs2, uint8_t rs1, uint8_t funct3, uint8_t opcode)
 {
     uint32_t encoded = 0;
@@ -362,8 +501,10 @@ uint32_t AssemblyCompiler::assembleBType(const AssemblyInstruction& instruction,
     auto& operands = instruction.getOperands();
     if (operands.size() != 3)
     {
-        instructionOutput->consoleLog = "Not the right number of operands, should be exactly 3!";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Not the right number of operands, should be exactly 3!";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
@@ -377,22 +518,28 @@ uint32_t AssemblyCompiler::assembleBType(const AssemblyInstruction& instruction,
     try {
         imm = std::stoi(operands[2]);
     } catch (...) {
-        instructionOutput->consoleLog = "Invalid immediate value!";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Invalid immediate value!";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
     if (imm % 4 != 0)
     {
-        instructionOutput->consoleLog = "Branch offset must be a multiple of 4!";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Branch offset must be a multiple of 4!";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
     if (imm < -4096 || imm > 4094)
     {
-        instructionOutput->consoleLog = "Branch offset out of 13-bit signed range (-4096 to 4094)!";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Branch offset out of 13-bit signed range (-4096 to 4094)!";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
@@ -401,38 +548,32 @@ uint32_t AssemblyCompiler::assembleBType(const AssemblyInstruction& instruction,
 
 uint32_t AssemblyCompiler::assembleBEQ(const AssemblyInstruction& instruction)
 {
-    uint8_t funct3 = 0x0;
-    return assembleBType(instruction, funct3);
+    return assembleBType(instruction, 0x0);
 }
 
 uint32_t AssemblyCompiler::assembleBNE(const AssemblyInstruction& instruction)
 {
-    uint8_t funct3 = 0x1;
-    return assembleBType(instruction, funct3);
+    return assembleBType(instruction, 0x1);
 }
 
 uint32_t AssemblyCompiler::assembleBLT(const AssemblyInstruction& instruction)
 {
-    uint8_t funct3 = 0x4;
-    return assembleBType(instruction, funct3);
+    return assembleBType(instruction, 0x4);
 }
 
 uint32_t AssemblyCompiler::assembleBGE(const AssemblyInstruction& instruction)
 {
-    uint8_t funct3 = 0x5;
-    return assembleBType(instruction, funct3);
+    return assembleBType(instruction, 0x5);
 }
 
 uint32_t AssemblyCompiler::assembleBLTU(const AssemblyInstruction& instruction)
 {
-    uint8_t funct3 = 0x6;
-    return assembleBType(instruction, funct3);
+    return assembleBType(instruction, 0x6);
 }
 
 uint32_t AssemblyCompiler::assembleBGEU(const AssemblyInstruction& instruction)
 {
-    uint8_t funct3 = 0x7;
-    return assembleBType(instruction, funct3);
+    return assembleBType(instruction, 0x7);
 }
 
 uint32_t AssemblyCompiler::encodeJType(int32_t imm, uint8_t rd, uint8_t opcode)
@@ -455,8 +596,10 @@ uint32_t AssemblyCompiler::assembleJType(const AssemblyInstruction& instruction)
     auto& operands = instruction.getOperands();
     if (operands.size() != 2)
     {
-        instructionOutput->consoleLog = "Not the right number of operands, should be exactly 2!";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Not the right number of operands, should be exactly 2!";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
@@ -469,22 +612,28 @@ uint32_t AssemblyCompiler::assembleJType(const AssemblyInstruction& instruction)
     try {
         imm = std::stol(operands[1], nullptr, 0);
     } catch (...) {
-        instructionOutput->consoleLog = "Invalid immediate value!";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Invalid immediate value!";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
     if (imm % 4 != 0)
     {
-        instructionOutput->consoleLog = "Jump offset must be a multiple of 4!";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Jump offset must be a multiple of 4!";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
     if (imm < -1048576 || imm > 1048574)
     {
-        instructionOutput->consoleLog = "Jump offset out of 21-bit signed range (-1048576 to 1048574)!";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Jump offset out of 21-bit signed range (-1048576 to 1048574)!";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
@@ -511,8 +660,10 @@ uint32_t AssemblyCompiler::assembleUType(const AssemblyInstruction& instruction,
     const auto& operands = instruction.getOperands();
     if (operands.size() != 2)
     {
-        instructionOutput->consoleLog = "U-type instruction requires exactly 2 operands.";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "U-type instruction requires exactly 2 operands.";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
@@ -524,8 +675,10 @@ uint32_t AssemblyCompiler::assembleUType(const AssemblyInstruction& instruction,
     try {
         imm = std::stoul(operands[1], nullptr, 0);
     } catch (...) {
-        instructionOutput->consoleLog = "Invalid immediate value.";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Invalid immediate value.";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
@@ -566,8 +719,10 @@ uint32_t AssemblyCompiler::assembleIType(const AssemblyInstruction& instruction,
     const auto& operands = instruction.getOperands();
     if (operands.size() != 3)
     {
-        instructionOutput->consoleLog = "Not the right number of operands, should be exactly 3!";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Not the right number of operands, should be exactly 3!";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
@@ -581,15 +736,19 @@ uint32_t AssemblyCompiler::assembleIType(const AssemblyInstruction& instruction,
     try {
         imm = std::stol(operands[2], nullptr, 0);
     } catch (...) {
-        instructionOutput->consoleLog = "Invalid immediate value!";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Invalid immediate value!";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
     if (imm < -2048 || imm > 2047)
     {
-        instructionOutput->consoleLog = "Immediate value out of 12-bit signed range (-2048 to 2047)!";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Immediate value out of 12-bit signed range (-2048 to 2047)!";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
@@ -645,8 +804,10 @@ uint32_t AssemblyCompiler::assembleIShiftType(const AssemblyInstruction& instruc
     const auto& operands = instruction.getOperands();
     if (operands.size() != 3)
     {
-        instructionOutput->consoleLog = "Shift instructions require exactly 3 operands (rd, rs1, shamt)";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Shift instructions require exactly 3 operands (rd, rs1, shamt)";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
@@ -659,15 +820,19 @@ uint32_t AssemblyCompiler::assembleIShiftType(const AssemblyInstruction& instruc
     try {
         shamt = std::stol(operands[2], nullptr, 0);
     } catch (...) {
-        instructionOutput->consoleLog = "Invalid shift amount!";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Invalid shift amount!";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
     if (shamt < 0 || shamt > 31)
     {
-        instructionOutput->consoleLog = "Shift amount must be between 0 and 31!";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Shift amount must be between 0 and 31!";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
@@ -695,8 +860,10 @@ uint32_t AssemblyCompiler::assembleILoadType(const AssemblyInstruction& instruct
 
     if (operands.size() != 2)
     {
-        instructionOutput->consoleLog = "Load instructions require exactly 2 operands (rd, imm(rs1))";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Load instructions require exactly 2 operands (rd, imm(rs1))";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
@@ -710,8 +877,10 @@ uint32_t AssemblyCompiler::assembleILoadType(const AssemblyInstruction& instruct
 
     if (openParen == std::string::npos || closeParen == std::string::npos || closeParen <= openParen + 1)
     {
-        instructionOutput->consoleLog = "Invalid load address format, expected imm(rs1)";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Invalid load address format, expected imm(rs1)";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
@@ -722,8 +891,10 @@ uint32_t AssemblyCompiler::assembleILoadType(const AssemblyInstruction& instruct
     try {
         imm = std::stol(immStr, nullptr, 0);
     } catch (...) {
-        instructionOutput->consoleLog = "Invalid immediate value in load instruction";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Invalid immediate value in load instruction";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
@@ -734,8 +905,10 @@ uint32_t AssemblyCompiler::assembleILoadType(const AssemblyInstruction& instruct
     // Immediate range check (signed 12-bit)
     if (imm < -2048 || imm > 2047)
     {
-        instructionOutput->consoleLog = "Immediate out of range for load instruction (-2048 to 2047)";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Immediate out of range for load instruction (-2048 to 2047)";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
@@ -796,8 +969,10 @@ uint32_t AssemblyCompiler::assembleSType(const AssemblyInstruction& instruction,
 
     if (operands.size() != 2)
     {
-        instructionOutput->consoleLog = "Store instructions require exactly 2 operands (rs2, imm(rs1))";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Store instructions require exactly 2 operands (rs2, imm(rs1))";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
@@ -811,8 +986,10 @@ uint32_t AssemblyCompiler::assembleSType(const AssemblyInstruction& instruction,
 
     if (openParen == std::string::npos || closeParen == std::string::npos || closeParen <= openParen + 1)
     {
-        instructionOutput->consoleLog = "Invalid store address format, expected imm(rs1)";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Invalid store address format, expected imm(rs1)";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
@@ -823,8 +1000,10 @@ uint32_t AssemblyCompiler::assembleSType(const AssemblyInstruction& instruction,
     try {
         imm = std::stol(immStr, nullptr, 0);
     } catch (...) {
-        instructionOutput->consoleLog = "Invalid immediate value in store instruction";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Invalid immediate value in store instruction";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 
@@ -835,8 +1014,10 @@ uint32_t AssemblyCompiler::assembleSType(const AssemblyInstruction& instruction,
     // Immediate range check (signed 12-bit)
     if (imm < -2048 || imm > 2047)
     {
-        instructionOutput->consoleLog = "Immediate out of range for store instruction (-2048 to 2047)";
-        instructionOutput->exitCode = -1;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Immediate out of range for store instruction (-2048 to 2047)";
+            instructionOutput->exitCode = -1;
+        }
         return 0;
     }
 

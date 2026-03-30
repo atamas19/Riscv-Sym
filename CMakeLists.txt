@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(WITH_GUI "Build the GUI interface" OFF)
 option(WITH_CLI "Build the CLI interface" ON)
+option(WITH_TESTS "Build the test suite" ON)
 
 find_package(spdlog 1.12.0 QUIET)
 if(NOT spdlog_FOUND)
@@ -51,4 +52,9 @@ if(WITH_CLI)
         message(STATUS "Found CLI11 installed on system.")
     endif()
     add_subdirectory(src/cli)
+endif()
+
+if(WITH_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
 endif()

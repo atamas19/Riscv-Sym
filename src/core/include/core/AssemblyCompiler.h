@@ -14,7 +14,7 @@ class AssemblyInstruction;
 class AssemblyCompiler
 {
 public:
-    static uint32_t compile(const std::string& asmCode, InstructionOutput& instructionOutput);
+    static uint32_t compile(const std::string& asmCode, InstructionOutput* instructionOutput = nullptr);
 
     static AssemblyCompiler& getInstance();
 
@@ -24,7 +24,7 @@ private:
 private:
     uint32_t getInstruction(const std::string& instructionString);
 
-    void setInstructionOutput(InstructionOutput& instructionOutput);
+    void setInstructionOutput(InstructionOutput* instructionOutput);
 
     bool validateRegister(const std::optional<uint8_t>& reg, const std::string& name);
 
@@ -52,6 +52,22 @@ private:
     uint32_t assembleDIVU(const AssemblyInstruction& instruction);
     uint32_t assembleREM(const AssemblyInstruction& instruction);
     uint32_t assembleREMU(const AssemblyInstruction& instruction);
+
+    // RV32A instructions
+    uint32_t assembleAMOType(const AssemblyInstruction& instruction, uint8_t funct7);
+    uint32_t assembleLRType(const AssemblyInstruction& instruction, uint8_t funct7);
+
+    uint32_t assembleLR(const AssemblyInstruction& instruction);
+    uint32_t assembleSC(const AssemblyInstruction& instruction);
+    uint32_t assembleAMOSWAP(const AssemblyInstruction& instruction);
+    uint32_t assembleAMOADD(const AssemblyInstruction& instruction);
+    uint32_t assembleAMOXOR(const AssemblyInstruction& instruction);
+    uint32_t assembleAMOAND(const AssemblyInstruction& instruction);
+    uint32_t assembleAMOOR(const AssemblyInstruction& instruction);
+    uint32_t assembleAMOMIN(const AssemblyInstruction& instruction);
+    uint32_t assembleAMOMAX(const AssemblyInstruction& instruction);
+    uint32_t assembleAMOMINU(const AssemblyInstruction& instruction);
+    uint32_t assembleAMOMAXU(const AssemblyInstruction& instruction);
 
 private:
     uint32_t encodeBType(int16_t imm, uint8_t rs2, uint8_t rs1, uint8_t funct3, uint8_t opcode);
