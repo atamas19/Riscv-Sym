@@ -15,9 +15,10 @@ else()
     message(STATUS "Found GTest installed on system.")
 endif()
 
+file(GLOB_RECURSE TESTS_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
+
 add_executable(riscv_tests
-    RTypeInstructionsTests.cpp
-    ITypeInstructionsTests.cpp
+    ${TESTS_SOURCES}
 )
 
 target_link_libraries(riscv_tests PRIVATE
