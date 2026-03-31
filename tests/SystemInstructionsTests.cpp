@@ -115,6 +115,8 @@ TEST_F(RiscvCpuTest, MretInstructionRestoresProgramCounter) {
 
 TEST_F(RiscvCpuTest, SretInstructionRestoresProgramCounter) {
     uint32_t targetPc = 0x40000000;
+
+    cpu->setPrivilegeMode(PrivilegeMode::Supervisor);
     cpu->setRegister(1, targetPc);
 
     uint32_t encodedWriteSepc = AssemblyCompiler::compile("csrrw x0, sepc, x1");

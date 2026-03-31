@@ -1168,7 +1168,7 @@ uint32_t AssemblyCompiler::assembleCsrReg(const AssemblyInstruction& instruction
     auto csr = resolveCsrAddress(operands[1]);
     if (!csr) {
         if (instructionOutput) {
-            instructionOutput->consoleLog = "Invalid CSR name or address";
+            instructionOutput->consoleLog = "Invalid CSR name or address " + operands[1];
             instructionOutput->exitCode = -1;
         }
         return 0;
@@ -1197,7 +1197,7 @@ uint32_t AssemblyCompiler::assembleCsrImm(const AssemblyInstruction& instruction
     auto csr = resolveCsrAddress(operands[1]);
     if (!csr) {
         if (instructionOutput) {
-            instructionOutput->consoleLog = "Invalid CSR name or address";
+            instructionOutput->consoleLog = "Invalid CSR name or address " + operands[1];
             instructionOutput->exitCode = -1;
         }
         return 0;
