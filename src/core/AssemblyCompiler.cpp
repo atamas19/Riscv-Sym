@@ -162,11 +162,11 @@ uint32_t AssemblyCompiler::getInstruction(const std::string& instructionString)
         {"csrrwi", [this](const AssemblyInstruction& ins) { return assembleCSRRWI(ins); }},
         {"csrrsi", [this](const AssemblyInstruction& ins) { return assembleCSRRSI(ins); }},
         {"csrrci", [this](const AssemblyInstruction& ins) { return assembleCSRRCI(ins); }},
-        {"ecall",  [this](const AssemblyInstruction& ins) { return 0x00000073; }},
-        {"ebreak", [this](const AssemblyInstruction& ins) { return 0x00100073; }},
-        {"mret",   [this](const AssemblyInstruction& ins) { return 0x30200073; }},
-        {"sret",   [this](const AssemblyInstruction& ins) { return 0x10200073; }},
-        {"sfence.vma", [this](const AssemblyInstruction& ins) { return 0x12000073; }}
+        {"ecall",      [this](const AssemblyInstruction& ins) { return assembleZeroOperandSystemInstr(ins, 0x00000073); }},
+        {"ebreak",     [this](const AssemblyInstruction& ins) { return assembleZeroOperandSystemInstr(ins, 0x00100073); }},
+        {"mret",       [this](const AssemblyInstruction& ins) { return assembleZeroOperandSystemInstr(ins, 0x30200073); }},
+        {"sret",       [this](const AssemblyInstruction& ins) { return assembleZeroOperandSystemInstr(ins, 0x10200073); }},
+        {"sfence.vma", [this](const AssemblyInstruction& ins) { return assembleSfenceVma(ins); }}
     };
     if (instructionString.empty())
     {
@@ -1090,6 +1090,54 @@ std::optional<uint16_t> AssemblyCompiler::resolveCsrAddress(const std::string& c
     }
 
     return std::nullopt;
+}
+
+uint32_t AssemblyCompiler::assembleZeroOperandSystemInstr(const AssemblyInstruction& instruction, uint32_t baseOpcode)
+{
+    if (!instruction.getOperands().empty())
+    {
+        if (instructionOutput) {
+            instructionOutput->consoleLog = instruction.getName() + " does not take any operands.";
+            instructionOutput->exitCode = -1;
+        }
+        return 0;
+    }
+
+    return baseOpcode;
+}
+
+uint32_t AssemblyCompiler::assembleSfenceVma(const AssemblyInstruction& instruction)
+{
+    const auto& operands = instruction.getOperands();
+
+    if (operands.size() > 2)
+    {
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "sfence.vma takes at most 2 operands (rs1, rs2).";
+            instructionOutput->exitCode = -1;
+        }
+        return 0;
+    }
+
+    uint8_t rs1 = 0;
+    uint8_t rs2 = 0;
+    if (operands.size() >= 1) {
+        auto reg = registerNameToNumber(operands[0]);
+        if (!validateRegister(reg, operands[0])) return 0;
+        rs1 = *reg;
+    }
+
+    if (operands.size() == 2) {
+        auto reg = registerNameToNumber(operands[1]);
+        if (!validateRegister(reg, operands[1])) return 0;
+        rs2 = *reg;
+    }
+
+    uint32_t encoded = 0x12000073;
+    encoded |= (static_cast<uint32_t>(rs1) << 15);
+    encoded |= (static_cast<uint32_t>(rs2) << 20);
+
+    return encoded;
 }
 
 uint32_t AssemblyCompiler::encodeSystemType(uint16_t csr, uint8_t rs1_zimm, uint8_t funct3, uint8_t rd)

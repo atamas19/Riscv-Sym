@@ -45,7 +45,7 @@ TEST_F(RiscvCpuTest, SltiuInstructionUnsignedComparison) {
 TEST_F(RiscvCpuTest, XoriInstruction) {
     cpu->setRegister(1, 0b1010);
 
-    uint32_t encoded = AssemblyCompiler::compile("xori x2, x1, 0b1100");
+    uint32_t encoded = AssemblyCompiler::compile("xori x2, x1, 12");
     InstructionFactory::create(encoded)->execute(*cpu);
 
     EXPECT_EQ(cpu->getRegister(2), 0b0110);
@@ -54,7 +54,7 @@ TEST_F(RiscvCpuTest, XoriInstruction) {
 TEST_F(RiscvCpuTest, OriInstruction) {
     cpu->setRegister(1, 0b1010);
 
-    uint32_t encoded = AssemblyCompiler::compile("ori x2, x1, 0b1100");
+    uint32_t encoded = AssemblyCompiler::compile("ori x2, x1, 12");
     InstructionFactory::create(encoded)->execute(*cpu);
 
     EXPECT_EQ(cpu->getRegister(2), 0b1110);
@@ -63,7 +63,7 @@ TEST_F(RiscvCpuTest, OriInstruction) {
 TEST_F(RiscvCpuTest, AndiInstruction) {
     cpu->setRegister(1, 0b1010);
 
-    uint32_t encoded = AssemblyCompiler::compile("andi x2, x1, 0b1100");
+    uint32_t encoded = AssemblyCompiler::compile("andi x2, x1, 12");
     InstructionFactory::create(encoded)->execute(*cpu);
 
     EXPECT_EQ(cpu->getRegister(2), 0b1000);
