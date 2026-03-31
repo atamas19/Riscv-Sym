@@ -16,7 +16,8 @@ else()
 endif()
 
 add_executable(riscv_tests
-    InstructionTests.cpp
+    RTypeInstructionsTests.cpp
+    ITypeInstructionsTests.cpp
 )
 
 target_link_libraries(riscv_tests PRIVATE
