@@ -132,6 +132,23 @@ private:
     uint32_t assembleSW(const AssemblyInstruction& instruction);
 
 private:
+    std::optional<uint16_t> resolveCsrAddress(const std::string& csrName);
+
+    uint32_t assembleZeroOperandSystemInstr(const AssemblyInstruction& instruction, uint32_t baseOpcode);
+    uint32_t assembleSfenceVma(const AssemblyInstruction& instruction);
+
+    uint32_t encodeSystemType(uint16_t csr, uint8_t rs1_zimm, uint8_t funct3, uint8_t rd);
+    uint32_t assembleCsrReg(const AssemblyInstruction& instruction, uint8_t funct3);
+    uint32_t assembleCsrImm(const AssemblyInstruction& instruction, uint8_t funct3);
+
+    uint32_t assembleCSRRW(const AssemblyInstruction& instruction);
+    uint32_t assembleCSRRS(const AssemblyInstruction& instruction);
+    uint32_t assembleCSRRC(const AssemblyInstruction& instruction);
+    uint32_t assembleCSRRWI(const AssemblyInstruction& instruction);
+    uint32_t assembleCSRRSI(const AssemblyInstruction& instruction);
+    uint32_t assembleCSRRCI(const AssemblyInstruction& instruction);
+
+private:
     InstructionOutput* instructionOutput;
 };
 

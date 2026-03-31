@@ -154,7 +154,19 @@ uint32_t AssemblyCompiler::getInstruction(const std::string& instructionString)
         // SType instructions
         {"sb",   [this](const AssemblyInstruction& ins) { return assembleSB(ins);   }},
         {"sh",   [this](const AssemblyInstruction& ins) { return assembleSH(ins);   }},
-        {"sw",   [this](const AssemblyInstruction& ins) { return assembleSW(ins);   }}
+        {"sw",   [this](const AssemblyInstruction& ins) { return assembleSW(ins);   }},
+        // System instructions
+        {"csrrw",  [this](const AssemblyInstruction& ins) { return assembleCSRRW(ins);  }},
+        {"csrrs",  [this](const AssemblyInstruction& ins) { return assembleCSRRS(ins);  }},
+        {"csrrc",  [this](const AssemblyInstruction& ins) { return assembleCSRRC(ins);  }},
+        {"csrrwi", [this](const AssemblyInstruction& ins) { return assembleCSRRWI(ins); }},
+        {"csrrsi", [this](const AssemblyInstruction& ins) { return assembleCSRRSI(ins); }},
+        {"csrrci", [this](const AssemblyInstruction& ins) { return assembleCSRRCI(ins); }},
+        {"ecall",      [this](const AssemblyInstruction& ins) { return assembleZeroOperandSystemInstr(ins, 0x00000073); }},
+        {"ebreak",     [this](const AssemblyInstruction& ins) { return assembleZeroOperandSystemInstr(ins, 0x00100073); }},
+        {"mret",       [this](const AssemblyInstruction& ins) { return assembleZeroOperandSystemInstr(ins, 0x30200073); }},
+        {"sret",       [this](const AssemblyInstruction& ins) { return assembleZeroOperandSystemInstr(ins, 0x10200073); }},
+        {"sfence.vma", [this](const AssemblyInstruction& ins) { return assembleSfenceVma(ins); }}
     };
     if (instructionString.empty())
     {
@@ -1037,4 +1049,208 @@ uint32_t AssemblyCompiler::assembleSH(const AssemblyInstruction& instruction)
 uint32_t AssemblyCompiler::assembleSW(const AssemblyInstruction& instruction)
 {
     return assembleSType(instruction, 0x2);
+}
+
+std::optional<uint16_t> AssemblyCompiler::resolveCsrAddress(const std::string& csrName)
+{
+    static const std::unordered_map<std::string, uint16_t> csrMap = {
+        {"mstatus", 0x300},
+        {"misa", 0x301},
+        {"medeleg", 0x302},
+        {"mideleg", 0x303},
+        {"mie", 0x304},
+        {"mtvec", 0x305},
+        {"mscratch", 0x340},
+        {"mepc", 0x341},
+        {"mcause", 0x342},
+        {"mtval", 0x343},
+        {"mip", 0x344},
+        {"sstatus", 0x100},
+        {"sie", 0x104},
+        {"stvec", 0x105},
+        {"sscratch", 0x140},
+        {"sepc", 0x141},
+        {"scause", 0x142},
+        {"stval", 0x143},
+        {"sip", 0x144},
+        {"satp", 0x180}
+    };
+
+    auto it = csrMap.find(csrName);
+    if (it != csrMap.end()) {
+        return it->second;
+    }
+
+    try {
+        uint32_t val = std::stoul(csrName, nullptr, 0);
+        if (val <= 0xFFF) {
+            return static_cast<uint16_t>(val);
+        }
+    } catch (...) {
+    }
+
+    return std::nullopt;
+}
+
+uint32_t AssemblyCompiler::assembleZeroOperandSystemInstr(const AssemblyInstruction& instruction, uint32_t baseOpcode)
+{
+    if (!instruction.getOperands().empty())
+    {
+        if (instructionOutput) {
+            instructionOutput->consoleLog = instruction.getName() + " does not take any operands.";
+            instructionOutput->exitCode = -1;
+        }
+        return 0;
+    }
+
+    return baseOpcode;
+}
+
+uint32_t AssemblyCompiler::assembleSfenceVma(const AssemblyInstruction& instruction)
+{
+    const auto& operands = instruction.getOperands();
+
+    if (operands.size() > 2)
+    {
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "sfence.vma takes at most 2 operands (rs1, rs2).";
+            instructionOutput->exitCode = -1;
+        }
+        return 0;
+    }
+
+    uint8_t rs1 = 0;
+    uint8_t rs2 = 0;
+    if (operands.size() >= 1) {
+        auto reg = registerNameToNumber(operands[0]);
+        if (!validateRegister(reg, operands[0])) return 0;
+        rs1 = *reg;
+    }
+
+    if (operands.size() == 2) {
+        auto reg = registerNameToNumber(operands[1]);
+        if (!validateRegister(reg, operands[1])) return 0;
+        rs2 = *reg;
+    }
+
+    uint32_t encoded = 0x12000073;
+    encoded |= (static_cast<uint32_t>(rs1) << 15);
+    encoded |= (static_cast<uint32_t>(rs2) << 20);
+
+    return encoded;
+}
+
+uint32_t AssemblyCompiler::encodeSystemType(uint16_t csr, uint8_t rs1_zimm, uint8_t funct3, uint8_t rd)
+{
+    uint32_t encoded = 0;
+    encoded |= (static_cast<uint32_t>(csr) & 0xFFF) << 20;
+    encoded |= (static_cast<uint32_t>(rs1_zimm) & 0x1F) << 15;
+    encoded |= (static_cast<uint32_t>(funct3) & 0x7) << 12;
+    encoded |= (static_cast<uint32_t>(rd) & 0x1F) << 7;
+    encoded |= 0x73;
+    return encoded;
+}
+
+uint32_t AssemblyCompiler::assembleCsrReg(const AssemblyInstruction& instruction, uint8_t funct3)
+{
+    const auto& operands = instruction.getOperands();
+    if (operands.size() != 3) {
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "CSR instruction requires exactly 3 operands (rd, csr, rs1)";
+            instructionOutput->exitCode = -1;
+        }
+        return 0;
+    }
+
+    auto rd = registerNameToNumber(operands[0]);
+    if (!validateRegister(rd, operands[0])) return 0;
+
+    auto csr = resolveCsrAddress(operands[1]);
+    if (!csr) {
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Invalid CSR name or address " + operands[1];
+            instructionOutput->exitCode = -1;
+        }
+        return 0;
+    }
+
+    auto rs1 = registerNameToNumber(operands[2]);
+    if (!validateRegister(rs1, operands[2])) return 0;
+
+    return encodeSystemType(*csr, *rs1, funct3, *rd);
+}
+
+uint32_t AssemblyCompiler::assembleCsrImm(const AssemblyInstruction& instruction, uint8_t funct3)
+{
+    const auto& operands = instruction.getOperands();
+    if (operands.size() != 3) {
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "CSR immediate instruction requires exactly 3 operands (rd, csr, uimm)";
+            instructionOutput->exitCode = -1;
+        }
+        return 0;
+    }
+
+    auto rd = registerNameToNumber(operands[0]);
+    if (!validateRegister(rd, operands[0])) return 0;
+
+    auto csr = resolveCsrAddress(operands[1]);
+    if (!csr) {
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Invalid CSR name or address " + operands[1];
+            instructionOutput->exitCode = -1;
+        }
+        return 0;
+    }
+
+    uint32_t zimm;
+    try {
+        zimm = std::stoul(operands[2], nullptr, 0);
+    } catch (...) {
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Invalid immediate value for CSR instruction";
+            instructionOutput->exitCode = -1;
+        }
+        return 0;
+    }
+
+    if (zimm > 31) {
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "CSR immediate must be between 0 and 31 (5-bit unsigned)";
+            instructionOutput->exitCode = -1;
+        }
+        return 0;
+    }
+
+    return encodeSystemType(*csr, static_cast<uint8_t>(zimm), funct3, *rd);
+}
+
+uint32_t AssemblyCompiler::assembleCSRRW(const AssemblyInstruction& instruction)
+{
+    return assembleCsrReg(instruction, 0x1);
+}
+
+uint32_t AssemblyCompiler::assembleCSRRS(const AssemblyInstruction& instruction)
+{
+    return assembleCsrReg(instruction, 0x2);
+}
+
+uint32_t AssemblyCompiler::assembleCSRRC(const AssemblyInstruction& instruction)
+{
+    return assembleCsrReg(instruction, 0x3);
+}
+
+uint32_t AssemblyCompiler::assembleCSRRWI(const AssemblyInstruction& instruction)
+{
+    return assembleCsrImm(instruction, 0x5);
+}
+
+uint32_t AssemblyCompiler::assembleCSRRSI(const AssemblyInstruction& instruction)
+{
+    return assembleCsrImm(instruction, 0x6);
+}
+
+uint32_t AssemblyCompiler::assembleCSRRCI(const AssemblyInstruction& instruction)
+{
+    return assembleCsrImm(instruction, 0x7);
 }
