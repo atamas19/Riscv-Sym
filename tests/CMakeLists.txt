@@ -26,5 +26,9 @@ target_link_libraries(riscv_tests PRIVATE
     GTest::gtest_main
 )
 
+target_include_directories(riscv_tests PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
 include(GoogleTest)
 gtest_discover_tests(riscv_tests)
