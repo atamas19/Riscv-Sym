@@ -184,7 +184,7 @@ TEST_F(RiscvCpuTest, FenceInstructionExecutesAsNoOp) {
         EXPECT_EQ(cpu->getRegister(i), 0);
     }
 
-    EXPECT_EQ(cpu->getPc(), currentPc + 8);
+    EXPECT_EQ(cpu->getPc(), currentPc + 4);
 }
 
 TEST_F(RiscvCpuTest, FenceIInstructionExecutesAsNoOp) {
