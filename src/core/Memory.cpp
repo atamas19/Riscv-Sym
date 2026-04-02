@@ -5,7 +5,6 @@
 #include <iostream>
 #include <algorithm>
 #include <cstring>
-#include <cassert>
 #include <fstream>
 #ifdef _WIN32
     #include <conio.h>
