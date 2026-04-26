@@ -20,6 +20,8 @@ bool Instruction_New::execute(uint32_t encodedInstruction, RiscvCpu& cpu, Instru
         return RType::InstructionNew::execute(encodedInstruction, cpu, instructionOutput);
     case RType::AtomicNew::getInstructionDescription():
         return RType::AtomicNew::execute(encodedInstruction, cpu, instructionOutput);
+    case BType::InstructionNew::getInstructionDescription():
+        return BType::InstructionNew::execute(encodedInstruction, cpu, instructionOutput);
     default:
         break;
     }
