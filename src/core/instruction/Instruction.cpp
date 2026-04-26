@@ -11,13 +11,20 @@
 #include <unordered_map>
 #include <functional>
 
-uint32_t getBits(uint32_t instruction, uint8_t x, uint8_t y)
-{
-    if (x > y || y >= 32)
-        throw std::out_of_range("Invalid bit range");
+bool Instruction_New::execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+    const uint8_t opcode = getBits(encodedInstruction, 0, 6);
 
-    uint32_t mask = (1ULL << (y - x + 1)) - 1;
-    return (instruction >> x) & mask;
+    switch (opcode)
+    {
+    case RType::InstructionNew::getInstructionDescription():
+        return RType::InstructionNew::execute(encodedInstruction, cpu, instructionOutput);
+    case RType::AtomicNew::getInstructionDescription():
+        return RType::AtomicNew::execute(encodedInstruction, cpu, instructionOutput);
+    default:
+        break;
+    }
+
+    return false;
 }
 
 std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruction)

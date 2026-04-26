@@ -60,8 +60,6 @@ int RiscvCpu::executeAsmCommand(const std::string& command, InstructionOutput& i
         instructionOutput.exitCode = -1;
     }
 
-    instruction.reset();
-
     return 0;
 }
 
