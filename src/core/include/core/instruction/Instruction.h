@@ -20,7 +20,14 @@ inline uint32_t getBits(uint32_t instruction, uint8_t x, uint8_t y) {
     return (instruction >> x) & mask;
 }
 
-namespace Instruction_New {
+constexpr uint16_t createInstructionDescription(uint8_t funct3, uint8_t funct7) {
+    return (static_cast<uint16_t>(funct3) << 8) | funct7;
+}
+
+const uint16_t createRuntimeInstructionDescription(uint8_t funct3, uint8_t funct7);
+
+namespace Instruction_New
+{
     bool execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr);
 };
 

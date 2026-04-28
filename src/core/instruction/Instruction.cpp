@@ -11,6 +11,10 @@
 #include <unordered_map>
 #include <functional>
 
+const uint16_t createRuntimeInstructionDescription(uint8_t funct3, uint8_t funct7) {
+    return (static_cast<uint16_t>(funct3) << 8) | funct7;
+}
+
 bool Instruction_New::execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
     const uint8_t opcode = getBits(encodedInstruction, 0, 6);
 
@@ -22,6 +26,14 @@ bool Instruction_New::execute(uint32_t encodedInstruction, RiscvCpu& cpu, Instru
         return RType::AtomicNew::execute(encodedInstruction, cpu, instructionOutput);
     case BType::InstructionNew::getInstructionDescription():
         return BType::InstructionNew::execute(encodedInstruction, cpu, instructionOutput);
+    case IType::ArithmeticInstruction::getInstructionDescription():
+        return IType::ArithmeticInstruction::execute(encodedInstruction, cpu, instructionOutput);
+    case IType::LoadInstruction::getInstructionDescription():
+        return IType::LoadInstruction::execute(encodedInstruction, cpu, instructionOutput);
+    case IType::JALR_NEW::getInstructionDescription():
+        return IType::JALR_NEW::execute(encodedInstruction, cpu, instructionOutput);
+    case IType::FenceInstruction::getInstructionDescription():
+        return IType::FenceInstruction::execute(encodedInstruction, cpu, instructionOutput);
     default:
         break;
     }

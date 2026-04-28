@@ -9,10 +9,6 @@
 namespace RType
 {
 
-constexpr uint16_t createInstructionDescription(uint8_t funct3, uint8_t funct7) {
-    return (static_cast<uint16_t>(funct3) << 8) | funct7;
-}
-
 struct InstructionArguments {
     uint8_t rs1;
     uint8_t rs2;
@@ -622,6 +618,5 @@ protected:
 };
 
 } // namespace AMO
-
 
 } // namespace RType

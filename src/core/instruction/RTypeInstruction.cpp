@@ -16,10 +16,6 @@ void Instruction::decode()
     rs2 = getBits(instruction, 20, 24);
 }
 
-static inline const uint16_t createRuntimeInstructionDescription(uint8_t funct3, uint8_t funct7) {
-    return (static_cast<uint16_t>(funct3) << 8) | funct7;
-}
-
 namespace InstructionNew
 {
     bool execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
@@ -27,7 +23,7 @@ namespace InstructionNew
         const uint8_t rs1 = getBits(encodedInstruction, 15, 19);
         const uint8_t rs2 = getBits(encodedInstruction, 20, 24);
 
-        const uint16_t funct3 = getBits(encodedInstruction, 12, 14);
+        const uint8_t funct3 = getBits(encodedInstruction, 12, 14);
         const uint8_t funct7 = getBits(encodedInstruction, 25, 31);
         const uint16_t instructionDescriptor = createRuntimeInstructionDescription(funct3, funct7);
         switch (instructionDescriptor)
