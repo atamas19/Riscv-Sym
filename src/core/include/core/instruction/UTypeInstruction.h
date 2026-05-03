@@ -5,6 +5,28 @@
 namespace UType
 {
 
+struct InstructionArguments {
+    const uint8_t rd;
+    const int32_t imm;
+};
+
+namespace InstructionNew
+{
+    // Load Upper Immediate
+    namespace LUI {
+        constexpr uint8_t getInstructionDescription() { return 0x37; }
+
+        bool execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput);
+    }
+
+    // Add Upper Immediate to Program Counter
+    namespace AUIPC {
+        constexpr uint8_t getInstructionDescription() { return 0x17; }
+
+        bool execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput);
+    }
+}
+
 class Instruction : public ::Instruction
 {
 public:

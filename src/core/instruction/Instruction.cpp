@@ -38,6 +38,12 @@ bool Instruction_New::execute(uint32_t encodedInstruction, RiscvCpu& cpu, Instru
         return JType::InstructionNew::execute(encodedInstruction, cpu, instructionOutput);
     case SType::InstructionNew::getInstructionDescription():
         return SType::InstructionNew::execute(encodedInstruction, cpu, instructionOutput);
+    // case System::InstructionNew::getInstructionDescription():
+    //     return System::InstructionNew::execute(encodedInstruction, cpu, instructionOutput);
+    case UType::InstructionNew::LUI::getInstructionDescription():
+        return UType::InstructionNew::LUI::execute(encodedInstruction, cpu, instructionOutput);
+    case UType::InstructionNew::AUIPC::getInstructionDescription():
+        return UType::InstructionNew::AUIPC::execute(encodedInstruction, cpu, instructionOutput);
     default:
         break;
     }

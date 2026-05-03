@@ -26,11 +26,11 @@ namespace InstructionNew
 
         switch (funct3)
         {
-        case SB::getInstructionDescriptor():
+        case SB::getInstructionDescription():
             return SB::execute({rs1, rs2, imm}, cpu, instructionOutput);
-        case SH::getInstructionDescriptor():
+        case SH::getInstructionDescription():
             return SH::execute({rs1, rs2, imm}, cpu, instructionOutput);
-        case SW::getInstructionDescriptor():
+        case SW::getInstructionDescription():
             return SW::execute({rs1, rs2, imm}, cpu, instructionOutput);
         default:
             break;

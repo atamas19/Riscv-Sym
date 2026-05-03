@@ -19,21 +19,21 @@ namespace InstructionNew
 
     // Store Byte
     namespace SB {
-        constexpr uint8_t getInstructionDescriptor() { return 0x0; }
+        constexpr uint8_t getInstructionDescription() { return 0x0; }
 
         bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput);
     }
 
     // Store Halfword
     namespace SH {
-        constexpr uint8_t getInstructionDescriptor() { return 0x1; }
+        constexpr uint8_t getInstructionDescription() { return 0x1; }
 
         bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput);
     }
 
     // Store Word
     namespace SW {
-        constexpr uint8_t getInstructionDescriptor() { return 0x2; }
+        constexpr uint8_t getInstructionDescription() { return 0x2; }
 
         bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput);
     }

@@ -19,7 +19,7 @@ namespace InstructionNew
     // Jump and Link
     namespace JAL {
         // Doesn't matter since JAL is the only instruction in the J-type format, but it's here for consistency
-        // constexpr uint8_t getInstructionDescriptor() { return 0x6f; }
+        // constexpr uint8_t getInstructionDescription() { return 0x6f; }
 
         bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput);
     }
