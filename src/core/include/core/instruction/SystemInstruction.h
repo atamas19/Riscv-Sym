@@ -5,6 +5,13 @@
 
 namespace System {
 
+struct InstructionArguments {
+    const int32_t imm;
+    const uint16_t csr_addr;
+    const uint8_t rs1;
+    const uint8_t rd;
+};
+
 class Instruction : public IType::Instruction {
 public:
     Instruction(uint32_t instruction) : IType::Instruction(instruction) {}

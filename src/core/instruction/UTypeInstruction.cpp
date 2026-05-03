@@ -9,15 +9,15 @@ namespace UType
 namespace InstructionNew
 {
 
-    inline const InstructionArguments decodeInstruction(uint32_t encodedInstruction) {
+    static InstructionArguments getInstructionArguments(uint32_t encodedInstruction) {
         const uint8_t rd = getBits(encodedInstruction, 7, 11);
         const int32_t imm = (encodedInstruction & 0xfffff000);
 
-        return {rd, imm};
+        return {imm, rd};
     }
 
     bool LUI::execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-        const InstructionArguments instructionArguments = decodeInstruction(encodedInstruction);
+        const InstructionArguments instructionArguments = getInstructionArguments(encodedInstruction);
 
         cpu.setRegister(instructionArguments.rd, instructionArguments.imm);
         cpu.setPc(cpu.getPc() + 4);
@@ -33,7 +33,7 @@ namespace InstructionNew
     }
 
     bool AUIPC::execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-        const InstructionArguments instructionArguments = decodeInstruction(encodedInstruction);
+        const InstructionArguments instructionArguments = getInstructionArguments(encodedInstruction);
 
         const uint32_t pc = cpu.getPc();
         const uint32_t resultValue = pc + instructionArguments.imm;

@@ -9,9 +9,10 @@ namespace JType
 
 namespace InstructionNew
 {
-    bool execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-        const uint8_t rd = getBits(encodedInstruction, 7, 11);
-        int32_t imm = ((getBits(encodedInstruction, 31, 31) << 20) |
+    namespace {
+
+    int32_t getImm(uint32_t encodedInstruction) {
+        int32_t imm = ((getBits(encodedInstruction, 31, 31) << 20)  |
                         (getBits(encodedInstruction, 12, 19) << 12) |
                         (getBits(encodedInstruction, 20, 20) << 11) |
                         (getBits(encodedInstruction, 21, 30) << 1));
@@ -21,7 +22,23 @@ namespace InstructionNew
         else
             imm &= 0x001fffff;
 
-        return JAL::execute({rd, imm}, cpu, instructionOutput);
+        return imm;
+    }
+
+    InstructionArguments getInstructionArguments(uint32_t encodedInstruction) {
+        const uint8_t rd = getBits(encodedInstruction, 7, 11);
+        const int32_t imm = getImm(encodedInstruction);
+
+        return {imm, rd};
+    }
+
+    } // namespace
+
+    bool execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const uint8_t rd = getBits(encodedInstruction, 7, 11);
+        const int32_t imm = getImm(encodedInstruction);
+
+        return JAL::execute({imm, rd}, cpu, instructionOutput);
     }
 
     bool JAL::execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {

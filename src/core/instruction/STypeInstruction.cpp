@@ -12,28 +12,40 @@ namespace SType
 
 namespace InstructionNew
 {
-    bool execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-        const uint8_t rs1 = getBits(encodedInstruction, 15, 19);
-        const uint8_t rs2 = getBits(encodedInstruction, 20, 24);
-        int32_t imm = (getBits(encodedInstruction, 25, 31) << 5 | getBits(encodedInstruction, 7, 11));
+    namespace {
+        int32_t getImm(uint32_t encodedInstruction) {
+            int32_t imm = (getBits(encodedInstruction, 25, 31) << 5 | getBits(encodedInstruction, 7, 11));
 
-        if (getBits(imm, 11, 11) == 1)
-            imm = (imm | 0xfffff000);
-        else
-            imm = (imm & 0xfff);
+            if (getBits(imm, 11, 11) == 1)
+                imm = (imm | 0xfffff000);
+            else
+                imm = (imm & 0xfff);
+
+            return imm;
+        }
+
+        InstructionArguments getInstructionArguments(uint32_t encodedInstruction) {
+            const uint8_t rs1 = getBits(encodedInstruction, 15, 19);
+            const uint8_t rs2 = getBits(encodedInstruction, 20, 24);
+            const int32_t imm = getImm(encodedInstruction);
+
+            return {imm, rs1, rs2};
+        }
+
+    } // namespace
+
+    bool execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const InstructionArguments instructionArguments = getInstructionArguments(encodedInstruction);
 
         const uint8_t funct3 = getBits(encodedInstruction, 12, 14);
-
         switch (funct3)
         {
         case SB::getInstructionDescription():
-            return SB::execute({rs1, rs2, imm}, cpu, instructionOutput);
+            return SB::execute(instructionArguments, cpu, instructionOutput);
         case SH::getInstructionDescription():
-            return SH::execute({rs1, rs2, imm}, cpu, instructionOutput);
+            return SH::execute(instructionArguments, cpu, instructionOutput);
         case SW::getInstructionDescription():
-            return SW::execute({rs1, rs2, imm}, cpu, instructionOutput);
-        default:
-            break;
+            return SW::execute(instructionArguments, cpu, instructionOutput);
         }
 
         return false;

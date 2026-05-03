@@ -24,7 +24,7 @@ constexpr uint16_t createInstructionDescription(uint8_t funct3, uint8_t funct7) 
     return (static_cast<uint16_t>(funct3) << 8) | funct7;
 }
 
-const uint16_t createRuntimeInstructionDescription(uint8_t funct3, uint8_t funct7);
+uint16_t createRuntimeInstructionDescription(uint8_t funct3, uint8_t funct7);
 
 namespace Instruction_New
 {

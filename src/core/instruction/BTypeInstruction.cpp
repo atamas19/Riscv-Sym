@@ -24,20 +24,6 @@ int32_t Instruction::getImm() {
     return tempValue;
 }
 
-static inline const int32_t getImm(uint32_t instruction) {
-    int32_t tempValue = ((getBits(instruction, 31, 31) << 12) |
-                         (getBits(instruction, 7, 7) << 11)   |
-                         (getBits(instruction, 25, 30) << 5)  |
-                         (getBits(instruction, 8, 11) << 1));
-
-    if (getBits(tempValue, 12, 12) == 1)
-        tempValue |= 0xfffff000;
-    else
-        tempValue &= 0xfff;
-
-    return tempValue;
-}
-
 void Instruction::decode()
 {
     rs1 = getBits(instruction, 15, 19);
@@ -47,28 +33,48 @@ void Instruction::decode()
 
 namespace InstructionNew
 {
+    namespace {
+        int32_t getImm(uint32_t instruction) {
+            int32_t imm = ( (getBits(instruction, 31, 31) << 12) |
+                            (getBits(instruction, 7, 7)   << 11) |
+                            (getBits(instruction, 25, 30) << 5)  |
+                            (getBits(instruction, 8, 11)  << 1) );
+
+            if (getBits(imm, 12, 12) == 1)
+                imm |= 0xfffff000;
+            else
+                imm &= 0xfff;
+
+            return imm;
+        }
+
+        InstructionArguments getInstructionArguments(uint32_t encodedInstruction) {
+            const uint8_t rs1 = getBits(encodedInstruction, 15, 19);
+            const uint8_t rs2 = getBits(encodedInstruction, 20, 24);
+            const int32_t imm = getImm(encodedInstruction);
+
+            return {imm, rs1, rs2};
+        }
+    } // namespace
+
     bool execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-        const uint8_t rs1 = getBits(encodedInstruction, 15, 19);
-        const uint8_t rs2 = getBits(encodedInstruction, 20, 24);
-        const int32_t imm = getImm(encodedInstruction);
+        const InstructionArguments instructionArguments = getInstructionArguments(encodedInstruction);
 
         const uint8_t funct3 = getBits(encodedInstruction, 12, 14);
         switch (funct3)
         {
         case BEQ::getInstructionDescriptor():
-            return BEQ::execute({rs1, rs2, imm}, cpu, instructionOutput);
+            return BEQ::execute(instructionArguments, cpu, instructionOutput);
         case BNE::getInstructionDescriptor():
-            return BNE::execute({rs1, rs2, imm}, cpu, instructionOutput);
+            return BNE::execute(instructionArguments, cpu, instructionOutput);
         case BLT::getInstructionDescriptor():
-            return BLT::execute({rs1, rs2, imm}, cpu, instructionOutput);
+            return BLT::execute(instructionArguments, cpu, instructionOutput);
         case BGE::getInstructionDescriptor():
-            return BGE::execute({rs1, rs2, imm}, cpu, instructionOutput);
+            return BGE::execute(instructionArguments, cpu, instructionOutput);
         case BLTU::getInstructionDescriptor():
-            return BLTU::execute({rs1, rs2, imm}, cpu, instructionOutput);
+            return BLTU::execute(instructionArguments, cpu, instructionOutput);
         case BGEU::getInstructionDescriptor():
-            return BGEU::execute({rs1, rs2, imm}, cpu, instructionOutput);
-        default:
-            break;
+            return BGEU::execute(instructionArguments, cpu, instructionOutput);
         }
 
         return false;

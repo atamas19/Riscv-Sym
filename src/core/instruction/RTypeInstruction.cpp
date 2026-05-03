@@ -16,12 +16,18 @@ void Instruction::decode()
     rs2 = getBits(instruction, 20, 24);
 }
 
+static InstructionArguments getInstructionArguments(uint32_t encodedInstruction) {
+    const uint8_t rd  = getBits(encodedInstruction, 7, 11);
+    const uint8_t rs1 = getBits(encodedInstruction, 15, 19);
+    const uint8_t rs2 = getBits(encodedInstruction, 20, 24);
+
+    return {rs1, rs2, rd};
+}
+
 namespace InstructionNew
 {
     bool execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-        const uint8_t rd  = getBits(encodedInstruction, 7, 11);
-        const uint8_t rs1 = getBits(encodedInstruction, 15, 19);
-        const uint8_t rs2 = getBits(encodedInstruction, 20, 24);
+        const InstructionArguments instructionArguments = getInstructionArguments(encodedInstruction);
 
         const uint8_t funct3 = getBits(encodedInstruction, 12, 14);
         const uint8_t funct7 = getBits(encodedInstruction, 25, 31);
@@ -29,41 +35,41 @@ namespace InstructionNew
         switch (instructionDescriptor)
         {
         case ADD::getInstructionDescription():
-            return ADD::execute({rs1, rs2, rd}, cpu, instructionOutput);
+            return ADD::execute(instructionArguments, cpu, instructionOutput);
         case SUB::getInstructionDescription():
-            return SUB::execute({rs1, rs2, rd}, cpu, instructionOutput);
+            return SUB::execute(instructionArguments, cpu, instructionOutput);
         case SLL::getInstructionDescription():
-            return SLL::execute({rs1, rs2, rd}, cpu, instructionOutput);
+            return SLL::execute(instructionArguments, cpu, instructionOutput);
         case SLT::getInstructionDescription():
-            return SLT::execute({rs1, rs2, rd}, cpu, instructionOutput);
+            return SLT::execute(instructionArguments, cpu, instructionOutput);
         case SLTU::getInstructionDescription():
-            return SLTU::execute({rs1, rs2, rd}, cpu, instructionOutput);
+            return SLTU::execute(instructionArguments, cpu, instructionOutput);
         case XOR::getInstructionDescription():
-            return XOR::execute({rs1, rs2, rd}, cpu, instructionOutput);
+            return XOR::execute(instructionArguments, cpu, instructionOutput);
         case SRL::getInstructionDescription():
-            return SRL::execute({rs1, rs2, rd}, cpu, instructionOutput);
+            return SRL::execute(instructionArguments, cpu, instructionOutput);
         case SRA::getInstructionDescription():
-            return SRA::execute({rs1, rs2, rd}, cpu, instructionOutput);
+            return SRA::execute(instructionArguments, cpu, instructionOutput);
         case OR::getInstructionDescription():
-            return OR::execute({rs1, rs2, rd}, cpu, instructionOutput);
+            return OR::execute(instructionArguments, cpu, instructionOutput);
         case AND::getInstructionDescription():
-            return AND::execute({rs1, rs2, rd}, cpu, instructionOutput);
+            return AND::execute(instructionArguments, cpu, instructionOutput);
         case MUL::getInstructionDescription():
-            return MUL::execute({rs1, rs2, rd}, cpu, instructionOutput);
+            return MUL::execute(instructionArguments, cpu, instructionOutput);
         case MULH::getInstructionDescription():
-            return MULH::execute({rs1, rs2, rd}, cpu, instructionOutput);
+            return MULH::execute(instructionArguments, cpu, instructionOutput);
         case MULHSU::getInstructionDescription():
-            return MULHSU::execute({rs1, rs2, rd}, cpu, instructionOutput);
+            return MULHSU::execute(instructionArguments, cpu, instructionOutput);
         case MULHU::getInstructionDescription():
-            return MULHU::execute({rs1, rs2, rd}, cpu, instructionOutput);
+            return MULHU::execute(instructionArguments, cpu, instructionOutput);
         case DIV::getInstructionDescription():
-            return DIV::execute({rs1, rs2, rd}, cpu, instructionOutput);
+            return DIV::execute(instructionArguments, cpu, instructionOutput);
         case DIVU::getInstructionDescription():
-            return DIVU::execute({rs1, rs2, rd}, cpu, instructionOutput);
+            return DIVU::execute(instructionArguments, cpu, instructionOutput);
         case REM::getInstructionDescription():
-            return REM::execute({rs1, rs2, rd}, cpu, instructionOutput);
+            return REM::execute(instructionArguments, cpu, instructionOutput);
         case REMU::getInstructionDescription():
-            return REMU::execute({rs1, rs2, rd}, cpu, instructionOutput);
+            return REMU::execute(instructionArguments, cpu, instructionOutput);
         }
 
         return false;
@@ -449,31 +455,28 @@ namespace InstructionNew
 namespace AtomicNew
 {
     bool execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-        const uint8_t rd  = getBits(encodedInstruction, 7, 11);
-        const uint8_t rs1 = getBits(encodedInstruction, 15, 19);
-        const uint8_t rs2 = getBits(encodedInstruction, 20, 24);
+        const InstructionArguments instructionArguments = getInstructionArguments(encodedInstruction);
 
         const uint8_t funct3 = getBits(encodedInstruction, 12, 14);
         const uint8_t funct7 = getBits(encodedInstruction, 25, 31);
-
-        uint8_t amo_op = funct7 >> 2;
+        const uint8_t amo_op = funct7 >> 2;
 
         const uint16_t instructionDescriptor = createRuntimeInstructionDescription(funct3, amo_op);
         switch (instructionDescriptor) {
-            case LR::getInstructionDescription(): return LR::execute({rs1, rs2, rd}, cpu, instructionOutput);
-            case SC::getInstructionDescription(): return SC::execute({rs1, rs2, rd}, cpu, instructionOutput);
+            case LR::getInstructionDescription(): return LR::execute(instructionArguments, cpu, instructionOutput);
+            case SC::getInstructionDescription(): return SC::execute(instructionArguments, cpu, instructionOutput);
 
-            case AMO::ADD:: getInstructionDescription(): return AMO::ADD:: execute({rs1, rs2, rd}, cpu, instructionOutput);
-            case AMO::SWAP::getInstructionDescription(): return AMO::SWAP::execute({rs1, rs2, rd}, cpu, instructionOutput);
-            case AMO::XOR:: getInstructionDescription(): return AMO::XOR:: execute({rs1, rs2, rd}, cpu, instructionOutput);
-            case AMO::OR::  getInstructionDescription(): return AMO::OR::  execute({rs1, rs2, rd}, cpu, instructionOutput);
-            case AMO::AND:: getInstructionDescription(): return AMO::AND:: execute({rs1, rs2, rd}, cpu, instructionOutput);
-            case AMO::MIN:: getInstructionDescription(): return AMO::MIN:: execute({rs1, rs2, rd}, cpu, instructionOutput);
-            case AMO::MAX:: getInstructionDescription(): return AMO::MAX:: execute({rs1, rs2, rd}, cpu, instructionOutput);
-            case AMO::MINU::getInstructionDescription(): return AMO::MINU::execute({rs1, rs2, rd}, cpu, instructionOutput);
-            case AMO::MAXU::getInstructionDescription(): return AMO::MAXU::execute({rs1, rs2, rd}, cpu, instructionOutput);
-            default: return false;
+            case AMO::ADD:: getInstructionDescription(): return AMO::ADD:: execute(instructionArguments, cpu, instructionOutput);
+            case AMO::SWAP::getInstructionDescription(): return AMO::SWAP::execute(instructionArguments, cpu, instructionOutput);
+            case AMO::XOR:: getInstructionDescription(): return AMO::XOR:: execute(instructionArguments, cpu, instructionOutput);
+            case AMO::OR::  getInstructionDescription(): return AMO::OR::  execute(instructionArguments, cpu, instructionOutput);
+            case AMO::AND:: getInstructionDescription(): return AMO::AND:: execute(instructionArguments, cpu, instructionOutput);
+            case AMO::MIN:: getInstructionDescription(): return AMO::MIN:: execute(instructionArguments, cpu, instructionOutput);
+            case AMO::MAX:: getInstructionDescription(): return AMO::MAX:: execute(instructionArguments, cpu, instructionOutput);
+            case AMO::MINU::getInstructionDescription(): return AMO::MINU::execute(instructionArguments, cpu, instructionOutput);
+            case AMO::MAXU::getInstructionDescription(): return AMO::MAXU::execute(instructionArguments, cpu, instructionOutput);
         }
+        return false;
     }
 
     namespace LR {

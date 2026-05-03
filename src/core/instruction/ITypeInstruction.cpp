@@ -9,13 +9,9 @@
 namespace IType
 {
 
-static inline const int8_t getShamt(int32_t imm) {
-    return getBits(imm, 0, 4);
-}
+namespace {
 
-static inline const InstructionArguments getInstructionArguments(uint32_t encodedInstruction) {
-    const uint8_t rd  = getBits(encodedInstruction,  7, 11);
-    const uint8_t rs1 = getBits(encodedInstruction, 15, 19);
+int32_t getImm(uint32_t encodedInstruction) {
     int32_t imm = getBits(encodedInstruction, 20, 31);
 
     if (getBits(imm, 11, 11) == 1)
@@ -23,8 +19,18 @@ static inline const InstructionArguments getInstructionArguments(uint32_t encode
     else
         imm &= 0xfff;
 
-    return {rs1, rd, imm};
+    return imm;
 }
+
+InstructionArguments getInstructionArguments(uint32_t encodedInstruction) {
+    const uint8_t rd  = getBits(encodedInstruction,  7, 11);
+    const uint8_t rs1 = getBits(encodedInstruction, 15, 19);
+    const int32_t imm = getImm(encodedInstruction);
+
+    return {imm, rs1, rd};
+}
+
+} // namespace
 
 namespace ArithmeticInstruction
 {
@@ -46,8 +52,6 @@ namespace ArithmeticInstruction
             return ORI::execute(instructionArguments, cpu, instructionOutput);
         case ANDI::getInstructionDescription():
             return ANDI::execute(instructionArguments, cpu, instructionOutput);
-        default:
-            break;
         }
 
         const uint8_t specialBit = getBits(encodedInstruction, 30, 30);
@@ -60,8 +64,6 @@ namespace ArithmeticInstruction
             return SRLI::execute(instructionArguments, cpu, instructionOutput);
         case SRAI::getInstructionDescription():
             return SRAI::execute(instructionArguments, cpu, instructionOutput);
-        default:
-            break;
         }
 
         return false;
@@ -255,8 +257,6 @@ namespace LoadInstruction
             return LBU::execute(instructionArguments, cpu, instructionOutput);
         case LHU::getInstructionDescription():
             return LHU::execute(instructionArguments, cpu, instructionOutput);
-        default:
-            break;
         }
 
         return false;
@@ -403,8 +403,6 @@ namespace FenceInstruction
             return FENCE::execute(instructionArguments, cpu, instructionOutput);
         case FENCE_I::getInstructionDescription():
             return FENCE_I::execute(instructionArguments, cpu, instructionOutput);
-        default:
-            break;
         }
 
         return false;
