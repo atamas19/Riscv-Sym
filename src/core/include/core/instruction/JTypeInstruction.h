@@ -6,8 +6,8 @@ namespace JType
 {
 
 struct InstructionArguments {
-    uint8_t rd;
-    int32_t imm;
+    const uint8_t rd;
+    const int32_t imm;
 };
 
 namespace InstructionNew

@@ -36,6 +36,8 @@ bool Instruction_New::execute(uint32_t encodedInstruction, RiscvCpu& cpu, Instru
         return IType::FenceInstruction::execute(encodedInstruction, cpu, instructionOutput);
     case JType::InstructionNew::getInstructionDescription():
         return JType::InstructionNew::execute(encodedInstruction, cpu, instructionOutput);
+    case SType::InstructionNew::getInstructionDescription():
+        return SType::InstructionNew::execute(encodedInstruction, cpu, instructionOutput);
     default:
         break;
     }

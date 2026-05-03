@@ -6,9 +6,9 @@ namespace BType
 {
 
 struct InstructionArguments {
-    uint8_t rs1;
-    uint8_t rs2;
-    int32_t imm;
+    const uint8_t rs1;
+    const uint8_t rs2;
+    const int32_t imm;
 };
 
 namespace InstructionNew

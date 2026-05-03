@@ -10,9 +10,9 @@ namespace RType
 {
 
 struct InstructionArguments {
-    uint8_t rs1;
-    uint8_t rs2;
-    uint8_t rd;
+    const uint8_t rs1;
+    const uint8_t rs2;
+    const uint8_t rd;
 };
 
 namespace InstructionNew

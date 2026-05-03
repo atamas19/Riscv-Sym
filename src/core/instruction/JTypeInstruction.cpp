@@ -10,23 +10,22 @@ namespace JType
 namespace InstructionNew
 {
     bool execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-        InstructionArguments instructionArguments;
-        instructionArguments.rd = getBits(encodedInstruction, 7, 11);
-        instructionArguments.imm = ((getBits(encodedInstruction, 31, 31) << 20) |
-                                    (getBits(encodedInstruction, 12, 19) << 12) |
-                                    (getBits(encodedInstruction, 20, 20) << 11) |
-                                    (getBits(encodedInstruction, 21, 30) << 1));
+        const uint8_t rd = getBits(encodedInstruction, 7, 11);
+        int32_t imm = ((getBits(encodedInstruction, 31, 31) << 20) |
+                        (getBits(encodedInstruction, 12, 19) << 12) |
+                        (getBits(encodedInstruction, 20, 20) << 11) |
+                        (getBits(encodedInstruction, 21, 30) << 1));
 
-        if (getBits(instructionArguments.imm, 20, 20) == 1)
-            instructionArguments.imm |= 0xfff00000;
+        if (getBits(imm, 20, 20) == 1)
+            imm |= 0xfff00000;
         else
-            instructionArguments.imm &= 0x001fffff;
+            imm &= 0x001fffff;
 
-        return JAL::execute(instructionArguments, cpu, instructionOutput);
+        return JAL::execute({rd, imm}, cpu, instructionOutput);
     }
 
     bool JAL::execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-        uint32_t targetAddress = cpu.getPc() + instructionArguments.imm;
+        const uint32_t targetAddress = cpu.getPc() + instructionArguments.imm;
 
         if (instructionArguments.rd != 0)
             cpu.setRegister(instructionArguments.rd, cpu.getPc() + 4);

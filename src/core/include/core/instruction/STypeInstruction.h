@@ -5,6 +5,40 @@
 namespace SType
 {
 
+struct InstructionArguments {
+    const uint8_t rs1;
+    const uint8_t rs2;
+    const int32_t imm;
+};
+
+namespace InstructionNew
+{
+    constexpr uint8_t getInstructionDescription() { return 0x23; }
+
+    bool execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput);
+
+    // Store Byte
+    namespace SB {
+        constexpr uint8_t getInstructionDescriptor() { return 0x0; }
+
+        bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput);
+    }
+
+    // Store Halfword
+    namespace SH {
+        constexpr uint8_t getInstructionDescriptor() { return 0x1; }
+
+        bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput);
+    }
+
+    // Store Word
+    namespace SW {
+        constexpr uint8_t getInstructionDescriptor() { return 0x2; }
+
+        bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput);
+    }
+}
+
 class Instruction : public ::Instruction
 {
 public:
