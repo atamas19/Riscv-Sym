@@ -26,27 +26,10 @@ constexpr uint16_t createInstructionDescription(uint8_t funct3, uint8_t funct7) 
 
 uint16_t createRuntimeInstructionDescription(uint8_t funct3, uint8_t funct7);
 
-namespace Instruction_New
+namespace Instruction
 {
     bool execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr);
-};
-
-class Instruction
-{
-public:
-    virtual void execute(RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr) = 0;
-    virtual ~Instruction() = default;
-protected:
-    virtual void decode() = 0;
-
-    uint32_t instruction;
-};
-
-class InstructionFactory
-{
-public:
-    static std::unique_ptr<Instruction> create(uint32_t encodedInstruction);
-};
+} // namespace Instruction
 
 struct InstructionOutput
 {
