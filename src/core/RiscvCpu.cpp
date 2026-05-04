@@ -45,43 +45,29 @@ void RiscvCpu::setPrivilegeMode(PrivilegeMode mode) {
 }
 
 int RiscvCpu::executeAsmCommand(const std::string& command, InstructionOutput& instructionOutput) {
-    auto instruction = getInstructionFromAsmCommand(command, instructionOutput);
+    const uint32_t binaryInstruction = getBinaryInstructionFromAsmCommand(command, instructionOutput);
 
-    if (instruction == nullptr) {
+    if (!binaryInstruction) {
         instructionOutput.exitCode = -1;
         return 1;
     }
 
-    try {
-        instruction->execute(*this, &instructionOutput);
-        instructionOutput.exitCode = 0;
-    } catch(const std::exception& e) {
-        instructionOutput.consoleLog = "Error executing `" + command + "`: " + std::string{e.what()};
-        instructionOutput.exitCode = -1;
-    }
-
-    instruction.reset();
+    Instruction::execute(binaryInstruction, *this, &instructionOutput);
+    instructionOutput.exitCode = 0;
 
     return 0;
 }
 
-std::unique_ptr<Instruction> RiscvCpu::getInstructionFromAsmCommand(const std::string& asmCommand, InstructionOutput& instructionOutput) {
-    uint32_t binaryInstruction = AssemblyCompiler::compile(asmCommand, &instructionOutput);
+uint32_t RiscvCpu::getBinaryInstructionFromAsmCommand(const std::string& asmCommand, InstructionOutput& instructionOutput) {
+    const uint32_t binaryInstruction = AssemblyCompiler::compile(asmCommand, &instructionOutput);
 
     spdlog::debug("Binary Instruction: {:032b}", binaryInstruction);
 
-    if (binaryInstruction == 0) {
+    if (!binaryInstruction) {
         instructionOutput.consoleLog = "Error converting `" + asmCommand + "` to binary: " + instructionOutput.consoleLog;
-        return nullptr;
     }
 
-    auto instruction = InstructionFactory::create(binaryInstruction);
-
-    if (instruction == nullptr)
-        instructionOutput.consoleLog = asmCommand + " doesn't exist";
-        // Should never come into this if statement
-
-    return instruction;
+    return binaryInstruction;
 }
 
 bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAddr) {
@@ -129,13 +115,11 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
                 break;
             }
 
-            auto instruction = InstructionFactory::create(binaryInstruction);
-            if (!instruction) {
+            if (!Instruction::execute(binaryInstruction, *this)) {
                 takeTrap(ExceptionCause::IllegalInstruction, binaryInstruction);
                 continue;
             }
 
-            instruction->execute(*this);
 
         } catch (const PageFaultException& e) {
             ExceptionCause cause;

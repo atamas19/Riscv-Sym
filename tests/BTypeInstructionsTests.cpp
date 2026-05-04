@@ -10,7 +10,7 @@ TEST_F(RiscvCpuTest, BeqInstructionTakesBranchWhenEqual) {
     cpu->setRegister(2, 42);
 
     uint32_t encoded = AssemblyCompiler::compile("beq x1, x2, 16");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(cpu->getPc(), currentPc + 16);
 }
@@ -21,7 +21,7 @@ TEST_F(RiscvCpuTest, BeqInstructionDoesNotBranchWhenNotEqual) {
     cpu->setRegister(2, 99);
 
     uint32_t encoded = AssemblyCompiler::compile("beq x1, x2, 16");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(cpu->getPc(), currentPc + 4);
 }
@@ -32,7 +32,7 @@ TEST_F(RiscvCpuTest, BeqInstructionHandlesNegativeOffset) {
     cpu->setRegister(2, 42);
 
     uint32_t encoded = AssemblyCompiler::compile("beq x1, x2, -16");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(cpu->getPc(), currentPc - 16);
 }
@@ -43,7 +43,7 @@ TEST_F(RiscvCpuTest, BneInstructionTakesBranchWhenNotEqual) {
     cpu->setRegister(2, 20);
 
     uint32_t encoded = AssemblyCompiler::compile("bne x1, x2, 32");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(cpu->getPc(), currentPc + 32);
 }
@@ -54,7 +54,7 @@ TEST_F(RiscvCpuTest, BneInstructionDoesNotBranchWhenEqual) {
     cpu->setRegister(2, 10);
 
     uint32_t encoded = AssemblyCompiler::compile("bne x1, x2, 32");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(cpu->getPc(), currentPc + 4);
 }
@@ -65,7 +65,7 @@ TEST_F(RiscvCpuTest, BltInstructionTakesBranchWhenSignedLessThan) {
     cpu->setRegister(2, 5);
 
     uint32_t encoded = AssemblyCompiler::compile("blt x1, x2, 16");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(cpu->getPc(), currentPc + 16);
 }
@@ -76,7 +76,7 @@ TEST_F(RiscvCpuTest, BltInstructionDoesNotBranchWhenSignedGreaterOrEqual) {
     cpu->setRegister(2, static_cast<uint32_t>(-15));
 
     uint32_t encoded = AssemblyCompiler::compile("blt x1, x2, 16");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(cpu->getPc(), currentPc + 4);
 }
@@ -87,7 +87,7 @@ TEST_F(RiscvCpuTest, BgeInstructionTakesBranchWhenSignedGreater) {
     cpu->setRegister(2, static_cast<uint32_t>(-15));
 
     uint32_t encoded = AssemblyCompiler::compile("bge x1, x2, 16");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(cpu->getPc(), currentPc + 16);
 }
@@ -98,7 +98,7 @@ TEST_F(RiscvCpuTest, BgeInstructionTakesBranchWhenEqual) {
     cpu->setRegister(2, static_cast<uint32_t>(-10));
 
     uint32_t encoded = AssemblyCompiler::compile("bge x1, x2, 16");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(cpu->getPc(), currentPc + 16);
 }
@@ -109,7 +109,7 @@ TEST_F(RiscvCpuTest, BgeInstructionDoesNotBranchWhenSignedLess) {
     cpu->setRegister(2, 5);
 
     uint32_t encoded = AssemblyCompiler::compile("bge x1, x2, 16");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(cpu->getPc(), currentPc + 4);
 }
@@ -120,7 +120,7 @@ TEST_F(RiscvCpuTest, BltuInstructionTakesBranchWhenUnsignedLessThan) {
     cpu->setRegister(2, 10);
 
     uint32_t encoded = AssemblyCompiler::compile("bltu x1, x2, 16");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(cpu->getPc(), currentPc + 16);
 }
@@ -131,7 +131,7 @@ TEST_F(RiscvCpuTest, BltuInstructionDoesNotBranchOnNegativeSignedValue) {
     cpu->setRegister(2, 5);
 
     uint32_t encoded = AssemblyCompiler::compile("bltu x1, x2, 16");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(cpu->getPc(), currentPc + 4);
 }
@@ -142,7 +142,7 @@ TEST_F(RiscvCpuTest, BgeuInstructionTakesBranchOnNegativeSignedValue) {
     cpu->setRegister(2, 5);
 
     uint32_t encoded = AssemblyCompiler::compile("bgeu x1, x2, 16");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(cpu->getPc(), currentPc + 16);
 }
@@ -153,7 +153,7 @@ TEST_F(RiscvCpuTest, BgeuInstructionDoesNotBranchWhenUnsignedLess) {
     cpu->setRegister(2, 10);
 
     uint32_t encoded = AssemblyCompiler::compile("bgeu x1, x2, 16");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(cpu->getPc(), currentPc + 4);
 }

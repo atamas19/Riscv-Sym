@@ -10,7 +10,7 @@ TEST_F(RiscvCpuTest, SwInstructionStoresWord) {
     cpu->setRegister(2, 0x11223344);
 
     uint32_t encoded = AssemblyCompiler::compile("sw x2, 0(x1)");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(Memory::getInstance().read32(address), 0x11223344);
 }
@@ -21,7 +21,7 @@ TEST_F(RiscvCpuTest, SwInstructionWithPositiveOffset) {
     cpu->setRegister(2, 0x55667788);
 
     uint32_t encoded = AssemblyCompiler::compile("sw x2, 16(x1)");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(Memory::getInstance().read32(address + 16), 0x55667788);
 }
@@ -32,7 +32,7 @@ TEST_F(RiscvCpuTest, SwInstructionWithNegativeOffset) {
     cpu->setRegister(2, 0x99AABBCC);
 
     uint32_t encoded = AssemblyCompiler::compile("sw x2, -4(x1)");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(Memory::getInstance().read32(address - 4), 0x99AABBCC);
 }
@@ -45,7 +45,7 @@ TEST_F(RiscvCpuTest, ShInstructionStoresHalfword) {
     cpu->setRegister(2, 0x1234AABB);
 
     uint32_t encoded = AssemblyCompiler::compile("sh x2, 0(x1)");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(Memory::getInstance().read32(address), 0xFFFFAABB);
 }
@@ -58,7 +58,7 @@ TEST_F(RiscvCpuTest, ShInstructionWithOffset) {
     cpu->setRegister(2, 0x1234AABB);
 
     uint32_t encoded = AssemblyCompiler::compile("sh x2, 2(x1)");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(Memory::getInstance().read32(address + 2), 0xFFFFAABB);
 }
@@ -71,7 +71,7 @@ TEST_F(RiscvCpuTest, SbInstructionStoresByte) {
     cpu->setRegister(2, 0x123456AA);
 
     uint32_t encoded = AssemblyCompiler::compile("sb x2, 0(x1)");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(Memory::getInstance().read32(address), 0xFFFFFFAA);
 }
@@ -84,7 +84,7 @@ TEST_F(RiscvCpuTest, SbInstructionWithOffset) {
     cpu->setRegister(2, 0x123456AA);
 
     uint32_t encoded = AssemblyCompiler::compile("sb x2, 1(x1)");
-    InstructionFactory::create(encoded)->execute(*cpu);
+    Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(Memory::getInstance().read32(address + 1), 0xFFFFFFAA);
 }

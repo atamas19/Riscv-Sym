@@ -5,56 +5,39 @@
 namespace SType
 {
 
-class Instruction : public ::Instruction
-{
-public:
-    Instruction(uint32_t instruction) { this->instruction = instruction; }
-
-    virtual ~Instruction() = default;
-protected:
-    void decode() override;
-
-    uint8_t rs1;
-    uint8_t rs2;
-    int32_t imm;
+struct InstructionArguments {
+    const int32_t imm;
+    const uint8_t rs1;
+    const uint8_t rs2;
 };
 
-class InstructionFactory
+namespace Instruction
 {
-public:
-    static std::unique_ptr<Instruction> create(uint32_t encodedInstruction);
+    constexpr uint8_t getInstructionDescription() { return 0x23; }
 
-    static const uint8_t getInstructionDescription() { return 0x23; }
-};
+    bool execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput);
 
-// Store Byte
-class SB : public Instruction
-{
-public:
-    SB(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr) override;
+    // Store Byte
+    namespace SB {
+        constexpr uint8_t getInstructionDescription() { return 0x0; }
 
-    static const uint8_t getInstructionDescriptor() { return 0x0; }
-};
+        bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput);
+    }
 
-// Store Halfword
-class SH : public Instruction
-{
-public:
-    SH(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr) override;
+    // Store Halfword
+    namespace SH {
+        constexpr uint8_t getInstructionDescription() { return 0x1; }
 
-    static const uint8_t getInstructionDescriptor() { return 0x1; }
-};
+        bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput);
+    }
 
-// Store Word
-class SW : public Instruction
-{
-public:
-    SW(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr) override;
+    // Store Word
+    namespace SW {
+        constexpr uint8_t getInstructionDescription() { return 0x2; }
 
-    static const uint8_t getInstructionDescriptor() { return 0x2; }
-};
+        bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput);
+    }
+
+} // namespace Instruction
 
 } // namespace SType

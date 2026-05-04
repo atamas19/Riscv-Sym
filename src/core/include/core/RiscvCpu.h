@@ -67,7 +67,7 @@ private:
     RiscvCpu& operator=(RiscvCpu&&) = delete;
 
 private:
-    std::unique_ptr<Instruction> getInstructionFromAsmCommand(const std::string& asmCommand, InstructionOutput& instructionOutput);
+    uint32_t getBinaryInstructionFromAsmCommand(const std::string& asmCommand, InstructionOutput& instructionOutput);
 
     bool loadBinFileToMemory(const std::string& filename, uint32_t startAddr);
 

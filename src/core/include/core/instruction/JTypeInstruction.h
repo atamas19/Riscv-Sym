@@ -5,29 +5,24 @@
 namespace JType
 {
 
-class Instruction : public ::Instruction
-{
-public:
-    Instruction(uint32_t instruction) { this->instruction = instruction; }
-
-    virtual ~Instruction() = default;
-private:
-    int32_t getImm();
-
-protected:
-    void decode() override;
-
-    uint8_t rd;
-    int32_t imm;
+struct InstructionArguments {
+    const int32_t imm;
+    const uint8_t rd;
 };
 
-class JAL : public Instruction
+namespace Instruction
 {
-public:
-    JAL(uint32_t instruction) : Instruction(instruction) { decode(); }
-    void execute(RiscvCpu& cpu, InstructionOutput* instructionOutput = nullptr) override;
+    constexpr uint8_t getInstructionDescription() { return 0x6f; }
 
-    static const uint8_t getInstructionDescriptor() { return 0x6f; }
-};
+    bool execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput);
+
+    // Jump and Link
+    namespace JAL {
+        // Doesn't matter since JAL is the only instruction in the J-type format, but it's here for consistency
+        // constexpr uint8_t getInstructionDescription() { return 0x6f; }
+
+        bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput);
+    }
+} // namespace Instruction
 
 } // namespace JType
