@@ -19,42 +19,42 @@ namespace InstructionNew
 
     // Branch Equal
     namespace BEQ {
-        constexpr uint8_t getInstructionDescriptor() { return 0x0; }
+        constexpr uint8_t getInstructionDescription() { return 0x0; }
 
         bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput);
     }
 
     // Branch Not Equal
     namespace BNE {
-        constexpr uint8_t getInstructionDescriptor() { return 0x1; }
+        constexpr uint8_t getInstructionDescription() { return 0x1; }
 
         bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput);
     }
 
     // Branch Less Than
     namespace BLT {
-        constexpr uint8_t getInstructionDescriptor() { return 0x4; }
+        constexpr uint8_t getInstructionDescription() { return 0x4; }
 
         bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput);
     }
 
     // Branch Greater or Equal
     namespace BGE {
-        constexpr uint8_t getInstructionDescriptor() { return 0x5; }
+        constexpr uint8_t getInstructionDescription() { return 0x5; }
 
         bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput);
     }
 
     // Branch Less Than Unsigned
     namespace BLTU {
-        constexpr uint8_t getInstructionDescriptor() { return 0x6; }
+        constexpr uint8_t getInstructionDescription() { return 0x6; }
 
         bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput);
     }
 
     // Branch Greater or Equal Unsigned
     namespace BGEU {
-        constexpr uint8_t getInstructionDescriptor() { return 0x7; }
+        constexpr uint8_t getInstructionDescription() { return 0x7; }
 
         bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput);
     }

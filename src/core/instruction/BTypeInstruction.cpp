@@ -63,145 +63,133 @@ namespace InstructionNew
         const uint8_t funct3 = getBits(encodedInstruction, 12, 14);
         switch (funct3)
         {
-        case BEQ::getInstructionDescriptor():
+        case BEQ::getInstructionDescription():
             return BEQ::execute(instructionArguments, cpu, instructionOutput);
-        case BNE::getInstructionDescriptor():
+        case BNE::getInstructionDescription():
             return BNE::execute(instructionArguments, cpu, instructionOutput);
-        case BLT::getInstructionDescriptor():
+        case BLT::getInstructionDescription():
             return BLT::execute(instructionArguments, cpu, instructionOutput);
-        case BGE::getInstructionDescriptor():
+        case BGE::getInstructionDescription():
             return BGE::execute(instructionArguments, cpu, instructionOutput);
-        case BLTU::getInstructionDescriptor():
+        case BLTU::getInstructionDescription():
             return BLTU::execute(instructionArguments, cpu, instructionOutput);
-        case BGEU::getInstructionDescriptor():
+        case BGEU::getInstructionDescription():
             return BGEU::execute(instructionArguments, cpu, instructionOutput);
         }
 
         return false;
     }
 
-    namespace BEQ {
-        bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-            const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
-            const uint32_t rs2Value = cpu.getRegister(instructionArguments.rs2);
-            const int32_t pcIncrement = (rs1Value == rs2Value) ? instructionArguments.imm : 4;
+    bool BEQ::execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
+        const uint32_t rs2Value = cpu.getRegister(instructionArguments.rs2);
+        const int32_t pcIncrement = (rs1Value == rs2Value) ? instructionArguments.imm : 4;
 
-            cpu.setPc(cpu.getPc() + pcIncrement);
+        cpu.setPc(cpu.getPc() + pcIncrement);
 
-            if (instructionOutput) {
-                instructionOutput->consoleLog = fmt::format(
-                    "Performed BEQ: x{} ({}) == x{} ({}) -> {}",
-                    instructionArguments.rs1, rs1Value, instructionArguments.rs2, rs2Value,
-                    (rs1Value == rs2Value) ? fmt::format("branch taken to PC + {}.", instructionArguments.imm) : "branch not taken."
-                );
-                instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rs2});
-            }
-
-            return true;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = fmt::format(
+                "Performed BEQ: x{} ({}) == x{} ({}) -> {}",
+                instructionArguments.rs1, rs1Value, instructionArguments.rs2, rs2Value,
+                (rs1Value == rs2Value) ? fmt::format("branch taken to PC + {}.", instructionArguments.imm) : "branch not taken."
+            );
+            instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rs2});
         }
-    };
 
-    namespace BNE {
-        bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-            const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
-            const uint32_t rs2Value = cpu.getRegister(instructionArguments.rs2);
-            const int32_t pcIncrement = (rs1Value != rs2Value) ? instructionArguments.imm : 4;
+        return true;
+    }
 
-            cpu.setPc(cpu.getPc() + pcIncrement);
+    bool BNE::execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
+        const uint32_t rs2Value = cpu.getRegister(instructionArguments.rs2);
+        const int32_t pcIncrement = (rs1Value != rs2Value) ? instructionArguments.imm : 4;
 
-            if (instructionOutput) {
-                instructionOutput->consoleLog = fmt::format(
-                    "Performed BNE: x{} ({}) != x{} ({}) -> {}",
-                    instructionArguments.rs1, rs1Value, instructionArguments.rs2, rs2Value,
-                    (rs1Value != rs2Value) ? fmt::format("branch taken to PC + {}.", instructionArguments.imm) : "branch not taken."
-                );
-                instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rs2});
-            }
+        cpu.setPc(cpu.getPc() + pcIncrement);
 
-            return true;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = fmt::format(
+                "Performed BNE: x{} ({}) != x{} ({}) -> {}",
+                instructionArguments.rs1, rs1Value, instructionArguments.rs2, rs2Value,
+                (rs1Value != rs2Value) ? fmt::format("branch taken to PC + {}.", instructionArguments.imm) : "branch not taken."
+            );
+            instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rs2});
         }
-    };
 
-    namespace BLT {
-        bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-            const int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(instructionArguments.rs1));
-            const int32_t rs2Value = static_cast<int32_t>(cpu.getRegister(instructionArguments.rs2));
-            const int32_t pcIncrement = (rs1Value < rs2Value) ? instructionArguments.imm : 4;
+        return true;
+    }
 
-            cpu.setPc(cpu.getPc() + pcIncrement);
+    bool BLT::execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(instructionArguments.rs1));
+        const int32_t rs2Value = static_cast<int32_t>(cpu.getRegister(instructionArguments.rs2));
+        const int32_t pcIncrement = (rs1Value < rs2Value) ? instructionArguments.imm : 4;
 
-            if (instructionOutput) {
-                instructionOutput->consoleLog = fmt::format(
-                    "Performed BLT: x{} ({}) < x{} ({}) -> {}",
-                    instructionArguments.rs1, rs1Value, instructionArguments.rs2, rs2Value,
-                    (rs1Value < rs2Value) ? fmt::format("branch taken to PC + {}.", instructionArguments.imm) : "branch not taken."
-                );
-                instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rs2});
-            }
-            return true;
+        cpu.setPc(cpu.getPc() + pcIncrement);
+
+        if (instructionOutput) {
+            instructionOutput->consoleLog = fmt::format(
+                "Performed BLT: x{} ({}) < x{} ({}) -> {}",
+                instructionArguments.rs1, rs1Value, instructionArguments.rs2, rs2Value,
+                (rs1Value < rs2Value) ? fmt::format("branch taken to PC + {}.", instructionArguments.imm) : "branch not taken."
+            );
+            instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rs2});
         }
-    };
+        return true;
+    }
 
-    namespace BGE {
-        bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-            const int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(instructionArguments.rs1));
-            const int32_t rs2Value = static_cast<int32_t>(cpu.getRegister(instructionArguments.rs2));
-            const int32_t pcIncrement = (rs1Value >= rs2Value) ? instructionArguments.imm : 4;
+    bool BGE::execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(instructionArguments.rs1));
+        const int32_t rs2Value = static_cast<int32_t>(cpu.getRegister(instructionArguments.rs2));
+        const int32_t pcIncrement = (rs1Value >= rs2Value) ? instructionArguments.imm : 4;
 
-            cpu.setPc(cpu.getPc() + pcIncrement);
+        cpu.setPc(cpu.getPc() + pcIncrement);
 
-            if (instructionOutput) {
-                instructionOutput->consoleLog = fmt::format(
-                    "Performed BGE: x{} ({}) >= x{} ({}) -> {}",
-                    instructionArguments.rs1, rs1Value, instructionArguments.rs2, rs2Value,
-                    (rs1Value >= rs2Value) ? fmt::format("branch taken to PC + {}.", instructionArguments.imm) : "branch not taken."
-                );
-                instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rs2});
-            }
-            return true;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = fmt::format(
+                "Performed BGE: x{} ({}) >= x{} ({}) -> {}",
+                instructionArguments.rs1, rs1Value, instructionArguments.rs2, rs2Value,
+                (rs1Value >= rs2Value) ? fmt::format("branch taken to PC + {}.", instructionArguments.imm) : "branch not taken."
+            );
+            instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rs2});
         }
-    };
+        return true;
+    }
 
-    namespace BLTU {
-        bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-            const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
-            const uint32_t rs2Value = cpu.getRegister(instructionArguments.rs2);
-            const int32_t pcIncrement = (rs1Value < rs2Value) ? instructionArguments.imm : 4;
+    bool BLTU::execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
+        const uint32_t rs2Value = cpu.getRegister(instructionArguments.rs2);
+        const int32_t pcIncrement = (rs1Value < rs2Value) ? instructionArguments.imm : 4;
 
-            cpu.setPc(cpu.getPc() + pcIncrement);
+        cpu.setPc(cpu.getPc() + pcIncrement);
 
-            if (instructionOutput) {
-                instructionOutput->consoleLog = fmt::format(
-                    "Performed BLTU: x{} ({}) < x{} ({}) -> {}",
-                    instructionArguments.rs1, rs1Value, instructionArguments.rs2, rs2Value,
-                    (rs1Value < rs2Value) ? fmt::format("branch taken to PC + {}.", instructionArguments.imm) : "branch not taken."
-                );
-                instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rs2});
-            }
-            return true;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = fmt::format(
+                "Performed BLTU: x{} ({}) < x{} ({}) -> {}",
+                instructionArguments.rs1, rs1Value, instructionArguments.rs2, rs2Value,
+                (rs1Value < rs2Value) ? fmt::format("branch taken to PC + {}.", instructionArguments.imm) : "branch not taken."
+            );
+            instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rs2});
         }
-    };
+        return true;
+    }
 
-    namespace BGEU {
-        bool execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-            const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
-            const uint32_t rs2Value = cpu.getRegister(instructionArguments.rs2);
-            const int32_t pcIncrement = (rs1Value >= rs2Value) ? instructionArguments.imm : 4;
+    bool BGEU::execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
+        const uint32_t rs2Value = cpu.getRegister(instructionArguments.rs2);
+        const int32_t pcIncrement = (rs1Value >= rs2Value) ? instructionArguments.imm : 4;
 
-            cpu.setPc(cpu.getPc() + pcIncrement);
+        cpu.setPc(cpu.getPc() + pcIncrement);
 
-            if (instructionOutput) {
-                instructionOutput->consoleLog = fmt::format(
-                    "Performed BGEU: x{} ({}) >= x{} ({}) -> {}",
-                    instructionArguments.rs1, rs1Value, instructionArguments.rs2, rs2Value,
-                    (rs1Value >= rs2Value) ? fmt::format("branch taken to PC + {}.", instructionArguments.imm) : "branch not taken."
-                );
-                instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rs2});
-            }
-            return true;
+        if (instructionOutput) {
+            instructionOutput->consoleLog = fmt::format(
+                "Performed BGEU: x{} ({}) >= x{} ({}) -> {}",
+                instructionArguments.rs1, rs1Value, instructionArguments.rs2, rs2Value,
+                (rs1Value >= rs2Value) ? fmt::format("branch taken to PC + {}.", instructionArguments.imm) : "branch not taken."
+            );
+            instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rs2});
         }
-    };
-};
+        return true;
+    }
+}
 
 std::unique_ptr<Instruction> InstructionFactory::create(uint32_t encodedInstruction)
 {

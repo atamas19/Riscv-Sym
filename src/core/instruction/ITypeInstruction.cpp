@@ -9,8 +9,6 @@
 namespace IType
 {
 
-namespace {
-
 int32_t getImm(uint32_t encodedInstruction) {
     int32_t imm = getBits(encodedInstruction, 20, 31);
 
@@ -22,15 +20,13 @@ int32_t getImm(uint32_t encodedInstruction) {
     return imm;
 }
 
-InstructionArguments getInstructionArguments(uint32_t encodedInstruction) {
+static InstructionArguments getInstructionArguments(uint32_t encodedInstruction) {
     const uint8_t rd  = getBits(encodedInstruction,  7, 11);
     const uint8_t rs1 = getBits(encodedInstruction, 15, 19);
     const int32_t imm = getImm(encodedInstruction);
 
     return {imm, rs1, rd};
 }
-
-} // namespace
 
 namespace ArithmeticInstruction
 {
@@ -96,7 +92,7 @@ namespace ArithmeticInstruction
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
-                "Performed SLTI: x{} = (x{} ({}) < imm ({}))",
+                "getBitsPerformed SLTI: x{} = (x{} ({}) < imm ({}))",
                 instructionArguments.rd, instructionArguments.rs1, rs1Value, instructionArguments.imm
             );
             instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rd});

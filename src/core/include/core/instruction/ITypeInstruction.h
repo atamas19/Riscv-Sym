@@ -13,6 +13,8 @@ struct InstructionArguments {
     const uint8_t rd;
 };
 
+int32_t getImm(uint32_t encodedInstruction);
+
 namespace ArithmeticInstruction
 {
     constexpr uint8_t getInstructionDescription() { return 0x13; }
