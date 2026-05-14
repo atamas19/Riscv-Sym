@@ -9,398 +9,420 @@
 namespace IType
 {
 
-void Instruction::decode()
-{
-    rd  = getBits(instruction,  7, 11);
-    rs1 = getBits(instruction, 15, 19);
-    imm = getBits(instruction, 20, 31);
+int32_t getImm(uint32_t encodedInstruction) {
+    int32_t imm = getBits(encodedInstruction, 20, 31);
 
     if (getBits(imm, 11, 11) == 1)
         imm |= 0xfffff000;
     else
         imm &= 0xfff;
+
+    return imm;
 }
 
-const int8_t Instruction::getShamt() const
-{
-    return getBits(imm, 0, 4);
+static InstructionArguments getInstructionArguments(uint32_t encodedInstruction) {
+    const uint8_t rd  = getBits(encodedInstruction,  7, 11);
+    const uint8_t rs1 = getBits(encodedInstruction, 15, 19);
+    const int32_t imm = getImm(encodedInstruction);
+
+    return {imm, rs1, rd};
 }
 
-// This create function will handle the IType instructions that have the 0x13 opcode
-std::unique_ptr<Instruction> ArithmeticInstructionFactory::create(uint32_t encodedInstruction)
+namespace ArithmeticInstruction
 {
-    static const std::unordered_map<uint8_t, std::function<std::unique_ptr<Instruction>(uint32_t)>> instructionMap = {
-        { ADDI::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<ADDI> (ins); }},
-        { SLTI::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<SLTI> (ins); }},
-        { SLTIU::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<SLTIU>(ins); }},
-        { XORI::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<XORI> (ins); }},
-        { ORI::getInstructionDescriptor  (), [](uint32_t ins) { return std::make_unique<ORI>  (ins); }},
-        { ANDI::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<ANDI> (ins); }}
-    };
+    bool execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const InstructionArguments instructionArguments = getInstructionArguments(encodedInstruction);
 
-                                    // funct3, specialBit
-    static const std::unordered_map<std::tuple<uint8_t, uint8_t>, std::function<std::unique_ptr<Instruction>(uint32_t)>, TupleHash> specialInstructionMap = {
-        { SLLI::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<SLLI>(ins); }},
-        { SRLI::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<SRLI>(ins); }},
-        { SRAI::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<SRAI>(ins); }}
-    };
+        const uint8_t funct3 = getBits(encodedInstruction, 12, 14);
+        switch (funct3)
+        {
+        case ADDI::getInstructionDescription():
+            return ADDI::execute(instructionArguments, cpu, instructionOutput);
+        case SLTI::getInstructionDescription():
+            return SLTI::execute(instructionArguments, cpu, instructionOutput);
+        case SLTIU::getInstructionDescription():
+            return SLTIU::execute(instructionArguments, cpu, instructionOutput);
+        case XORI::getInstructionDescription():
+            return XORI::execute(instructionArguments, cpu, instructionOutput);
+        case ORI::getInstructionDescription():
+            return ORI::execute(instructionArguments, cpu, instructionOutput);
+        case ANDI::getInstructionDescription():
+            return ANDI::execute(instructionArguments, cpu, instructionOutput);
+        }
 
-    uint8_t funct3 = getBits(encodedInstruction, 12, 14);
+        const uint8_t specialBit = getBits(encodedInstruction, 30, 30);
+        const uint16_t instructionDescriptor = createRuntimeInstructionDescription(funct3, specialBit);
+        switch (instructionDescriptor)
+        {
+        case SLLI::getInstructionDescription():
+            return SLLI::execute(instructionArguments, cpu, instructionOutput);
+        case SRLI::getInstructionDescription():
+            return SRLI::execute(instructionArguments, cpu, instructionOutput);
+        case SRAI::getInstructionDescription():
+            return SRAI::execute(instructionArguments, cpu, instructionOutput);
+        }
 
-    auto it = instructionMap.find(funct3);
-    if (it != instructionMap.end())
-        return it->second(encodedInstruction);
-    else
-    {
-        uint8_t specialBit = getBits(encodedInstruction, 30, 30);
-        std::tuple<uint8_t, uint8_t> specialInstructionDescriptor{funct3, specialBit};
-
-        auto specialIt = specialInstructionMap.find(specialInstructionDescriptor);
-        if (specialIt != specialInstructionMap.end())
-            return specialIt->second(encodedInstruction);
+        return false;
     }
 
-    return nullptr;
-}
+    bool ADDI::execute(const InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
+        const uint32_t result = rs1Value + instructionArguments.imm;
 
-// Arithmetic instructions
+        cpu.setRegister(instructionArguments.rd, result);
+        cpu.setPc(cpu.getPc() + 4);
 
-void ADDI::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
-{
-    uint32_t rs1Value = cpu.getRegister(rs1);
+        if (instructionOutput) {
+            instructionOutput->consoleLog = fmt::format(
+                "Performed ADDI: x{} = x{} ({}) + imm ({}).",
+                instructionArguments.rd, instructionArguments.rs1, rs1Value, instructionArguments.imm
+            );
+            instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rd});
+        }
 
-    uint32_t result = rs1Value + imm;
-
-    cpu.setRegister(rd, result);
-    cpu.setPc(cpu.getPc() + 4);
-
-    if (instructionOutput) {
-        instructionOutput->consoleLog = fmt::format(
-            "Performed ADDI: x{} = x{} ({}) + imm ({}).",
-            rd, rs1, rs1Value, imm
-        );
-        instructionOutput->setRegisters({rs1, rd});
+        return true;
     }
-}
 
-void SLTI::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
-{
-    int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
+    bool SLTI::execute(const InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(instructionArguments.rs1));
+        const uint8_t result = (rs1Value < instructionArguments.imm);
 
-    uint8_t result = (rs1Value < imm);
+        cpu.setRegister(instructionArguments.rd, result);
+        cpu.setPc(cpu.getPc() + 4);
 
-    cpu.setRegister(rd, result);
-    cpu.setPc(cpu.getPc() + 4);
+        if (instructionOutput) {
+            instructionOutput->consoleLog = fmt::format(
+                "getBitsPerformed SLTI: x{} = (x{} ({}) < imm ({}))",
+                instructionArguments.rd, instructionArguments.rs1, rs1Value, instructionArguments.imm
+            );
+            instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rd});
+        }
 
-    if (instructionOutput) {
-        instructionOutput->consoleLog = fmt::format(
-            "Performed SLTI: x{} = (x{} ({}) < imm ({}))",
-            rd, rs1, rs1Value, imm
-        );
-        instructionOutput->setRegisters({rs1, rd});
+        return true;
     }
-}
 
-void SLTIU::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
-{
-    uint32_t rs1Value = cpu.getRegister(rs1);
-    uint32_t u_imm = static_cast<uint32_t>(imm);
+    bool SLTIU::execute(const InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
+        const uint32_t u_imm = static_cast<uint32_t>(instructionArguments.imm);
+        const uint8_t result = (rs1Value < u_imm);
 
-    uint8_t result = (rs1Value < u_imm);
+        cpu.setRegister(instructionArguments.rd, result);
+        cpu.setPc(cpu.getPc() + 4);
 
-    cpu.setRegister(rd, result);
-    cpu.setPc(cpu.getPc() + 4);
+        if (instructionOutput) {
+            instructionOutput->consoleLog = fmt::format(
+                "Performed SLTIU: x{} = (x{} ({}) < imm ({}))",
+                instructionArguments.rd, instructionArguments.rs1, rs1Value, u_imm
+            );
+            instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rd});
+        }
 
-    if (instructionOutput) {
-        instructionOutput->consoleLog = fmt::format(
-            "Performed SLTIU: x{} = (x{} ({}) < imm ({}))",
-            rd, rs1, rs1Value, u_imm
-        );
-        instructionOutput->setRegisters({rs1, rd});
+        return true;
     }
-}
 
-void XORI::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
-{
-    uint32_t rs1Value = cpu.getRegister(rs1);
+    bool XORI::execute(const InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
+        uint32_t result = (rs1Value ^ instructionArguments.imm);
 
-    uint32_t result = (rs1Value ^ imm);
+        cpu.setRegister(instructionArguments.rd, result);
+        cpu.setPc(cpu.getPc() + 4);
 
-    cpu.setRegister(rd, result);
-    cpu.setPc(cpu.getPc() + 4);
+        if (instructionOutput) {
+            instructionOutput->consoleLog = fmt::format(
+                "Performed XORI: x{} = x{} ({}) ^ imm ({}).",
+                instructionArguments.rd, instructionArguments.rs1, rs1Value, instructionArguments.imm
+            );
+            instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rd});
+        }
 
-    if (instructionOutput) {
-        instructionOutput->consoleLog = fmt::format(
-            "Performed XORI: x{} = x{} ({}) ^ imm ({}).",
-            rd, rs1, rs1Value, imm
-        );
-        instructionOutput->setRegisters({rs1, rd});
+        return true;
     }
-}
 
-void ORI::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
-{
-    uint32_t rs1Value = cpu.getRegister(rs1);
+    bool ORI::execute(const InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
+        const uint32_t result = (rs1Value | instructionArguments.imm);
 
-    uint32_t result = (rs1Value | imm);
+        cpu.setRegister(instructionArguments.rd, result);
+        cpu.setPc(cpu.getPc() + 4);
 
-    cpu.setRegister(rd, result);
-    cpu.setPc(cpu.getPc() + 4);
+        if (instructionOutput) {
+            instructionOutput->consoleLog = fmt::format(
+                "Performed ORI: x{} = x{} ({}) | imm ({}).",
+                instructionArguments.rd, instructionArguments.rs1, rs1Value, instructionArguments.imm
+            );
+            instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rd});
+        }
 
-    if (instructionOutput) {
-        instructionOutput->consoleLog = fmt::format(
-            "Performed ORI: x{} = x{} ({}) | imm ({}).",
-            rd, rs1, rs1Value, imm
-        );
-        instructionOutput->setRegisters({rs1, rd});
+        return true;
     }
-}
 
-void ANDI::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
-{
-    uint32_t rs1Value = cpu.getRegister(rs1);
+    bool ANDI::execute(const InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
 
-    uint32_t result = (rs1Value & imm);
+        uint32_t result = (rs1Value & instructionArguments.imm);
 
-    cpu.setRegister(rd, result);
-    cpu.setPc(cpu.getPc() + 4);
+        cpu.setRegister(instructionArguments.rd, result);
+        cpu.setPc(cpu.getPc() + 4);
 
-    if (instructionOutput) {
-        instructionOutput->consoleLog = fmt::format(
-            "Performed ANDI: x{} = x{} ({}) & imm ({}).",
-            rd, rs1, rs1Value, imm
-        );
-        instructionOutput->setRegisters({rs1, rd});
+        if (instructionOutput) {
+            instructionOutput->consoleLog = fmt::format(
+                "Performed ANDI: x{} = x{} ({}) & imm ({}).",
+                instructionArguments.rd, instructionArguments.rs1, rs1Value, instructionArguments.imm
+            );
+            instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rd});
+        }
+
+        return true;
     }
-}
 
-void SLLI::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
-{
-    uint32_t rs1Value = cpu.getRegister(rs1);
-    int32_t shamt_i = getShamt();
+    bool SLLI::execute(const InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
+        const int32_t shamt_i = getBits(instructionArguments.imm, 0, 4);
+        const uint32_t result = (rs1Value << shamt_i);
 
-    uint32_t result = (rs1Value << shamt_i);
+        cpu.setRegister(instructionArguments.rd, result);
+        cpu.setPc(cpu.getPc() + 4);
 
-    cpu.setRegister(rd, result);
-    cpu.setPc(cpu.getPc() + 4);
+        if (instructionOutput) {
+            instructionOutput->consoleLog = fmt::format(
+                "Performed SLLI: x{} = x{} ({}) << shamt ({}).",
+                instructionArguments.rd, instructionArguments.rs1, rs1Value, shamt_i
+            );
+            instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rd});
+        }
 
-    if (instructionOutput) {
-        instructionOutput->consoleLog = fmt::format(
-            "Performed SLLI: x{} = x{} ({}) << shamt ({}).",
-            rd, rs1, rs1Value, shamt_i
-        );
-        instructionOutput->setRegisters({rs1, rd});
+        return true;
     }
-}
 
-void SRLI::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
-{
-    uint32_t rs1Value = cpu.getRegister(rs1);
-    int32_t shamt_i = getShamt();
+    bool SRLI::execute(const InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
+        const int32_t shamt_i = getBits(instructionArguments.imm, 0, 4);
 
-    uint32_t result = (static_cast<uint32_t>(rs1Value) >> shamt_i);
+        uint32_t result = (static_cast<uint32_t>(rs1Value) >> shamt_i);
 
-    cpu.setRegister(rd, result);
-    cpu.setPc(cpu.getPc() + 4);
+        cpu.setRegister(instructionArguments.rd, result);
+        cpu.setPc(cpu.getPc() + 4);
 
-    if (instructionOutput) {
-        instructionOutput->consoleLog = fmt::format(
-            "Performed SRLI: x{} = x{} ({}) >> shamt ({}).",
-            rd, rs1, rs1Value, shamt_i
-        );
-        instructionOutput->setRegisters({rs1, rd});
+        if (instructionOutput) {
+            instructionOutput->consoleLog = fmt::format(
+                "Performed SRLI: x{} = x{} ({}) >> shamt ({}).",
+                instructionArguments.rd, instructionArguments.rs1, rs1Value, shamt_i
+            );
+            instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rd});
+        }
+
+        return true;
     }
-}
 
-void SRAI::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
-{
-    int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(rs1));
-    int32_t shamt_i = getShamt();
+    bool SRAI::execute(const InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(instructionArguments.rs1));
+        const int32_t shamt_i = getBits(instructionArguments.imm, 0, 4);
+        const uint32_t result = (rs1Value >> shamt_i);
 
-    uint32_t result = (rs1Value >> shamt_i);
+        cpu.setRegister(instructionArguments.rd, result);
+        cpu.setPc(cpu.getPc() + 4);
 
-    cpu.setRegister(rd, result);
-    cpu.setPc(cpu.getPc() + 4);
+        if (instructionOutput) {
+            instructionOutput->consoleLog = fmt::format(
+                "Performed SRAI: x{} = x{} ({}) >> shamt ({}).",
+                instructionArguments.rd, instructionArguments.rs1, rs1Value, shamt_i
+            );
+            instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rd});
+        }
 
-    if (instructionOutput) {
-        instructionOutput->consoleLog = fmt::format(
-            "Performed SRAI: x{} = x{} ({}) >> shamt ({}).",
-            rd, rs1, rs1Value, shamt_i
-        );
-        instructionOutput->setRegisters({rs1, rd});
+        return true;
     }
-}
 
-// This create function will handle the IType instructions that are meant for loading memory, they have the 0x3 opcode
-std::unique_ptr<Instruction> LoadInstructionFactory::create(uint32_t encodedInstruction)
+} // namespace ArithmeticInstruction
+
+namespace LoadInstruction
 {
-    static const std::unordered_map<uint8_t, std::function<std::unique_ptr<Instruction>(uint32_t)>> instructionMap = {
-        { LB::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<LB> (ins); }},
-        { LH::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<LH> (ins); }},
-        { LW::getInstructionDescriptor (), [](uint32_t ins) { return std::make_unique<LW> (ins); }},
-        { LBU::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<LBU>(ins); }},
-        { LHU::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<LHU>(ins); }}
-    };
+    bool execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const InstructionArguments instructionArguments = getInstructionArguments(encodedInstruction);
 
-    uint8_t funct3 = getBits(encodedInstruction, 12, 14);
+        const uint8_t funct3 = getBits(encodedInstruction, 12, 14);
+        switch (funct3)
+        {
+        case LB::getInstructionDescription():
+            return LB::execute(instructionArguments, cpu, instructionOutput);
+        case LH::getInstructionDescription():
+            return LH::execute(instructionArguments, cpu, instructionOutput);
+        case LW::getInstructionDescription():
+            return LW::execute(instructionArguments, cpu, instructionOutput);
+        case LBU::getInstructionDescription():
+            return LBU::execute(instructionArguments, cpu, instructionOutput);
+        case LHU::getInstructionDescription():
+            return LHU::execute(instructionArguments, cpu, instructionOutput);
+        }
 
-    auto it = instructionMap.find(funct3);
-    if (it != instructionMap.end())
-        return it->second(encodedInstruction);
-
-    return nullptr;
-}
-
-void LB::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
-{
-    uint32_t rs1Value = cpu.getRegister(rs1);
-
-    uint32_t addr = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(imm);
-    uint8_t rawByte = Memory::getInstance().read8(addr);
-    int32_t signedVal = static_cast<int32_t>(static_cast<int8_t>(rawByte));
-
-    cpu.setRegister(rd, static_cast<uint32_t>(signedVal));
-    cpu.setPc(cpu.getPc() + 4);
-
-    if (instructionOutput) {
-        instructionOutput->consoleLog = fmt::format(
-            "Performed LB: x{} = Mem[x{} ({}) + imm ({})] (byte loaded)",
-            rd, rs1, rs1Value, imm
-        );
-        instructionOutput->setRegisters({rs1, rd});
-        instructionOutput->setRamAddresses({{addr, rawByte}});
+        return false;
     }
-}
 
-void LH::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
-{
-    uint32_t rs1Value = cpu.getRegister(rs1);
+    bool LB::execute(const InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
 
-    uint32_t addr = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(imm);
-    uint16_t rawHw = Memory::getInstance().read16(addr);
-    int32_t signedVal = static_cast<int32_t>(static_cast<int16_t>(rawHw));
+        const uint32_t addr = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(instructionArguments.imm);
+        const uint8_t rawByte = Memory::getInstance().read8(addr);
+        const int32_t signedVal = static_cast<int32_t>(static_cast<int8_t>(rawByte));
 
-    cpu.setRegister(rd, static_cast<uint32_t>(signedVal));
-    cpu.setPc(cpu.getPc() + 4);
+        cpu.setRegister(instructionArguments.rd, static_cast<uint32_t>(signedVal));
+        cpu.setPc(cpu.getPc() + 4);
 
-    if (instructionOutput) {
-        instructionOutput->consoleLog = fmt::format(
-            "Performed LH: x{} = Mem[x{} ({}) + imm ({})] (halfword loaded)",
-            rd, rs1, rs1Value, imm
-        );
-        instructionOutput->setRegisters({rs1, rd});
-        instructionOutput->setRamAddresses({{addr, rawHw}});
+        if (instructionOutput) {
+            instructionOutput->consoleLog = fmt::format(
+                "Performed LB: x{} = Mem[x{} ({}) + imm ({})] (byte loaded)",
+                instructionArguments.rd, instructionArguments.rs1, rs1Value, instructionArguments.imm
+            );
+            instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rd});
+            instructionOutput->setRamAddresses({{addr, rawByte}});
+        }
+
+        return true;
     }
-}
 
-void LW::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
-{
-    uint32_t rs1Value = cpu.getRegister(rs1);
+    bool LH::execute(const InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
 
-    uint32_t addr = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(imm);
-    uint32_t rawWord = Memory::getInstance().read32(addr);
-    int32_t signedVal = static_cast<int32_t>(rawWord);
+        const uint32_t addr = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(instructionArguments.imm);
+        const uint16_t rawHw = Memory::getInstance().read16(addr);
+        const int32_t signedVal = static_cast<int32_t>(static_cast<int16_t>(rawHw));
 
-    cpu.setRegister(rd, static_cast<uint32_t>(signedVal));
-    cpu.setPc(cpu.getPc() + 4);
+        cpu.setRegister(instructionArguments.rd, static_cast<uint32_t>(signedVal));
+        cpu.setPc(cpu.getPc() + 4);
 
-    if (instructionOutput) {
-        instructionOutput->consoleLog = fmt::format(
-            "Performed LW: x{} = Mem[x{} ({}) + imm ({})] (word loaded)",
-            rd, rs1, rs1Value, imm
-        );
-        instructionOutput->setRegisters({rs1, rd});
-        instructionOutput->setRamAddresses({{addr, rawWord}});
+        if (instructionOutput) {
+            instructionOutput->consoleLog = fmt::format(
+                "Performed LH: x{} = Mem[x{} ({}) + imm ({})] (halfword loaded)",
+                instructionArguments.rd, instructionArguments.rs1, rs1Value, instructionArguments.imm
+            );
+            instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rd});
+            instructionOutput->setRamAddresses({{addr, rawHw}});
+        }
+
+        return true;
     }
-}
 
-void LBU::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
-{
-    uint32_t rs1Value = cpu.getRegister(rs1);
+    bool LW::execute(const InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
 
-    uint32_t addr = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(imm);
-    uint32_t memoryValue = Memory::getInstance().read8(addr);
+        const uint32_t addr = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(instructionArguments.imm);
+        const uint32_t rawWord = Memory::getInstance().read32(addr);
+        const int32_t signedVal = static_cast<int32_t>(rawWord);
 
-    cpu.setRegister(rd, memoryValue);
-    cpu.setPc(cpu.getPc() + 4);
+        cpu.setRegister(instructionArguments.rd, static_cast<uint32_t>(signedVal));
+        cpu.setPc(cpu.getPc() + 4);
 
-    if (instructionOutput) {
-        instructionOutput->consoleLog = fmt::format(
-            "Performed LBU: x{} = Mem[x{} ({}) + imm ({})] (byte loaded, zero-extended)",
-            rd, rs1, rs1Value, imm
-        );
-        instructionOutput->setRegisters({rs1, rd});
-        instructionOutput->setRamAddresses({{addr, memoryValue}});
+        if (instructionOutput) {
+            instructionOutput->consoleLog = fmt::format(
+                "Performed LW: x{} = Mem[x{} ({}) + imm ({})] (word loaded)",
+                instructionArguments.rd, instructionArguments.rs1, rs1Value, instructionArguments.imm
+            );
+            instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rd});
+            instructionOutput->setRamAddresses({{addr, rawWord}});
+        }
+
+        return true;
     }
-}
 
-void LHU::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
-{
-    uint32_t rs1Value = cpu.getRegister(rs1);
+    bool LBU::execute(const InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
 
-    uint32_t addr = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(imm);
-    uint32_t memoryValue = Memory::getInstance().read16(addr);
+        const uint32_t addr = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(instructionArguments.imm);
+        const uint32_t memoryValue = Memory::getInstance().read8(addr);
 
-    cpu.setRegister(rd, memoryValue);
-    cpu.setPc(cpu.getPc() + 4);
+        cpu.setRegister(instructionArguments.rd, memoryValue);
+        cpu.setPc(cpu.getPc() + 4);
 
-    if (instructionOutput) {
-        instructionOutput->consoleLog = fmt::format(
-            "Performed LHU: x{} = Mem[x{} ({}) + imm ({})] (halfword loaded, zero-extended)",
-            rd, rs1, rs1Value, imm
-        );
-        instructionOutput->setRegisters({rs1, rd});
-        instructionOutput->setRamAddresses({{addr, memoryValue}});
+        if (instructionOutput) {
+            instructionOutput->consoleLog = fmt::format(
+                "Performed LBU: x{} = Mem[x{} ({}) + imm ({})] (byte loaded, zero-extended)",
+                instructionArguments.rd, instructionArguments.rs1, rs1Value, instructionArguments.imm
+            );
+            instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rd});
+            instructionOutput->setRamAddresses({{addr, memoryValue}});
+        }
+
+        return true;
     }
-}
 
-void JALR::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput)
-{
-    uint32_t rs1Value = cpu.getRegister(rs1);
+    bool LHU::execute(const InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
 
-    uint32_t targetAddress = (rs1Value + imm) & ~1;
+        const uint32_t addr = static_cast<uint32_t>(rs1Value) + static_cast<uint32_t>(instructionArguments.imm);
+        const uint32_t memoryValue = Memory::getInstance().read16(addr);
 
-    cpu.setRegister(rd, cpu.getPc() + 4);
+        cpu.setRegister(instructionArguments.rd, memoryValue);
+        cpu.setPc(cpu.getPc() + 4);
+
+        if (instructionOutput) {
+            instructionOutput->consoleLog = fmt::format(
+                "Performed LHU: x{} = Mem[x{} ({}) + imm ({})] (halfword loaded, zero-extended)",
+                instructionArguments.rd, instructionArguments.rs1, rs1Value, instructionArguments.imm
+            );
+            instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rd});
+            instructionOutput->setRamAddresses({{addr, memoryValue}});
+        }
+
+        return true;
+    }
+
+} // namespace LoadInstruction
+
+bool JALR::execute(const uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+    const InstructionArguments instructionArguments = getInstructionArguments(encodedInstruction);
+    const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
+    const uint32_t targetAddress = (rs1Value + instructionArguments.imm) & ~1;
+
+    cpu.setRegister(instructionArguments.rd, cpu.getPc() + 4);
 
     cpu.setPc(targetAddress);
 
     if (instructionOutput) {
         instructionOutput->consoleLog = fmt::format(
             "Performed JALR: x{} = PC + 4, jumped to (x{} ({}) + imm ({})) & ~1 = {}",
-            rd, rs1, rs1Value, imm, targetAddress
+            instructionArguments.rd, instructionArguments.rs1, rs1Value, instructionArguments.imm, targetAddress
         );
-        instructionOutput->setRegisters({rs1, rd});
+        instructionOutput->setRegisters({instructionArguments.rs1, instructionArguments.rd});
     }
+
+    return true;
 }
 
-std::unique_ptr<Instruction> FenceInstructionFactory::create(uint32_t encodedInstruction)
+namespace FenceInstruction
 {
-    static const std::unordered_map<uint8_t, std::function<std::unique_ptr<Instruction>(uint32_t)>> instructionMap = {
-        { FENCE  ::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<FENCE>  (ins); }},
-        { FENCE_I::getInstructionDescriptor(), [](uint32_t ins) { return std::make_unique<FENCE_I>(ins); }},
-    };
+    bool execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const InstructionArguments instructionArguments = getInstructionArguments(encodedInstruction);
 
-    uint8_t funct3 = getBits(encodedInstruction, 12, 14);
+        const uint8_t funct3 = getBits(encodedInstruction, 12, 14);
+        switch (funct3)
+        {
+        case FENCE::getInstructionDescription():
+            return FENCE::execute(instructionArguments, cpu, instructionOutput);
+        case FENCE_I::getInstructionDescription():
+            return FENCE_I::execute(instructionArguments, cpu, instructionOutput);
+        }
 
-    auto it = instructionMap.find(funct3);
-    if (it != instructionMap.end())
-        return it->second(encodedInstruction);
-
-    return nullptr;
-}
-
-void FENCE::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-    cpu.setPc(cpu.getPc() + 4);
-    if (instructionOutput) {
-        instructionOutput->consoleLog = "FENCE (Memory Barrier) - NOP";
+        return false;
     }
-};
 
-void FENCE_I::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-    cpu.setPc(cpu.getPc() + 4);
-    if (instructionOutput) {
-        instructionOutput->consoleLog = "FENCE.I (Instruction Barrier) - NOP";
+    bool FENCE::execute(const InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        cpu.setPc(cpu.getPc() + 4);
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "FENCE (Memory Barrier) - NOP";
+        }
+
+        return true;
     }
-}
+
+    bool FENCE_I::execute(const InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        cpu.setPc(cpu.getPc() + 4);
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "FENCE.I (Instruction Barrier) - NOP";
+        }
+
+        return true;
+    }
+
+} // namespace FenceInstruction
 
 } // namespace IType
