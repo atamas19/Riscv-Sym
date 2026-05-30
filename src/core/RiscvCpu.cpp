@@ -110,6 +110,7 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
         try {
             uint32_t binaryInstruction = _mem.read32(this->_pc, true);
 
+            spdlog::trace("PC: 0x{:08X} ; instruction: 0x{:08X}", this->_pc, binaryInstruction);
             if (binaryInstruction == 0 && this->_pc == 0) {
                 spdlog::info("Halted at PC=0");
                 break;
@@ -120,6 +121,32 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
                 continue;
             }
 
+            _mem.incrementTime(1);
+
+            uint32_t mip = getCsr().read(0x344); // 0x344 = adresa CSR pentru MIP
+            if (_mem.getMtime() >= _mem.getMtimecmp()) {
+                mip |= (1u << 7); // Setează bitul 7 (MTIP)
+            } else {
+                mip &= ~(1u << 7); // Șterge bitul 7
+            }
+            getCsr().write(0x344, mip);
+
+            // 2. Verifică dacă CPU-ul trebuie să preia întreruperea acum
+            uint32_t mie = getCsr().read(0x304); // 0x304 = MIE (Machine Interrupt Enable)
+            bool mtip = (mip & (1u << 7)) != 0;
+            bool mtie = (mie & (1u << 7)) != 0;
+
+            uint32_t mstatus = getCsr().read(0x300); // 0x300 = MSTATUS
+            bool mstatus_mie = (mstatus & (1u << 3)) != 0; // Bitul 3 este MIE global
+
+            PrivilegeMode currentMode = getPrivilegeMode();
+
+            // Întreruperea se declanșează dacă este activă, permisă și privilegiul o acceptă
+            if (mtip && mtie && (currentMode < PrivilegeMode::Machine || (currentMode == PrivilegeMode::Machine && mstatus_mie))) {
+                // Aruncăm un Machine Timer Interrupt (Codul 7 cu bitul de interrupt setat)
+                takeTrap(static_cast<ExceptionCause>((uint32_t)0x80000007), 0);
+                continue;
+            }
 
         } catch (const PageFaultException& e) {
             ExceptionCause cause;
