@@ -17,6 +17,10 @@ Memory& Memory::getInstance() {
     return instance;
 }
 
+void Memory::incrementTime(uint64_t ticks) {
+    _mtime += ticks;
+}
+
 uint8_t* Memory::getMemoryPtr(uint32_t address, bool allocateIfNeeded) {
     uint32_t pageIndex = address >> PAGE_SHIFT;
     uint32_t offset = address & PAGE_MASK;
@@ -83,43 +87,54 @@ uint32_t Memory::translateAddress(uint32_t vaddr, AccessType type) {
     uint32_t pte1 = read32Physical(pte1_addr);
 
     if ((pte1 & 0x1) == 0) throw PageFaultException(vaddr, type);
-    // Here would be the megapage checks, but xv6 Sv32 doesn't use them by default
+
+    bool r1 = (pte1 & 0x2) != 0;
+    bool w1 = (pte1 & 0x4) != 0;
+    bool x1 = (pte1 & 0x8) != 0;
 
     uint32_t pte1_ppn = (pte1 >> 10) & 0x3FFFFF;
-    uint32_t leaf_table_addr = pte1_ppn * PAGE_SIZE;
+    uint32_t final_ppn;
 
-    uint32_t pte0_addr = leaf_table_addr + (vpn0 * 4);
-    uint32_t pte0 = read32Physical(pte0_addr);
+    if (r1 || x1) {
+        if ((!r1 && !x1) || (w1 && !r1)) {
+            throw PageFaultException(vaddr, type);
+        }
 
-    // Check leaf PTE validity and permissions according to Sv32:
-    if ((pte0 & 0x1) == 0) throw PageFaultException(vaddr, type);
-    bool r = (pte0 & 0x2) != 0; // Read
-    bool w = (pte0 & 0x4) != 0; // Write
-    bool x = (pte0 & 0x8) != 0; // Execute
-    // Invalid leaf PTE if neither R nor X is set, or if W is set without R.
-    if ((!r && !x) || (w && !r)) {
-        throw PageFaultException(vaddr, type); // Page Fault: permission/configuration error
+        if ((pte1_ppn & 0x3FF) != 0) {
+            throw PageFaultException(vaddr, type);
+        }
+
+        switch (type) {
+            case AccessType::InstructionFetch: if (!x1) throw PageFaultException(vaddr, type); break;
+            case AccessType::Load:             if (!r1) throw PageFaultException(vaddr, type); break;
+            case AccessType::Store:            if (!w1) throw PageFaultException(vaddr, type); break;
+        }
+
+        final_ppn = pte1_ppn | vpn0;
+    } else {
+        uint32_t leaf_table_addr = pte1_ppn * PAGE_SIZE;
+        uint32_t pte0_addr = leaf_table_addr + (vpn0 * 4);
+        uint32_t pte0 = read32Physical(pte0_addr);
+
+        if ((pte0 & 0x1) == 0) throw PageFaultException(vaddr, type);
+
+        bool r0 = (pte0 & 0x2) != 0;
+        bool w0 = (pte0 & 0x4) != 0;
+        bool x0 = (pte0 & 0x8) != 0;
+
+        if ((!r0 && !x0) || (w0 && !r0)) {
+            throw PageFaultException(vaddr, type);
+        }
+
+        switch (type) {
+            case AccessType::InstructionFetch: if (!x0) throw PageFaultException(vaddr, type); break;
+            case AccessType::Load:             if (!r0) throw PageFaultException(vaddr, type); break;
+            case AccessType::Store:            if (!w0) throw PageFaultException(vaddr, type); break;
+        }
+
+        final_ppn = (pte0 >> 10) & 0x3FFFFF;
     }
 
-    switch (type) {
-        case AccessType::InstructionFetch:
-            if (!x) {
-                throw PageFaultException(vaddr, type);
-            }
-            break;
-        case AccessType::Load:
-            if (!r) {
-                throw PageFaultException(vaddr, type);
-            }
-            break;
-        case AccessType::Store:
-            if (!w) {
-                throw PageFaultException(vaddr, type);
-            }
-            break;
-    }
-
-    uint32_t final_ppn = (pte0 >> 10) & 0x3FFFFF;
     uint32_t physical_address = (final_ppn * PAGE_SIZE) + offset;
 
     return physical_address;
@@ -140,8 +155,23 @@ static inline uint16_t getCRC16(const uint8_t* message, int length) {
 }
 
 bool Memory::handleMMIO(uint32_t address, uint32_t value) {
-    if (address == UART_ADDR) {
-        std::cout << (char)value << std::flush;
+    // --- CLINT: mtimecmp ---
+    if (address == 0x02004000) {
+        // Scriere partea LOW (păstrăm partea HIGH intactă și înlocuim primii 32 biți)
+        _mtimecmp = (_mtimecmp & 0xFFFFFFFF00000000ULL) | value;
+        return true;
+    }
+    if (address == 0x02004004) {
+        // Scriere partea HIGH (păstrăm partea LOW intactă și înlocuim ultimii 32 biți)
+        _mtimecmp = (_mtimecmp & 0x00000000FFFFFFFFULL) | (static_cast<uint64_t>(value) << 32);
+        return true;
+    }
+
+    // --- UART ---
+    if (address >= UART_ADDR && address < UART_ADDR + 8) {
+        if (address == UART_ADDR) { // THR (Transmitter Holding Register)
+            std::cout << (char)(value & 0xFF) << std::flush;
+        }
         return true;
     }
 
@@ -224,10 +254,50 @@ bool Memory::handleMMIO(uint32_t address, uint32_t value) {
         }
         return true;
     }
+
+    // Fallback de siguranță: dacă se face o scriere sub adresa de bază a RAM-ului (0x80000000)
+    // la care nu ai implementat încă hardware-ul, ignorăm scrierea în loc să alocăm memorie.
+    if (address < 0x80000000) {
+        return true;
+    }
+
     return false;
 }
 
 bool Memory::handleMMIORead(uint32_t address, uint32_t& outValue) {
+    if (address == 0x0200BFF8) { // Citește partea LOW (32 biți)
+        outValue = (uint32_t)(_mtime & 0xFFFFFFFF);
+        return true;
+    }
+    if (address == 0x0200BFFC) { // Citește partea HIGH (32 biți)
+        outValue = (uint32_t)((_mtime >> 32) & 0xFFFFFFFF);
+        return true;
+    }
+    if (address == 0x02004000) {
+        outValue = static_cast<uint32_t>(_mtimecmp & 0xFFFFFFFF);
+        return true;
+    }
+    if (address == 0x02004004) {
+        outValue = static_cast<uint32_t>((_mtimecmp >> 32) & 0xFFFFFFFF);
+        return true;
+    }
+
+    // --- UART ---
+    if (address >= UART_ADDR && address < UART_ADDR + 8) {
+        if (address == UART_LSR_ADDR) {
+            uint8_t lsr = 0x20; // TX Empty
+            if (_uartInputChar != -1) lsr |= 0x01; // RX Data Ready
+            outValue = lsr;
+        }
+        else if (address == UART_RHR_ADDR) {
+            outValue = (_uartInputChar != -1) ? _uartInputChar : 0;
+            _uartInputChar = -1;
+        }
+        else {
+            outValue = 0; // Orice alt registru UART neimplementat returnează 0
+        }
+        return true;
+    }
     // --- UART LSR ---
     if (address == UART_LSR_ADDR) {
         uint8_t lsr = 0x20; // TX Empty
@@ -261,6 +331,13 @@ bool Memory::handleMMIORead(uint32_t address, uint32_t& outValue) {
 
     if (address == 0x10001004)    { outValue = 0;    return true; }
     if (address == 0x10001000)    { outValue = _spiReadBuffer; return true; }
+
+    if (address < 0x80000000) {
+        spdlog::debug("Unmapped MMIO READ at: 0x{:08X}", address);
+        outValue = 0;
+        return true; // Returnăm true ca să prevenim page fault sau RAM fallback
+    }
+
     return false;
 }
 
@@ -283,6 +360,9 @@ void Memory::pollKeyboard() {
 }
 
 bool Memory::loadDiskImage(const std::string& path) {
+    if (path.empty()) {
+        return true;
+    }
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
         spdlog::error("Couldn't load image from {}", path);
