@@ -2,6 +2,43 @@
 #include <core/instruction/CTypeInstruction.h>
 #include <core/AssemblyCompiler.h>
 
+// Helpers for constructing compressed instruction bitfields in tests
+static inline uint16_t setBits16(uint16_t inst, int lo, int hi, uint16_t value) {
+    uint16_t mask = ((1u << (hi - lo + 1)) - 1u) << lo;
+    inst &= ~mask;
+    inst |= (uint16_t)((value << lo) & mask);
+    return inst;
+}
+
+// Build a compressed J-type (C.J) instruction from a signed 12-bit immediate
+static uint16_t buildC_J_fromImm(int32_t imm) {
+    // imm is a signed value; compressible immediates are multiples of 2.
+    uint32_t uimm = (uint32_t)imm & 0xFFF; // 12 bits
+    uint16_t inst = 0;
+    // map imm bits to compressed fields used by decompress()
+    uint32_t b12 = (uimm >> 11) & 0x1;
+    uint32_t b11 = (uimm >> 4) & 0x1;
+    uint32_t b10 = (uimm >> 10) & 0x1;
+    uint32_t b9_8 = (uimm >> 8) & 0x3;
+    uint32_t b7 = (uimm >> 6) & 0x1;
+    uint32_t b6 = (uimm >> 7) & 0x1;
+    uint32_t b5 = (uimm >> 5) & 0x1;
+    uint32_t b3_5 = (uimm >> 1) & 0x7;
+
+    inst = setBits16(inst, 12, 12, (uint16_t)b12);
+    inst = setBits16(inst, 11, 11, (uint16_t)b11);
+    inst = setBits16(inst, 8, 8, (uint16_t)b10);
+    inst = setBits16(inst, 9, 10, (uint16_t)b9_8);
+    inst = setBits16(inst, 6, 6, (uint16_t)b7);
+    inst = setBits16(inst, 7, 7, (uint16_t)b6);
+    inst = setBits16(inst, 2, 2, (uint16_t)b5);
+    inst = setBits16(inst, 3, 5, (uint16_t)b3_5);
+    // Set op = 01 and funct3 = 101 (C.J has funct3=5)
+    inst = setBits16(inst, 0, 1, 1);
+    inst = setBits16(inst, 13, 15, 5);
+    return inst;
+}
+
 //////////////////////////////////////////////////////
 // C-Type (Compressed) Instructions - Decompressor  //
 //////////////////////////////////////////////////////
@@ -197,6 +234,59 @@ TEST_F(RiscvCpuTest, DecompressC_EBREAK) {
 TEST_F(RiscvCpuTest, IllegalCompressedInstructionReturnsZero) {
     uint16_t illegal = 0x0000;
     EXPECT_EQ(CType::decompress(illegal), 0);
+}
+
+TEST_F(RiscvCpuTest, C_ADDI4SPN_IllegalWhenImmZero) {
+    // Build a C.ADDI4SPN with rd'=x10 (rd' field = 2) but imm==0 -> illegal
+    uint16_t inst = 0;
+    inst = setBits16(inst, 2, 4, 2); // rd' = 8 + 2 = x10
+    inst = setBits16(inst, 0, 1, 0); // quadrant 00
+    inst = setBits16(inst, 13, 15, 0); // funct3 = 0
+
+    EXPECT_EQ(CType::decompress(inst), 0);
+}
+
+TEST_F(RiscvCpuTest, C_LI_IllegalWhenRdZero) {
+    // C.LI with rd==0 is illegal
+    uint16_t inst = 0;
+    inst = setBits16(inst, 0, 1, 1); // quadrant 01
+    inst = setBits16(inst, 13, 15, 2); // funct3 = 2 (C.LI)
+    inst = setBits16(inst, 7, 11, 0); // rd = 0
+    // set a non-zero immediate bit to ensure imm != 0
+    inst = setBits16(inst, 2, 6, 1);
+
+    EXPECT_EQ(CType::decompress(inst), 0);
+}
+
+TEST_F(RiscvCpuTest, C_LUI_IllegalWhenImmZero) {
+    // C.LUI with rd != 0 but imm == 0 is illegal
+    uint16_t inst = 0;
+    inst = setBits16(inst, 0, 1, 1); // quadrant 01
+    inst = setBits16(inst, 13, 15, 3); // funct3 = 3 (C.LUI / C.ADDI16SP)
+    inst = setBits16(inst, 7, 11, 5); // rd = 5
+    // ensure immediate bits are zero
+
+    EXPECT_EQ(CType::decompress(inst), 0);
+}
+
+TEST_F(RiscvCpuTest, C_ADDI16SP_IllegalWhenImmZero) {
+    // C.ADDI16SP when rd == 2 but imm16 == 0 is illegal
+    uint16_t inst = 0;
+    inst = setBits16(inst, 0, 1, 1); // quadrant 01
+    inst = setBits16(inst, 13, 15, 3); // funct3 = 3
+    inst = setBits16(inst, 7, 11, 2); // rd = 2 (x2)
+    // imm fields left zero
+
+    EXPECT_EQ(CType::decompress(inst), 0);
+}
+
+TEST_F(RiscvCpuTest, C_J_NegativeImmediateSignExtend) {
+    // Test that a negative J immediate is sign-extended correctly
+    int32_t imm = -4; // target offset
+    uint16_t compressed = buildC_J_fromImm(imm);
+    uint32_t decompressed = CType::decompress(compressed);
+    uint32_t expected = AssemblyCompiler::compile("jal x0, -4");
+    EXPECT_EQ(decompressed, expected);
 }
 
 TEST_F(RiscvCpuTest, ExecuteEndToEndCompressed_ADD) {
