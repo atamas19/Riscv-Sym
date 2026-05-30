@@ -175,12 +175,36 @@ TEST_F(RiscvCpuTest, DecompressC_SLLI) {
     EXPECT_EQ(CType::decompress(compressed), expected);
 }
 
+TEST_F(RiscvCpuTest, C_SLLI_ZeroShamtIsIllegal) {
+    // C.SLLI with shamt == 0 should be illegal and return 0
+    uint16_t inst = 0;
+    inst = setBits16(inst, 0, 1, 2); // quadrant 10
+    inst = setBits16(inst, 13, 15, 0); // funct3 = 0 (SLLI)
+    inst = setBits16(inst, 7, 11, 10); // rd = x10
+    // shamt bits (12 and 2..6) left zero
+
+    EXPECT_EQ(CType::decompress(inst), 0);
+}
+
 TEST_F(RiscvCpuTest, DecompressC_LWSP) {
     // C.LWSP x10, 8(sp)
     // RV32C Hex: 0x4522
     uint16_t compressed = 0x4522;
     uint32_t expected = AssemblyCompiler::compile("lw x10, 8(x2)");
     EXPECT_EQ(CType::decompress(compressed), expected);
+}
+
+TEST_F(RiscvCpuTest, C_LWSP_RdZeroReturnsZero) {
+    // C.LWSP with rd == 0 is illegal and should return 0
+    uint16_t inst = 0;
+    inst = setBits16(inst, 0, 1, 2); // quadrant 10
+    inst = setBits16(inst, 13, 15, 2); // funct3 = 2 (LWSP)
+    inst = setBits16(inst, 7, 11, 0); // rd = 0 (illegal)
+    // set imm bits to a non-zero value so encoding would otherwise be valid
+    inst = setBits16(inst, 2, 3, 1);
+    inst = setBits16(inst, 12, 12, 1);
+
+    EXPECT_EQ(CType::decompress(inst), 0);
 }
 
 TEST_F(RiscvCpuTest, DecompressC_SWSP) {
