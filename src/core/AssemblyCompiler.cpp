@@ -954,7 +954,7 @@ uint32_t AssemblyCompiler::assembleLHU(const AssemblyInstruction& instruction)
 
 uint32_t AssemblyCompiler::assembleJALR(const AssemblyInstruction& instruction)
 {
-    return assembleILoadType(instruction, 0x5, 0x67);
+    return assembleILoadType(instruction, 0x0, 0x67);
 }
 
 uint32_t AssemblyCompiler::encodeSType(int16_t imm, uint8_t rs1, uint8_t rs2, uint8_t funct3, uint8_t opcode)
