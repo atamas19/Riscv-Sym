@@ -3,7 +3,7 @@
 #include <core/AssemblyCompiler.h>
 
 //////////////////////////////////////////////////////
-// C-Type (Compressed) Instructions - Decompressor //
+// C-Type (Compressed) Instructions - Decompressor  //
 //////////////////////////////////////////////////////
 
 // ==========================================
@@ -11,7 +11,7 @@
 // ==========================================
 
 TEST_F(RiscvCpuTest, DecompressC_ADDI4SPN) {
-    // C.ADDI4SPN x10, sp, 8  (x10 este a0, adică rs1'=2)
+    // C.ADDI4SPN x10, sp, 8
     // RV32C Hex: 0x0028
     uint16_t compressed = 0x0028;
     uint32_t expected = AssemblyCompiler::compile("addi x10, x2, 8");
@@ -20,7 +20,7 @@ TEST_F(RiscvCpuTest, DecompressC_ADDI4SPN) {
 
 TEST_F(RiscvCpuTest, DecompressC_LW) {
     // C.LW x10, 4(x11)
-    // RV32C Hex Corectat: 0x41C8
+    // RV32C Hex: 0x41C8
     uint16_t compressed = 0x41C8;
     uint32_t expected = AssemblyCompiler::compile("lw x10, 4(x11)");
     EXPECT_EQ(CType::decompress(compressed), expected);
@@ -28,7 +28,7 @@ TEST_F(RiscvCpuTest, DecompressC_LW) {
 
 TEST_F(RiscvCpuTest, DecompressC_SW) {
     // C.SW x10, 4(x11)
-    // RV32C Hex Corectat: 0xC1C8
+    // RV32C Hex: 0xC1C8
     uint16_t compressed = 0xC1C8;
     uint32_t expected = AssemblyCompiler::compile("sw x10, 4(x11)");
     EXPECT_EQ(CType::decompress(compressed), expected);
@@ -194,20 +194,12 @@ TEST_F(RiscvCpuTest, DecompressC_EBREAK) {
     EXPECT_EQ(CType::decompress(compressed), expected);
 }
 
-// ==========================================
-// TESTE DE SIGURANȚĂ ȘI END-TO-END
-// ==========================================
-
 TEST_F(RiscvCpuTest, IllegalCompressedInstructionReturnsZero) {
-    // 0x0000 este complet ilegală în specificația RISC-V
     uint16_t illegal = 0x0000;
     EXPECT_EQ(CType::decompress(illegal), 0);
 }
 
 TEST_F(RiscvCpuTest, ExecuteEndToEndCompressed_ADD) {
-    // Verificăm dacă motorul complet CPU ia binarul pe 16 biți,
-    // îl decomprimă, îl execută și modifică registrul corect.
-
     cpu->setRegister(10, 50); // x10
     cpu->setRegister(11, 25); // x11
 
@@ -223,10 +215,8 @@ TEST_F(RiscvCpuTest, ExecuteEndToEndCompressed_ADD) {
 TEST_F(RiscvCpuTest, ExecuteEndToEndCompressed_LWSP) {
     // C.LWSP x10, 8(sp)
 
-    // Setăm SP (x2) la 0x1000
     cpu->setRegister(2, 0x1000);
 
-    // Scriem valoarea 0xDEADBEEF în RAM la 0x1008
     Memory::getInstance().write32(0x1008, 0xDEADBEEF);
 
     uint16_t compressed = 0x4522; // C.LWSP x10, 8(sp)
