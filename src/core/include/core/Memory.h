@@ -93,6 +93,7 @@ private:
     uint8_t _spiReadBuffer = 0xFF;
     uint16_t _spiCurrentCrc = 0;
     int _uartInputChar = -1;
+    uint8_t _uartRegs[8] = {0};
 };
 
 struct MemoryCell {

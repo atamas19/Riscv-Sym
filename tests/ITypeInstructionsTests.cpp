@@ -160,14 +160,17 @@ TEST_F(RiscvCpuTest, LbuInstructionZeroExtends) {
 TEST_F(RiscvCpuTest, JalrInstructionJumpsAndLinks) {
     uint32_t targetAddress = 0x4000;
     uint32_t currentPc = cpu->getPc();
+    uint32_t expectedReturn = currentPc + 4;
+
+    cpu->setNextPc(expectedReturn);
 
     cpu->setRegister(1, targetAddress - 8);
 
     uint32_t encoded = AssemblyCompiler::compile("jalr x2, 8(x1)");
     Instruction::execute(encoded, *cpu);
 
-    EXPECT_EQ(cpu->getPc(), targetAddress);
-    EXPECT_EQ(cpu->getRegister(2), currentPc + 4);
+    EXPECT_EQ(cpu->getNextPc(), targetAddress);
+    EXPECT_EQ(cpu->getRegister(2), expectedReturn);
 }
 
 // Fence Instructions (Executed as No-Ops)
@@ -181,8 +184,6 @@ TEST_F(RiscvCpuTest, FenceInstructionExecutesAsNoOp) {
     for (int i = 1; i < 32; i++) {
         EXPECT_EQ(cpu->getRegister(i), 0);
     }
-
-    EXPECT_EQ(cpu->getPc(), currentPc + 4);
 }
 
 TEST_F(RiscvCpuTest, FenceIInstructionExecutesAsNoOp) {
@@ -194,6 +195,4 @@ TEST_F(RiscvCpuTest, FenceIInstructionExecutesAsNoOp) {
     for (int i = 1; i < 32; i++) {
         EXPECT_EQ(cpu->getRegister(i), 0);
     }
-
-    EXPECT_EQ(cpu->getPc(), currentPc + 4);
 }

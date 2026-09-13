@@ -1,4 +1,5 @@
 #include "core/CsrUnit.h"
+#include "core/Memory.h"
 
 #include <spdlog/spdlog.h>
 
@@ -44,13 +45,16 @@ void CsrUnit::reset() {
 uint32_t CsrUnit::read(uint16_t address) const {
     if (address >= 4096) return 0;
 
-    if (address == 0xC00) { // CYCLE (Low 32 bits)
-        static uint32_t fake_time = 0;
-        fake_time += 10000;
-        return fake_time;
+    // Extensia Zicntr: Registrele de timp și instrucțiuni (partea LOW - 32 biți)
+    // C00 = CYCLE, C01 = TIME, C02 = INSTRET
+    if (address == 0xC00 || address == 0xC01 || address == 0xC02) {
+        return static_cast<uint32_t>(Memory::getInstance().getMtime() & 0xFFFFFFFF);
     }
-    if (address == 0xC80) { // CYCLEH (High 32 bits)
-        return 0;
+
+    // Extensia Zicntr: Registrele de timp și instrucțiuni (partea HIGH - 32 biți)
+    // C80 = CYCLEH, C81 = TIMEH, C82 = INSTRETH
+    if (address == 0xC80 || address == 0xC81 || address == 0xC82) {
+        return static_cast<uint32_t>((Memory::getInstance().getMtime() >> 32) & 0xFFFFFFFF);
     }
 
     switch (address) {
@@ -146,6 +150,12 @@ void CsrUnit::setBit(uint16_t address, uint32_t bitMask) {
 void CsrUnit::clearBit(uint16_t address, uint32_t bitMask) {
     uint32_t val = read(address);
     write(address, val & ~bitMask);
+}
+
+void CsrUnit::setMIP(uint32_t value) {
+    // Directly set the MIP register. This is intended for simulator-driven
+    // updates of hardware interrupt pending bits (e.g., MTIP from CLINT).
+    _csrs[CsrAddress::MIP] = value;
 }
 
 bool CsrUnit::canAccess(uint16_t address, PrivilegeMode currentMode, bool isWrite) const {

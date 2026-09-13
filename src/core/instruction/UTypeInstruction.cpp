@@ -20,7 +20,7 @@ namespace Instruction
         const InstructionArguments instructionArguments = getInstructionArguments(encodedInstruction);
 
         cpu.setRegister(instructionArguments.rd, instructionArguments.imm);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -39,7 +39,7 @@ namespace Instruction
         const uint32_t resultValue = pc + instructionArguments.imm;
 
         cpu.setRegister(instructionArguments.rd, resultValue);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(

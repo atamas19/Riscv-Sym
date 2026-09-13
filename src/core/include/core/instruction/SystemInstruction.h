@@ -106,6 +106,13 @@ namespace Instruction
         bool execute(uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput);
     }
 
+    // Wait For Interrupt
+    namespace WFI {
+        constexpr uint16_t getInstructionDescription() { return 0x105; }
+
+        bool execute(RiscvCpu& cpu, InstructionOutput* instructionOutput);
+    }
+
 } // namespace Instruction
 
 } // namespace System

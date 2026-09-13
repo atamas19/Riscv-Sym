@@ -1,4 +1,5 @@
 #include "core/Memory.h"
+#include "core/RiscvCpu.h"
 
 #include <spdlog/spdlog.h>
 
@@ -10,7 +11,36 @@
     #include <conio.h>
 #else
     #include <unistd.h>
+    #include <sys/select.h>
 #endif
+
+namespace {
+    uint32_t gWatchedRoots[8] = {};
+    uint32_t gWatchedRootCount = 0;
+
+    void rememberRootAddress(uint32_t root) {
+        for (uint32_t i = 0; i < gWatchedRootCount; ++i) {
+            if (gWatchedRoots[i] == root) {
+                return;
+            }
+        }
+
+        if (gWatchedRootCount < 8) {
+            gWatchedRoots[gWatchedRootCount++] = root;
+        }
+    }
+
+    bool isNearWatchedRoot(uint32_t paddr) {
+        const uint64_t paddr64 = static_cast<uint64_t>(paddr);
+        for (uint32_t i = 0; i < gWatchedRootCount; ++i) {
+            const uint64_t root = static_cast<uint64_t>(gWatchedRoots[i]);
+            if (paddr64 + 4 >= root && paddr64 < root + 0x20000ULL) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
 
 Memory& Memory::getInstance() {
     static Memory instance;
@@ -40,6 +70,20 @@ uint8_t* Memory::getMemoryPtr(uint32_t address, bool allocateIfNeeded) {
 }
 
 void Memory::setSATP(uint32_t satp) {
+    static uint32_t satpLogCount = 0;
+    if (_currentSatp != satp && satpLogCount < 64) {
+        const uint32_t oldRoot = (_currentSatp & 0x3FFFFF) << 12;
+        const uint32_t newRoot = (satp & 0x3FFFFF) << 12;
+        const uint32_t rootEntry0 = read32Physical(newRoot);
+        const uint32_t rootEntry1 = read32Physical(newRoot + 4);
+        const uint32_t rootEntry2 = read32Physical(newRoot + 8);
+        spdlog::info("[SATP] 0x{:08X} -> 0x{:08X} (root 0x{:08X} -> 0x{:08X})",
+                     _currentSatp, satp, oldRoot, newRoot);
+        spdlog::info("[SATP ROOT] root=0x{:08X} pte[0]=0x{:08X} pte[1]=0x{:08X} pte[2]=0x{:08X}",
+                     newRoot, rootEntry0, rootEntry1, rootEntry2);
+        ++satpLogCount;
+    }
+    rememberRootAddress((satp & 0x3FFFFF) << 12);
     _currentSatp = satp;
 }
 
@@ -74,6 +118,23 @@ uint32_t Memory::read32Physical(uint32_t paddr) {
 }
 
 uint32_t Memory::translateAddress(uint32_t vaddr, AccessType type) {
+    PrivilegeMode effectiveMode = RiscvCpu::getInstance().getPrivilegeMode();
+
+    // 2. Logica MPRV: Dacă suntem în M-Mode și facem Load/Store,
+    // verificăm dacă OpenSBI vrea să folosească temporar regulile din S-Mode.
+    if (effectiveMode == PrivilegeMode::Machine && type != AccessType::InstructionFetch) {
+        uint32_t mstatus = RiscvCpu::getInstance().getCsr().read(0x300); // 0x300 este MSTATUS
+        if ((mstatus & (1 << 17)) != 0) { // Bitul MPRV (Modify Privilege)
+            effectiveMode = static_cast<PrivilegeMode>((mstatus >> 11) & 3); // Extragem biții MPP
+        }
+    }
+
+    // 3. Dacă modul efectiv este Machine, ignorăm MMU-ul complet (returnăm adresa fizică brută)
+    if (effectiveMode == PrivilegeMode::Machine) {
+        return vaddr;
+    }
+
+    // 4. Dacă SATP este dezactivat (Mod Bare), ignorăm MMU-ul
     if ((_currentSatp & 0x80000000) == 0) return vaddr;
 
     uint32_t root_ppn = _currentSatp & 0x3FFFFF;
@@ -86,7 +147,35 @@ uint32_t Memory::translateAddress(uint32_t vaddr, AccessType type) {
     uint32_t pte1_addr = root_table_addr + (vpn1 * 4);
     uint32_t pte1 = read32Physical(pte1_addr);
 
-    if ((pte1 & 0x1) == 0) throw PageFaultException(vaddr, type);
+    static uint32_t mmuTraceCount = 0;
+    auto logMmuFault = [&](const char* reason, uint32_t pte0_addr, uint32_t pte0_value, bool hasPte0) {
+        if (mmuTraceCount >= 96) {
+            return;
+        }
+        const char* accessTypeName = "store";
+        if (type == AccessType::InstructionFetch) {
+            accessTypeName = "fetch";
+        } else if (type == AccessType::Load) {
+            accessTypeName = "load";
+        }
+
+        if (hasPte0) {
+            spdlog::info(
+                "[MMU TRACE] fault={} satp=0x{:08X} root=0x{:08X} vaddr=0x{:08X} access={} vpn1=0x{:03X} vpn0=0x{:03X} pte1@0x{:08X}=0x{:08X} pte0@0x{:08X}=0x{:08X}",
+                reason, _currentSatp, root_table_addr, vaddr, accessTypeName, vpn1, vpn0, pte1_addr, pte1,
+                pte0_addr, pte0_value);
+        } else {
+            spdlog::info(
+                "[MMU TRACE] fault={} satp=0x{:08X} root=0x{:08X} vaddr=0x{:08X} access={} vpn1=0x{:03X} vpn0=0x{:03X} pte1@0x{:08X}=0x{:08X}",
+                reason, _currentSatp, root_table_addr, vaddr, accessTypeName, vpn1, vpn0, pte1_addr, pte1);
+        }
+        ++mmuTraceCount;
+    };
+
+    if ((pte1 & 0x1) == 0) {
+        logMmuFault("invalid-l1-v", 0, 0, false);
+        throw PageFaultException(vaddr, type);
+    }
 
     bool r1 = (pte1 & 0x2) != 0;
     bool w1 = (pte1 & 0x4) != 0;
@@ -97,17 +186,34 @@ uint32_t Memory::translateAddress(uint32_t vaddr, AccessType type) {
 
     if (r1 || x1) {
         if ((!r1 && !x1) || (w1 && !r1)) {
+            logMmuFault("invalid-l1-rwx", 0, 0, false);
             throw PageFaultException(vaddr, type);
         }
 
         if ((pte1_ppn & 0x3FF) != 0) {
+            logMmuFault("misaligned-superpage", 0, 0, false);
             throw PageFaultException(vaddr, type);
         }
 
         switch (type) {
-            case AccessType::InstructionFetch: if (!x1) throw PageFaultException(vaddr, type); break;
-            case AccessType::Load:             if (!r1) throw PageFaultException(vaddr, type); break;
-            case AccessType::Store:            if (!w1) throw PageFaultException(vaddr, type); break;
+            case AccessType::InstructionFetch:
+                if (!x1) {
+                    logMmuFault("perm-x-l1", 0, 0, false);
+                    throw PageFaultException(vaddr, type);
+                }
+                break;
+            case AccessType::Load:
+                if (!r1) {
+                    logMmuFault("perm-r-l1", 0, 0, false);
+                    throw PageFaultException(vaddr, type);
+                }
+                break;
+            case AccessType::Store:
+                if (!w1) {
+                    logMmuFault("perm-w-l1", 0, 0, false);
+                    throw PageFaultException(vaddr, type);
+                }
+                break;
         }
 
         final_ppn = pte1_ppn | vpn0;
@@ -116,27 +222,45 @@ uint32_t Memory::translateAddress(uint32_t vaddr, AccessType type) {
         uint32_t pte0_addr = leaf_table_addr + (vpn0 * 4);
         uint32_t pte0 = read32Physical(pte0_addr);
 
-        if ((pte0 & 0x1) == 0) throw PageFaultException(vaddr, type);
+        if ((pte0 & 0x1) == 0) {
+            logMmuFault("invalid-l0-v", pte0_addr, pte0, true);
+            throw PageFaultException(vaddr, type);
+        }
 
         bool r0 = (pte0 & 0x2) != 0;
         bool w0 = (pte0 & 0x4) != 0;
         bool x0 = (pte0 & 0x8) != 0;
 
         if ((!r0 && !x0) || (w0 && !r0)) {
+            logMmuFault("invalid-l0-rwx", pte0_addr, pte0, true);
             throw PageFaultException(vaddr, type);
         }
 
         switch (type) {
-            case AccessType::InstructionFetch: if (!x0) throw PageFaultException(vaddr, type); break;
-            case AccessType::Load:             if (!r0) throw PageFaultException(vaddr, type); break;
-            case AccessType::Store:            if (!w0) throw PageFaultException(vaddr, type); break;
+            case AccessType::InstructionFetch:
+                if (!x0) {
+                    logMmuFault("perm-x-l0", pte0_addr, pte0, true);
+                    throw PageFaultException(vaddr, type);
+                }
+                break;
+            case AccessType::Load:
+                if (!r0) {
+                    logMmuFault("perm-r-l0", pte0_addr, pte0, true);
+                    throw PageFaultException(vaddr, type);
+                }
+                break;
+            case AccessType::Store:
+                if (!w0) {
+                    logMmuFault("perm-w-l0", pte0_addr, pte0, true);
+                    throw PageFaultException(vaddr, type);
+                }
+                break;
         }
 
         final_ppn = (pte0 >> 10) & 0x3FFFFF;
     }
 
     uint32_t physical_address = (final_ppn * PAGE_SIZE) + offset;
-
     return physical_address;
 }
 
@@ -159,18 +283,28 @@ bool Memory::handleMMIO(uint32_t address, uint32_t value) {
     if (address == 0x02004000) {
         // Scriere partea LOW (păstrăm partea HIGH intactă și înlocuim primii 32 biți)
         _mtimecmp = (_mtimecmp & 0xFFFFFFFF00000000ULL) | value;
+        spdlog::info("CLINT: write mtimecmp_low = 0x{:08X}, new mtimecmp=0x{:016X}", value, _mtimecmp);
         return true;
     }
     if (address == 0x02004004) {
         // Scriere partea HIGH (păstrăm partea LOW intactă și înlocuim ultimii 32 biți)
         _mtimecmp = (_mtimecmp & 0x00000000FFFFFFFFULL) | (static_cast<uint64_t>(value) << 32);
+        spdlog::info("CLINT: write mtimecmp_high = 0x{:08X}, new mtimecmp=0x{:016X}", value, _mtimecmp);
         return true;
     }
 
     // --- UART ---
     if (address >= UART_ADDR && address < UART_ADDR + 8) {
-        if (address == UART_ADDR) { // THR (Transmitter Holding Register)
-            std::cout << (char)(value & 0xFF) << std::flush;
+        uint32_t offset = address - UART_ADDR;
+
+        if (offset == 0) {
+            if ((_uartRegs[3] & 0x80) == 0) { // DLAB = 0
+                std::cout << (char)(value & 0xFF) << std::flush;
+            } else { // DLAB = 1
+                _uartRegs[0] = value & 0xFF;
+            }
+        } else {
+            _uartRegs[offset] = value & 0xFF;
         }
         return true;
     }
@@ -257,9 +391,9 @@ bool Memory::handleMMIO(uint32_t address, uint32_t value) {
 
     // Fallback de siguranță: dacă se face o scriere sub adresa de bază a RAM-ului (0x80000000)
     // la care nu ai implementat încă hardware-ul, ignorăm scrierea în loc să alocăm memorie.
-    if (address < 0x80000000) {
-        return true;
-    }
+    // if (address < 0x80000000) {
+    //     return true;
+    // }
 
     return false;
 }
@@ -284,20 +418,39 @@ bool Memory::handleMMIORead(uint32_t address, uint32_t& outValue) {
 
     // --- UART ---
     if (address >= UART_ADDR && address < UART_ADDR + 8) {
-        if (address == UART_LSR_ADDR) {
-            uint8_t lsr = 0x20; // TX Empty
-            if (_uartInputChar != -1) lsr |= 0x01; // RX Data Ready
+        uint32_t offset = address - UART_ADDR;
+
+        if (offset == 0) {
+            if ((_uartRegs[3] & 0x80) != 0) { // DLAB = 1
+                outValue = _uartRegs[0];
+            } else { // DLAB = 0 (RHR - Citim tasta)
+                outValue = (_uartInputChar != -1) ? _uartInputChar : 0;
+                _uartInputChar = -1; // Tasta a fost consumată
+            }
+        } else if (offset == 1) {
+            outValue = _uartRegs[1]; // IER / DLM
+        } else if (offset == 2) {
+            // IIR: "0xC1" îi spune Linux-ului că suntem un UART 16550A modern și funcțional
+            outValue = 0xC1;
+        } else if (offset == 3) {
+            outValue = _uartRegs[3]; // LCR
+        } else if (offset == 4) {
+            outValue = _uartRegs[4]; // MCR
+        } else if (offset == 5) {
+            // LSR: 0x60 = Suntem gata să primim text pentru printare
+            uint8_t lsr = 0x60;
+            if (_uartInputChar != -1) lsr |= 0x01; // Data Ready (Avem o tastă apăsată)
             outValue = lsr;
-        }
-        else if (address == UART_RHR_ADDR) {
-            outValue = (_uartInputChar != -1) ? _uartInputChar : 0;
-            _uartInputChar = -1;
-        }
-        else {
-            outValue = 0; // Orice alt registru UART neimplementat returnează 0
+        } else if (offset == 6) {
+            outValue = 0x00; // MSR
+        } else if (offset == 7) {
+            outValue = _uartRegs[7]; // SPR (Scratchpad - folosit de Linux pentru test)
+        } else {
+            outValue = 0;
         }
         return true;
     }
+
     // --- UART LSR ---
     if (address == UART_LSR_ADDR) {
         uint8_t lsr = 0x20; // TX Empty
@@ -332,11 +485,11 @@ bool Memory::handleMMIORead(uint32_t address, uint32_t& outValue) {
     if (address == 0x10001004)    { outValue = 0;    return true; }
     if (address == 0x10001000)    { outValue = _spiReadBuffer; return true; }
 
-    if (address < 0x80000000) {
-        spdlog::debug("Unmapped MMIO READ at: 0x{:08X}", address);
-        outValue = 0;
-        return true; // Returnăm true ca să prevenim page fault sau RAM fallback
-    }
+    // if (address < 0x80000000) {
+    //     spdlog::debug("Unmapped MMIO READ at: 0x{:08X}", address);
+    //     outValue = 0;
+    //     return true; // Returnăm true ca să prevenim page fault sau RAM fallback
+    // }
 
     return false;
 }
@@ -350,10 +503,19 @@ void Memory::pollKeyboard() {
             _uartInputChar = c;
         }
 #else
-        char c;
-        if (read(STDIN_FILENO, &c, 1) == 1) {
-            if (c == '\n') c = '\r';
-            _uartInputChar = c;
+        // Folosim select() pentru a verifica non-blocant dacă avem date pe STDIN
+        struct timeval tv = { 0L, 0L };
+        fd_set fds;
+        FD_ZERO(&fds);
+        FD_SET(STDIN_FILENO, &fds);
+
+        // Dacă select returnează > 0, înseamnă că utilizatorul a apăsat o tastă
+        if (select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv) > 0) {
+            char c;
+            if (read(STDIN_FILENO, &c, 1) == 1) {
+                if (c == '\n') c = '\r';
+                _uartInputChar = c;
+            }
         }
 #endif
     }
@@ -380,61 +542,63 @@ bool Memory::loadDiskImage(const std::string& path) {
 }
 
 void Memory::write32(uint32_t address, uint32_t value) {
-    uint32_t paddr = translateAddress(address, AccessType::Store);
-
-    if (handleMMIO(paddr, value)) return;
-
-    uint32_t pageIndex = paddr >> PAGE_SHIFT;
-    uint32_t offset = paddr & PAGE_MASK;
-
+    uint32_t offset = address & PAGE_MASK;
     if (offset + sizeof(uint32_t) <= PAGE_SIZE) {
+        uint32_t paddr = translateAddress(address, AccessType::Store);
+        if (handleMMIO(paddr, value)) return;
         uint8_t* ptr = getMemoryPtr(paddr, true);
         ptr[0] = value & 0xFF; ptr[1] = (value >> 8) & 0xFF;
         ptr[2] = (value >> 16) & 0xFF; ptr[3] = (value >> 24) & 0xFF;
-        return;
+    } else {
+        write8(address, value & 0xFF);
+        write8(address + 1, (value >> 8) & 0xFF);
+        write8(address + 2, (value >> 16) & 0xFF);
+        write8(address + 3, (value >> 24) & 0xFF);
     }
-    write8(paddr, value & 0xFF); write8(paddr + 1, (value >> 8) & 0xFF);
-    write8(paddr + 2, (value >> 16) & 0xFF); write8(paddr + 3, (value >> 24) & 0xFF);
 }
 
 uint32_t Memory::read32(uint32_t address, bool isInstruction) {
     AccessType type = isInstruction ? AccessType::InstructionFetch : AccessType::Load;
-    uint32_t paddr = translateAddress(address, type);
+    uint32_t offset = address & PAGE_MASK;
 
-    return read32Physical(paddr);
+    if (offset + sizeof(uint32_t) <= PAGE_SIZE) {
+        uint32_t paddr = translateAddress(address, type);
+        return read32Physical(paddr);
+    } else {
+        uint32_t b0 = read8(address);
+        uint32_t b1 = read8(address + 1);
+        uint32_t b2 = read8(address + 2);
+        uint32_t b3 = read8(address + 3);
+        return b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
+    }
 }
 
 void Memory::write16(uint32_t address, uint16_t value) {
-    uint32_t paddr = translateAddress(address, AccessType::Store);
-
-    if (handleMMIO(paddr, value)) return;
-
-    uint32_t pageIndex = paddr >> PAGE_SHIFT;
-    uint32_t offset = paddr & PAGE_MASK;
-
+    uint32_t offset = address & PAGE_MASK;
     if (offset + sizeof(uint16_t) <= PAGE_SIZE) {
+        uint32_t paddr = translateAddress(address, AccessType::Store);
+        if (handleMMIO(paddr, value)) return;
         uint8_t* ptr = getMemoryPtr(paddr, true);
         ptr[0] = value & 0xFF; ptr[1] = (value >> 8) & 0xFF;
-        return;
+    } else {
+        write8(address, value & 0xFF);
+        write8(address + 1, (value >> 8) & 0xFF);
     }
-    write8(paddr, value & 0xFF); write8(paddr + 1, (value >> 8) & 0xFF);
 }
 
 uint16_t Memory::read16(uint32_t address) {
-    uint32_t paddr = translateAddress(address, AccessType::Load);
-
-    uint32_t mmioValue;
-    if (handleMMIORead(paddr, mmioValue)) return mmioValue;
-
-    uint32_t pageIndex = paddr >> PAGE_SHIFT;
-    uint32_t offset = paddr & PAGE_MASK;
-
+    uint32_t offset = address & PAGE_MASK;
     if (offset + sizeof(uint16_t) <= PAGE_SIZE) {
+        uint32_t paddr = translateAddress(address, AccessType::Load);
+        uint32_t mmioValue;
+        if (handleMMIORead(paddr, mmioValue)) return mmioValue;
         uint8_t* ptr = getMemoryPtr(paddr, false);
         return ptr ? (uint16_t(ptr[0]) | (uint16_t(ptr[1]) << 8)) : 0;
+    } else {
+        uint32_t b0 = read8(address);
+        uint32_t b1 = read8(address + 1);
+        return b0 | (b1 << 8);
     }
-    uint32_t b0 = read8(paddr); uint32_t b1 = read8(paddr + 1);
-    return b0 | (b1 << 8);
 }
 
 void Memory::write8(uint32_t address, uint8_t value) {

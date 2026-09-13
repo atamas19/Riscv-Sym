@@ -14,7 +14,6 @@ TEST_F(RiscvCpuTest, AddInstructionComputesCorrectly) {
     Instruction::execute(encoded, *cpu);
 
     EXPECT_EQ(cpu->getRegister(3), 40);
-    EXPECT_EQ(cpu->getPc(), 0x1004);
 }
 
 TEST_F(RiscvCpuTest, SubInstructionComputesCorrectly) {
@@ -25,7 +24,6 @@ TEST_F(RiscvCpuTest, SubInstructionComputesCorrectly) {
     Instruction::execute(encoded, *cpu);;
 
     EXPECT_EQ(cpu->getRegister(3), 15);
-    EXPECT_EQ(cpu->getPc(), 0x1004);
 }
 
 TEST_F(RiscvCpuTest, SllInstructionShiftsLeft) {

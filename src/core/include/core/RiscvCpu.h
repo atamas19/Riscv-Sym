@@ -38,14 +38,20 @@ public:
 
     // Getters
     uint32_t getPc() const;
+    uint32_t getNextPc() const;
     uint32_t getRegister(uint8_t registerIndex) const;
     CsrUnit& getCsr();
     PrivilegeMode getPrivilegeMode() const;
 
     // Setters
     void setPc(uint32_t pcValue);
+    void setNextPc(uint32_t val);
     void setRegister(uint8_t registerIndex, uint32_t registerValue);
     void setPrivilegeMode(PrivilegeMode mode);
+
+    // Control
+    void requestShutdown(bool shutdown = true) { _shutdown_requested = shutdown; }
+    bool isShutdownRequested() const { return _shutdown_requested; }
 
 public:
     void takeTrap(ExceptionCause cause, uint32_t trapValue = 0);
@@ -74,10 +80,12 @@ private:
 private:
     bool _reservationValid = false;
     uint32_t _reservationAddress = 0;
+    bool _shutdown_requested = false;
 
 private:
     std::array<uint32_t, 32> _regs;
     uint32_t _pc;
+    uint32_t _nextPc = 0;
     CsrUnit _csrUnit;
     Memory& _mem;
 

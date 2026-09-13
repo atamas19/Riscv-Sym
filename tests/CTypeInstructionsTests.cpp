@@ -340,3 +340,13 @@ TEST_F(RiscvCpuTest, ExecuteEndToEndCompressed_LWSP) {
 
     EXPECT_EQ(cpu->getRegister(10), 0xDEADBEEF);
 }
+
+TEST_F(RiscvCpuTest, DecompressC_BEQZ_Offset) {
+    // Instrucțiunea exactă din kernel: C.BEQZ a0, +22
+    uint16_t compressed = 0xC919;
+
+    // Ar trebui să genereze: BEQ x10, x0, 22
+    uint32_t expected = AssemblyCompiler::compile("beq x10, x0, 22");
+
+    EXPECT_EQ(CType::decompress(compressed), expected);
+}

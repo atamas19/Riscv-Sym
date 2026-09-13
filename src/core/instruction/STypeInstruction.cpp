@@ -62,7 +62,7 @@ namespace Instruction
 
         Memory::getInstance().write8(finalAddress, result);
 
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -86,7 +86,7 @@ namespace Instruction
 
         Memory::getInstance().write16(finalAddress, result);
 
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -110,7 +110,7 @@ namespace Instruction
 
         Memory::getInstance().write32(finalAddress, result);
 
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
