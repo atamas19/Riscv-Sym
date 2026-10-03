@@ -54,7 +54,7 @@ void RiscvCpu::setPrivilegeMode(PrivilegeMode mode) {
     _privilegeMode = mode;
 }
 
-void RiscvCpu::requestShutdown(bool shutdown = true) {
+void RiscvCpu::requestShutdown(bool shutdown) {
     _shutdown_requested = shutdown;
 }
 
