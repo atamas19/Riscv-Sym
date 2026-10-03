@@ -50,8 +50,8 @@ public:
     void setPrivilegeMode(PrivilegeMode mode);
 
     // Control
-    void requestShutdown(bool shutdown = true) { _shutdown_requested = shutdown; }
-    bool isShutdownRequested() const { return _shutdown_requested; }
+    void requestShutdown(bool shutdown = true);
+    bool isShutdownRequested() const;
 
 public:
     void takeTrap(ExceptionCause cause, uint32_t trapValue = 0);

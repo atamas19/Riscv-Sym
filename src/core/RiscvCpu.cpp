@@ -54,6 +54,14 @@ void RiscvCpu::setPrivilegeMode(PrivilegeMode mode) {
     _privilegeMode = mode;
 }
 
+void RiscvCpu::requestShutdown(bool shutdown = true) {
+    _shutdown_requested = shutdown;
+}
+
+bool RiscvCpu::isShutdownRequested() const {
+    return _shutdown_requested;
+}
+
 int RiscvCpu::executeAsmCommand(const std::string& command, InstructionOutput& instructionOutput) {
     const uint32_t binaryInstruction = getBinaryInstructionFromAsmCommand(command, instructionOutput);
 
@@ -132,10 +140,6 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
             _mem.pollKeyboard();
         }
 
-        if (i % 100000 == 0) {
-            // spdlog::info("[PROGRESS] pc=0x{:08X} mode={} instrs={}", this->_pc, static_cast<int>(getPrivilegeMode()), i);
-        }
-
         try {
             uint32_t rawInstruction = _mem.read32(this->_pc, true);
             uint32_t binaryInstruction;
@@ -157,7 +161,6 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
                 continue;
             }
 
-            // 3. AVANSĂM PC-ul
             this->_pc = _nextPc;
             _mem.incrementTime(1);
             uint32_t mip_csr = getCsr().read(CsrAddress::MIP);
@@ -180,39 +183,31 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
 
             getCsr().setMIP(mip_csr);
 
-            // --- ROUTER DE ÎNTRERUPERI RISC-V ---
             uint32_t mie_csr = getCsr().read(CsrAddress::MIE);
             uint32_t mstatus = getCsr().read(CsrAddress::MSTATUS);
             PrivilegeMode currentMode = getPrivilegeMode();
 
-            // Verificăm global dacă întreruperile sunt activate pentru M și S mode
             bool m_enabled = (currentMode < PrivilegeMode::Machine) ||
                              ((currentMode == PrivilegeMode::Machine) && (mstatus & (1 << 3)));
             bool s_enabled = (currentMode < PrivilegeMode::Supervisor) ||
                              ((currentMode == PrivilegeMode::Supervisor) && (mstatus & (1 << 1)));
 
-            // `pending` conține toți biții care sunt și ceruți (MIP) și permiși (MIE)
             uint32_t pending = mip_csr & mie_csr;
             uint32_t interrupt_cause = 0xFFFFFFFF;
 
-            // 1. Prioritate Maximă: Întreruperi Machine (M-Mode)
             if (m_enabled) {
                 if (pending & (1 << 11)) interrupt_cause = 11;      // MEI (External)
                 else if (pending & (1 << 3)) interrupt_cause = 3;   // MSI (Software)
                 else if (pending & (1 << 7)) interrupt_cause = 7;   // MTI (Timer)
             }
 
-            // 2. Prioritate Secundară: Întreruperi Supervisor (S-Mode)
-            // Se verifică doar dacă nu a fost deja declanșată o întrerupere de M-Mode
             if (interrupt_cause == 0xFFFFFFFF && s_enabled) {
                 if (pending & (1 << 9)) interrupt_cause = 9;        // SEI (External)
                 else if (pending & (1 << 1)) interrupt_cause = 1;   // SSI (Software)
                 else if (pending & (1 << 5)) interrupt_cause = 5;   // STI (Timer)
             }
 
-            // Dacă am găsit o întrerupere validă, o declanșăm asincron
             if (interrupt_cause != 0xFFFFFFFF) {
-                // Adăugăm 0x80000000 pentru a marca că este Interrupt, nu Exception
                 takeTrap(static_cast<ExceptionCause>(0x80000000 | interrupt_cause), 0);
                 logCsrTransitions("post-interrupt-trap", this->_pc);
                 continue;
@@ -266,11 +261,6 @@ void RiscvCpu::takeTrap(ExceptionCause cause, uint32_t trapValue) {
     }
 
     if (delegateToS) {
-        // spdlog::info("Trap 0x{:08X} delegated to S-mode (pc=0x{:08X})", rawCause, _pc);
-
-        // If this is an interrupt and it is delegated to S-mode, reflect the
-        // pending bit in the S-mode pending register so supervisor code can
-        // observe it (SIP) — write to SIP will update MIP via delegation mask.
         if (isInterrupt) {
             _csrUnit.write(CsrAddress::SIP, (1u << causeIndex));
         }

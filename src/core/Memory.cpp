@@ -47,6 +47,32 @@ Memory& Memory::getInstance() {
     return instance;
 }
 
+int Memory::getUartInputChar() const {
+    return _uartInputChar;
+}
+
+bool Memory::isUartIrqPending() const {
+    bool rx_pending = (_uartInputChar != -1) && (_uartRegs[1] & 0x01);
+    bool tx_pending = _uartTxIrq && (_uartRegs[1] & 0x02);
+    return rx_pending || tx_pending;
+}
+
+void Memory::forceUartInput(char c) {
+    if (_uartInputChar == -1) {
+        _uartInputChar = c;
+        _uartIrqPending = true;
+    }
+}
+
+uint64_t Memory::getMtime() const {
+    return _mtime;
+}
+
+uint64_t Memory::getMtimecmp() const {
+    return _mtimecmp;
+}
+
+
 void Memory::incrementTime(uint64_t ticks) {
     _mtime += ticks;
 }
@@ -120,21 +146,17 @@ uint32_t Memory::read32Physical(uint32_t paddr) {
 uint32_t Memory::translateAddress(uint32_t vaddr, AccessType type) {
     PrivilegeMode effectiveMode = RiscvCpu::getInstance().getPrivilegeMode();
 
-    // 2. Logica MPRV: Dacă suntem în M-Mode și facem Load/Store,
-    // verificăm dacă OpenSBI vrea să folosească temporar regulile din S-Mode.
     if (effectiveMode == PrivilegeMode::Machine && type != AccessType::InstructionFetch) {
-        uint32_t mstatus = RiscvCpu::getInstance().getCsr().read(0x300); // 0x300 este MSTATUS
-        if ((mstatus & (1 << 17)) != 0) { // Bitul MPRV (Modify Privilege)
-            effectiveMode = static_cast<PrivilegeMode>((mstatus >> 11) & 3); // Extragem biții MPP
+        uint32_t mstatus = RiscvCpu::getInstance().getCsr().read(0x300); // 0x300 is MSTATUS
+        if ((mstatus & (1 << 17)) != 0) { // Bit MPRV (Modify Privilege)
+            effectiveMode = static_cast<PrivilegeMode>((mstatus >> 11) & 3);
         }
     }
 
-    // 3. Dacă modul efectiv este Machine, ignorăm MMU-ul complet (returnăm adresa fizică brută)
     if (effectiveMode == PrivilegeMode::Machine) {
         return vaddr;
     }
 
-    // 4. Dacă SATP este dezactivat (Mod Bare), ignorăm MMU-ul
     if ((_currentSatp & 0x80000000) == 0) return vaddr;
 
     uint32_t root_ppn = _currentSatp & 0x3FFFFF;
@@ -329,15 +351,12 @@ static inline uint16_t getCRC16(const uint8_t* message, int length) {
 }
 
 bool Memory::handleMMIO(uint32_t address, uint32_t value) {
-    // --- CLINT: mtimecmp ---
     if (address == 0x02004000) {
-        // Scriere partea LOW (păstrăm partea HIGH intactă și înlocuim primii 32 biți)
         _mtimecmp = (_mtimecmp & 0xFFFFFFFF00000000ULL) | value;
         spdlog::info("CLINT: write mtimecmp_low = 0x{:08X}, new mtimecmp=0x{:016X}", value, _mtimecmp);
         return true;
     }
     if (address == 0x02004004) {
-        // Scriere partea HIGH (păstrăm partea LOW intactă și înlocuim ultimii 32 biți)
         _mtimecmp = (_mtimecmp & 0x00000000FFFFFFFFULL) | (static_cast<uint64_t>(value) << 32);
         spdlog::info("CLINT: write mtimecmp_high = 0x{:08X}, new mtimecmp=0x{:016X}", value, _mtimecmp);
         return true;
@@ -350,13 +369,13 @@ bool Memory::handleMMIO(uint32_t address, uint32_t value) {
         if (offset == 0) {
             if ((_uartRegs[3] & 0x80) == 0) { // DLAB = 0
                 std::cout << (char)(value & 0xFF) << std::flush;
-                _uartTxIrq = true; // Bufferul e gol, declanșăm întrerupere TX!
+                _uartTxIrq = true;
             } else { // DLAB = 1
                 _uartRegs[0] = value & 0xFF;
             }
         } else if (offset == 1) { // IER
             _uartRegs[1] = value & 0xFF;
-            // Dacă Linux tocmai a activat TX Interrupts, îi semnalăm că bufferul e deja gol
+
             if (value & 0x02) _uartTxIrq = true;
         } else {
             _uartRegs[offset] = value & 0xFF;
@@ -444,12 +463,6 @@ bool Memory::handleMMIO(uint32_t address, uint32_t value) {
         return true;
     }
 
-    // Fallback de siguranță: dacă se face o scriere sub adresa de bază a RAM-ului (0x80000000)
-    // la care nu ai implementat încă hardware-ul, ignorăm scrierea în loc să alocăm memorie.
-    // if (address < 0x80000000) {
-    //     return true;
-    // }
-
     return false;
 }
 
@@ -478,19 +491,19 @@ bool Memory::handleMMIORead(uint32_t address, uint32_t& outValue) {
         if (offset == 0) {
             if ((_uartRegs[3] & 0x80) != 0) { // DLAB = 1
                 outValue = _uartRegs[0];
-            } else { // DLAB = 0 (RHR - Citim tasta)
+            } else { // DLAB = 0
                 outValue = (_uartInputChar != -1) ? _uartInputChar : 0;
-                _uartInputChar = -1; // Tasta a fost consumată
+                _uartInputChar = -1;
             }
         } else if (offset == 1) {
             outValue = _uartRegs[1]; // IER / DLM
         } else if (offset == 2) {
-            // IIR: Stabilim ce i-a cauzat lui Linux întreruperea
+            // IIR
             if ((_uartInputChar != -1) && (_uartRegs[1] & 0x01)) {
-                outValue = 0xC4; // RX Data Available (Tastă apăsată)
+                outValue = 0xC4; // RX Data Available
             } else if (_uartTxIrq && (_uartRegs[1] & 0x02)) {
-                outValue = 0xC2; // TX Holding Register Empty (Sunt gata de printat următoarea literă)
-                _uartTxIrq = false; // Hardware-ul curăță flag-ul când IIR este citit!
+                outValue = 0xC2; // TX Holding Register Empty
+                _uartTxIrq = false;
             } else {
                 outValue = 0xC1; // No Interrupt Pending
             }
@@ -545,12 +558,6 @@ bool Memory::handleMMIORead(uint32_t address, uint32_t& outValue) {
 
     if (address == 0x10001004)    { outValue = 0;    return true; }
     if (address == 0x10001000)    { outValue = _spiReadBuffer; return true; }
-
-    // if (address < 0x80000000) {
-    //     spdlog::debug("Unmapped MMIO READ at: 0x{:08X}", address);
-    //     outValue = 0;
-    //     return true; // Returnăm true ca să prevenim page fault sau RAM fallback
-    // }
 
     return false;
 }

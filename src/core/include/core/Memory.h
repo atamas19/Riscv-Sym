@@ -41,20 +41,10 @@ public:
 public:
     static Memory& getInstance();
 
-    int getUartInputChar() const { return _uartInputChar; }
+    int getUartInputChar() const;
 
-    bool isUartIrqPending() const {
-        bool rx_pending = (_uartInputChar != -1) && (_uartRegs[1] & 0x01); // Am primit o tastă?
-        bool tx_pending = _uartTxIrq && (_uartRegs[1] & 0x02);             // Am golit buffer-ul TX?
-        return rx_pending || tx_pending;
-    }
-
-    void forceUartInput(char c) {
-    if (_uartInputChar == -1) {
-        _uartInputChar = c;
-        _uartIrqPending = true;
-    }
-}
+    bool isUartIrqPending() const;
+    void forceUartInput(char c);
 
     void pollKeyboard();
 
@@ -64,8 +54,8 @@ public:
 
     void incrementTime(uint64_t ticks);
 
-    uint64_t getMtime() const { return _mtime; }
-    uint64_t getMtimecmp() const { return _mtimecmp; }
+    uint64_t getMtime() const;
+    uint64_t getMtimecmp() const;
 
     void write32(uint32_t address, uint32_t value);
     uint32_t read32(uint32_t address, bool isInstruction = false);
