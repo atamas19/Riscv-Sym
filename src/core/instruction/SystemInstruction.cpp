@@ -450,11 +450,6 @@ namespace Instruction
     }
 
     bool WFI::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-        // Wait For Interrupt: Pause execution until an interrupt is received.
-        // For a simulator, we just skip the instruction and continue.
-        // In a real implementation, this would put the CPU in a low-power sleep mode.
-
-
         if (instructionOutput) {
             instructionOutput->consoleLog = "WFI: Wait For Interrupt";
         }

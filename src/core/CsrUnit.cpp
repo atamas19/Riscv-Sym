@@ -151,8 +151,6 @@ void CsrUnit::clearBit(uint16_t address, uint32_t bitMask) {
 }
 
 void CsrUnit::setMIP(uint32_t value) {
-    // Directly set the MIP register. This is intended for simulator-driven
-    // updates of hardware interrupt pending bits (e.g., MTIP from CLINT).
     _csrs[CsrAddress::MIP] = value;
 }
 
