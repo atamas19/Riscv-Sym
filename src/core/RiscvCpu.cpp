@@ -128,7 +128,6 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
             break;
         }
 
-        // Poll keyboard more frequently - every 1000 instructions instead of 20000
         if (i % 100000 == 0) {
             _mem.pollKeyboard();
         }
@@ -136,28 +135,6 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
         if (i % 100000 == 0) {
             // spdlog::info("[PROGRESS] pc=0x{:08X} mode={} instrs={}", this->_pc, static_cast<int>(getPrivilegeMode()), i);
         }
-
-        // if (_mem.getUartInputChar() != -1) {
-        //     PrivilegeMode currentMode = getPrivilegeMode();
-
-        //     if (currentMode != PrivilegeMode::Machine) {
-        //         uint32_t sstatus = getCsr().read(0x100);
-        //         uint32_t sieCsr = getCsr().read(0x104);
-
-        //         bool sieGlobal = (sstatus & 0x2) != 0;
-        //         bool seie = (sieCsr & (1u << 9)) != 0;
-
-        //         if (seie && (currentMode == PrivilegeMode::User ||
-        //                     (currentMode == PrivilegeMode::Supervisor && sieGlobal))) {
-        //             uint32_t sipCsr = getCsr().read(0x144);
-        //             sipCsr |= (1u << 9);
-        //             getCsr().write(0x144, sipCsr);
-
-        //             takeTrap(static_cast<ExceptionCause>((uint32_t)0x80000009), 0);
-        //             continue;
-        //         }
-        //     }
-        // }
 
         try {
             uint32_t rawInstruction = _mem.read32(this->_pc, true);
@@ -183,27 +160,22 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
             // 3. AVANSĂM PC-ul
             this->_pc = _nextPc;
             _mem.incrementTime(1);
-            // ... (restul logicii cu MIP și MIE rămâne intactă)
-
-            // --- ACTUALIZARE MTIME ---
             uint32_t mip_csr = getCsr().read(CsrAddress::MIP);
 
-            // 1. Verificăm timer-ul Machine (CLINT mtimecmp)
-            if (_mem.getMtime() >= _mem.getMtimecmp()) {
-                mip_csr |= (1u << 7); // Setăm MTIP
-            } else {
-                mip_csr &= ~(1u << 7); // Curățăm MTIP
-            }
+            if (_mem.getMtime() >= _mem.getMtimecmp()) mip_csr |= (1u << 7);
+            else mip_csr &= ~(1u << 7);
 
-            // 2. Verificăm timer-ul Supervisor (Extensia SSTC)
-            // CSR 0x14D este stimecmp (LOW), CSR 0x15D este stimecmph (HIGH)
             uint64_t stimecmp = static_cast<uint64_t>(getCsr().read(0x14D)) |
-                               (static_cast<uint64_t>(getCsr().read(0x15D)) << 32);
+                            (static_cast<uint64_t>(getCsr().read(0x15D)) << 32);
+            if (_mem.getMtime() >= stimecmp) mip_csr |= (1u << 5);
+            else mip_csr &= ~(1u << 5);
 
-            if (_mem.getMtime() >= stimecmp) {
-                mip_csr |= (1u << 5); // Setăm STIP (Supervisor Timer Interrupt)
+            if (_mem.isUartIrqPending()) {
+                mip_csr |= (1u << 11); // MEIP
+                mip_csr |= (1u << 9);  // SEIP
             } else {
-                mip_csr &= ~(1u << 5); // Curățăm STIP
+                mip_csr &= ~(1u << 11);
+                mip_csr &= ~(1u << 9);
             }
 
             getCsr().setMIP(mip_csr);

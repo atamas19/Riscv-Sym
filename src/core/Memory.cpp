@@ -216,6 +216,31 @@ uint32_t Memory::translateAddress(uint32_t vaddr, AccessType type) {
                 break;
         }
 
+        // --- NEW PTE1 U/A/D CHECKS ---
+        bool u1 = (pte1 & 0x10) != 0;
+        bool a1 = (pte1 & 0x40) != 0;
+        bool d1 = (pte1 & 0x80) != 0;
+
+        if (effectiveMode == PrivilegeMode::User && !u1) {
+            logMmuFault("perm-u-l1", 0, 0, false);
+            throw PageFaultException(vaddr, type);
+        }
+        if (effectiveMode == PrivilegeMode::Supervisor && u1) {
+            if (type == AccessType::InstructionFetch) {
+                logMmuFault("perm-s-exec-u-l1", 0, 0, false);
+                throw PageFaultException(vaddr, type);
+            }
+            uint32_t sstatus = RiscvCpu::getInstance().getCsr().read(0x100);
+            if ((sstatus & (1 << 18)) == 0) { // Check SUM bit
+                logMmuFault("perm-s-sum-u-l1", 0, 0, false);
+                throw PageFaultException(vaddr, type);
+            }
+        }
+        if (!a1 || (type == AccessType::Store && !d1)) {
+            logMmuFault("ad-bits-missing-l1", 0, 0, false);
+            throw PageFaultException(vaddr, type);
+        }
+
         final_ppn = pte1_ppn | vpn0;
     } else {
         uint32_t leaf_table_addr = pte1_ppn * PAGE_SIZE;
@@ -255,6 +280,31 @@ uint32_t Memory::translateAddress(uint32_t vaddr, AccessType type) {
                     throw PageFaultException(vaddr, type);
                 }
                 break;
+        }
+
+        // --- NEW PTE0 U/A/D CHECKS ---
+        bool u0 = (pte0 & 0x10) != 0;
+        bool a0 = (pte0 & 0x40) != 0;
+        bool d0 = (pte0 & 0x80) != 0;
+
+        if (effectiveMode == PrivilegeMode::User && !u0) {
+            logMmuFault("perm-u-l0", pte0_addr, pte0, true);
+            throw PageFaultException(vaddr, type);
+        }
+        if (effectiveMode == PrivilegeMode::Supervisor && u0) {
+            if (type == AccessType::InstructionFetch) {
+                logMmuFault("perm-s-exec-u-l0", pte0_addr, pte0, true);
+                throw PageFaultException(vaddr, type);
+            }
+            uint32_t sstatus = RiscvCpu::getInstance().getCsr().read(0x100);
+            if ((sstatus & (1 << 18)) == 0) { // Check SUM bit
+                logMmuFault("perm-s-sum-u-l0", pte0_addr, pte0, true);
+                throw PageFaultException(vaddr, type);
+            }
+        }
+        if (!a0 || (type == AccessType::Store && !d0)) {
+            logMmuFault("ad-bits-missing-l0", pte0_addr, pte0, true);
+            throw PageFaultException(vaddr, type);
         }
 
         final_ppn = (pte0 >> 10) & 0x3FFFFF;
@@ -300,9 +350,14 @@ bool Memory::handleMMIO(uint32_t address, uint32_t value) {
         if (offset == 0) {
             if ((_uartRegs[3] & 0x80) == 0) { // DLAB = 0
                 std::cout << (char)(value & 0xFF) << std::flush;
+                _uartTxIrq = true; // Bufferul e gol, declanșăm întrerupere TX!
             } else { // DLAB = 1
                 _uartRegs[0] = value & 0xFF;
             }
+        } else if (offset == 1) { // IER
+            _uartRegs[1] = value & 0xFF;
+            // Dacă Linux tocmai a activat TX Interrupts, îi semnalăm că bufferul e deja gol
+            if (value & 0x02) _uartTxIrq = true;
         } else {
             _uartRegs[offset] = value & 0xFF;
         }
@@ -399,11 +454,11 @@ bool Memory::handleMMIO(uint32_t address, uint32_t value) {
 }
 
 bool Memory::handleMMIORead(uint32_t address, uint32_t& outValue) {
-    if (address == 0x0200BFF8) { // Citește partea LOW (32 biți)
+    if (address == 0x0200BFF8) {
         outValue = (uint32_t)(_mtime & 0xFFFFFFFF);
         return true;
     }
-    if (address == 0x0200BFFC) { // Citește partea HIGH (32 biți)
+    if (address == 0x0200BFFC) {
         outValue = (uint32_t)((_mtime >> 32) & 0xFFFFFFFF);
         return true;
     }
@@ -430,21 +485,27 @@ bool Memory::handleMMIORead(uint32_t address, uint32_t& outValue) {
         } else if (offset == 1) {
             outValue = _uartRegs[1]; // IER / DLM
         } else if (offset == 2) {
-            // IIR: "0xC1" îi spune Linux-ului că suntem un UART 16550A modern și funcțional
-            outValue = 0xC1;
+            // IIR: Stabilim ce i-a cauzat lui Linux întreruperea
+            if ((_uartInputChar != -1) && (_uartRegs[1] & 0x01)) {
+                outValue = 0xC4; // RX Data Available (Tastă apăsată)
+            } else if (_uartTxIrq && (_uartRegs[1] & 0x02)) {
+                outValue = 0xC2; // TX Holding Register Empty (Sunt gata de printat următoarea literă)
+                _uartTxIrq = false; // Hardware-ul curăță flag-ul când IIR este citit!
+            } else {
+                outValue = 0xC1; // No Interrupt Pending
+            }
         } else if (offset == 3) {
             outValue = _uartRegs[3]; // LCR
         } else if (offset == 4) {
             outValue = _uartRegs[4]; // MCR
         } else if (offset == 5) {
-            // LSR: 0x60 = Suntem gata să primim text pentru printare
             uint8_t lsr = 0x60;
-            if (_uartInputChar != -1) lsr |= 0x01; // Data Ready (Avem o tastă apăsată)
+            if (_uartInputChar != -1) lsr |= 0x01;
             outValue = lsr;
         } else if (offset == 6) {
             outValue = 0x00; // MSR
         } else if (offset == 7) {
-            outValue = _uartRegs[7]; // SPR (Scratchpad - folosit de Linux pentru test)
+            outValue = _uartRegs[7]; // SPR
         } else {
             outValue = 0;
         }
@@ -474,8 +535,8 @@ bool Memory::handleMMIORead(uint32_t address, uint32_t& outValue) {
 
     // --- PLIC SCLAIM ---
     if (address == PLIC_SCLAIM_ADDR) {
-        if (_uartInputChar != -1) {
-            outValue = 10; // ID UART
+        if (isUartIrqPending()) {
+            outValue = 12;
         } else {
             outValue = 0;
         }
@@ -501,20 +562,26 @@ void Memory::pollKeyboard() {
             char c = _getch();
             if (c == '\n') c = '\r';
             _uartInputChar = c;
+            _uartIrqPending = true;
         }
 #else
-        // Folosim select() pentru a verifica non-blocant dacă avem date pe STDIN
         struct timeval tv = { 0L, 0L };
         fd_set fds;
         FD_ZERO(&fds);
         FD_SET(STDIN_FILENO, &fds);
 
-        // Dacă select returnează > 0, înseamnă că utilizatorul a apăsat o tastă
         if (select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv) > 0) {
             char c;
             if (read(STDIN_FILENO, &c, 1) == 1) {
-                if (c == '\n') c = '\r';
+                if (c == '\r' || c == '\n') {
+                    c = '\n';
+                }
+
+                if (c == '\n') spdlog::critical("Received char from keyboard: [ENTER]");
+                else spdlog::critical("Received char from keyboard: {}", c);
+
                 _uartInputChar = c;
+                _uartIrqPending = true;
             }
         }
 #endif

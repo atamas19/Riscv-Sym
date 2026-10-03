@@ -43,6 +43,19 @@ public:
 
     int getUartInputChar() const { return _uartInputChar; }
 
+    bool isUartIrqPending() const {
+        bool rx_pending = (_uartInputChar != -1) && (_uartRegs[1] & 0x01); // Am primit o tastă?
+        bool tx_pending = _uartTxIrq && (_uartRegs[1] & 0x02);             // Am golit buffer-ul TX?
+        return rx_pending || tx_pending;
+    }
+
+    void forceUartInput(char c) {
+    if (_uartInputChar == -1) {
+        _uartInputChar = c;
+        _uartIrqPending = true;
+    }
+}
+
     void pollKeyboard();
 
     bool loadDiskImage(const std::string& path);
@@ -94,6 +107,9 @@ private:
     uint16_t _spiCurrentCrc = 0;
     int _uartInputChar = -1;
     uint8_t _uartRegs[8] = {0};
+
+    bool _uartIrqPending = false;
+    bool _uartTxIrq = false;
 };
 
 struct MemoryCell {
