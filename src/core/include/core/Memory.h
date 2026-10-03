@@ -41,13 +41,21 @@ public:
 public:
     static Memory& getInstance();
 
-    int getUartInputChar() const { return _uartInputChar; }
+    int getUartInputChar() const;
+
+    bool isUartIrqPending() const;
+    void forceUartInput(char c);
 
     void pollKeyboard();
 
     bool loadDiskImage(const std::string& path);
 
     void setSATP(uint32_t satp);
+
+    void incrementTime(uint64_t ticks);
+
+    uint64_t getMtime() const;
+    uint64_t getMtimecmp() const;
 
     void write32(uint32_t address, uint32_t value);
     uint32_t read32(uint32_t address, bool isInstruction = false);
@@ -77,8 +85,9 @@ private:
 
     std::vector<uint8_t> _disk;
 
+    uint64_t _mtime = 0;
+    uint64_t _mtimecmp = 0xFFFFFFFFFFFFFFFFULL;
     uint32_t _currentSatp = 0;
-
     int _spiState = 0;
     uint8_t _spiCmd = 0;
     uint32_t _spiArg = 0;
@@ -87,6 +96,10 @@ private:
     uint8_t _spiReadBuffer = 0xFF;
     uint16_t _spiCurrentCrc = 0;
     int _uartInputChar = -1;
+    uint8_t _uartRegs[8] = {0};
+
+    bool _uartIrqPending = false;
+    bool _uartTxIrq = false;
 };
 
 struct MemoryCell {

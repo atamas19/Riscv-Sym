@@ -42,15 +42,20 @@ namespace Instruction
     }
 
     bool JAL::execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const uint32_t returnAddress = cpu.getNextPc();
         const uint32_t targetAddress = cpu.getPc() + instructionArguments.imm;
 
-        if (instructionArguments.rd != 0)
-            cpu.setRegister(instructionArguments.rd, cpu.getPc() + 4);
+        if (instructionArguments.rd != 0) {
+            cpu.setRegister(instructionArguments.rd, returnAddress);
+        }
 
-        cpu.setPc(targetAddress);
+        cpu.setNextPc(targetAddress);
 
         if (instructionOutput) {
-            instructionOutput->consoleLog = fmt::format("Performed JAL: x{} = PC + 4, PC += {}.", instructionArguments.rd, instructionArguments.imm);
+            instructionOutput->consoleLog = fmt::format(
+                "Performed JAL: x{} = {}, PC += {}.",
+                instructionArguments.rd, returnAddress, instructionArguments.imm
+            );
             instructionOutput->setRegisters({instructionArguments.rd});
         }
 

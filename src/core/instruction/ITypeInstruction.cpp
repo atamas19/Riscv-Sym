@@ -70,7 +70,7 @@ namespace ArithmeticInstruction
         const uint32_t result = rs1Value + instructionArguments.imm;
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -88,7 +88,7 @@ namespace ArithmeticInstruction
         const uint8_t result = (rs1Value < instructionArguments.imm);
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -107,7 +107,7 @@ namespace ArithmeticInstruction
         const uint8_t result = (rs1Value < u_imm);
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -125,7 +125,7 @@ namespace ArithmeticInstruction
         uint32_t result = (rs1Value ^ instructionArguments.imm);
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -143,7 +143,7 @@ namespace ArithmeticInstruction
         const uint32_t result = (rs1Value | instructionArguments.imm);
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -162,7 +162,7 @@ namespace ArithmeticInstruction
         uint32_t result = (rs1Value & instructionArguments.imm);
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -181,7 +181,7 @@ namespace ArithmeticInstruction
         const uint32_t result = (rs1Value << shamt_i);
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -201,7 +201,7 @@ namespace ArithmeticInstruction
         uint32_t result = (static_cast<uint32_t>(rs1Value) >> shamt_i);
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -220,7 +220,7 @@ namespace ArithmeticInstruction
         const uint32_t result = (rs1Value >> shamt_i);
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -266,7 +266,7 @@ namespace LoadInstruction
         const int32_t signedVal = static_cast<int32_t>(static_cast<int8_t>(rawByte));
 
         cpu.setRegister(instructionArguments.rd, static_cast<uint32_t>(signedVal));
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -288,7 +288,7 @@ namespace LoadInstruction
         const int32_t signedVal = static_cast<int32_t>(static_cast<int16_t>(rawHw));
 
         cpu.setRegister(instructionArguments.rd, static_cast<uint32_t>(signedVal));
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -310,7 +310,7 @@ namespace LoadInstruction
         const int32_t signedVal = static_cast<int32_t>(rawWord);
 
         cpu.setRegister(instructionArguments.rd, static_cast<uint32_t>(signedVal));
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -331,7 +331,7 @@ namespace LoadInstruction
         const uint32_t memoryValue = Memory::getInstance().read8(addr);
 
         cpu.setRegister(instructionArguments.rd, memoryValue);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -352,7 +352,7 @@ namespace LoadInstruction
         const uint32_t memoryValue = Memory::getInstance().read16(addr);
 
         cpu.setRegister(instructionArguments.rd, memoryValue);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -370,12 +370,15 @@ namespace LoadInstruction
 
 bool JALR::execute(const uint32_t encodedInstruction, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
     const InstructionArguments instructionArguments = getInstructionArguments(encodedInstruction);
+    const uint32_t returnAddress = cpu.getNextPc();
     const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
     const uint32_t targetAddress = (rs1Value + instructionArguments.imm) & ~1;
 
-    cpu.setRegister(instructionArguments.rd, cpu.getPc() + 4);
+    if (instructionArguments.rd != 0) {
+        cpu.setRegister(instructionArguments.rd, returnAddress);
+    }
 
-    cpu.setPc(targetAddress);
+    cpu.setNextPc(targetAddress);
 
     if (instructionOutput) {
         instructionOutput->consoleLog = fmt::format(
@@ -406,7 +409,7 @@ namespace FenceInstruction
     }
 
     bool FENCE::execute(const InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-        cpu.setPc(cpu.getPc() + 4);
+
         if (instructionOutput) {
             instructionOutput->consoleLog = "FENCE (Memory Barrier) - NOP";
         }
@@ -415,7 +418,7 @@ namespace FenceInstruction
     }
 
     bool FENCE_I::execute(const InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-        cpu.setPc(cpu.getPc() + 4);
+
         if (instructionOutput) {
             instructionOutput->consoleLog = "FENCE.I (Instruction Barrier) - NOP";
         }

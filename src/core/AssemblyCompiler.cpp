@@ -537,10 +537,10 @@ uint32_t AssemblyCompiler::assembleBType(const AssemblyInstruction& instruction,
         return 0;
     }
 
-    if (imm % 4 != 0)
+    if (imm % 2 != 0)
     {
         if (instructionOutput) {
-            instructionOutput->consoleLog = "Branch offset must be a multiple of 4!";
+            instructionOutput->consoleLog = "Branch offset must be a multiple of 2!";
             instructionOutput->exitCode = -1;
         }
         return 0;
@@ -631,10 +631,10 @@ uint32_t AssemblyCompiler::assembleJType(const AssemblyInstruction& instruction)
         return 0;
     }
 
-    if (imm % 4 != 0)
+    if (imm % 2 != 0)
     {
         if (instructionOutput) {
-            instructionOutput->consoleLog = "Jump offset must be a multiple of 4!";
+            instructionOutput->consoleLog = "Jump offset must be a multiple of 2!";
             instructionOutput->exitCode = -1;
         }
         return 0;

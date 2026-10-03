@@ -74,7 +74,7 @@ namespace Instruction
         const uint32_t result = rs2Value + rs1Value;
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -93,7 +93,7 @@ namespace Instruction
         const uint32_t result = rs1Value - rs2Value;
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -113,7 +113,7 @@ namespace Instruction
         const uint32_t result = rs1Value << shiftValue;
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -132,7 +132,7 @@ namespace Instruction
         const uint8_t result = (rs1Value < rs2Value);
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -151,7 +151,7 @@ namespace Instruction
         const uint8_t result = (rs1Value < rs2Value);
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -170,7 +170,7 @@ namespace Instruction
         const uint32_t result = (rs1Value ^ rs2Value);
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -190,7 +190,7 @@ namespace Instruction
         const uint32_t result = static_cast<uint32_t>(rs1Value) >> shiftValue;
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -210,7 +210,7 @@ namespace Instruction
         const uint32_t result = static_cast<uint32_t>(static_cast<int32_t>(rs1Value) >> shiftValue);
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -229,7 +229,7 @@ namespace Instruction
         const uint32_t result = (rs1Value | rs2Value);
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -248,7 +248,7 @@ namespace Instruction
         const uint32_t result = (rs1Value & rs2Value);
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -269,7 +269,7 @@ namespace Instruction
         const uint32_t result = rs1Value * rs2Value;
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -288,7 +288,7 @@ namespace Instruction
         const int64_t result = rs1Value * rs2Value;
 
         cpu.setRegister(instructionArguments.rd, static_cast<uint32_t>(static_cast<uint64_t>(result) >> 32));
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -307,7 +307,7 @@ namespace Instruction
         const int64_t result = rs1Value * rs2Value;
 
         cpu.setRegister(instructionArguments.rd, static_cast<uint32_t>(static_cast<uint64_t>(result) >> 32));
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -326,7 +326,7 @@ namespace Instruction
         const uint64_t result = rs1Value * rs2Value;
 
         cpu.setRegister(instructionArguments.rd, static_cast<uint32_t>(result >> 32));
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -353,7 +353,7 @@ namespace Instruction
         }
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -378,7 +378,7 @@ namespace Instruction
         }
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -405,7 +405,7 @@ namespace Instruction
         }
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -430,7 +430,7 @@ namespace Instruction
         }
 
         cpu.setRegister(instructionArguments.rd, result);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -486,7 +486,7 @@ namespace AtomicInstruction
                 cpu.setRegister(instructionArguments.rd, value);
             }
 
-            cpu.setPc(cpu.getPc() + 4);
+
 
             if (instructionOutput) {
                 instructionOutput->consoleLog = fmt::format(
@@ -531,7 +531,7 @@ namespace AtomicInstruction
                 }
             }
 
-            cpu.setPc(cpu.getPc() + 4);
+
 
             return true;
         }
@@ -554,7 +554,7 @@ namespace AtomicInstruction
                 cpu.setRegister(instructionArguments.rd, old_value);
             }
 
-            cpu.setPc(cpu.getPc() + 4);
+
 
             if (instructionOutput) {
                 instructionOutput->consoleLog = fmt::format(

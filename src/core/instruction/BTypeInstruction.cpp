@@ -62,9 +62,10 @@ namespace Instruction
     bool BEQ::execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
         const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
         const uint32_t rs2Value = cpu.getRegister(instructionArguments.rs2);
-        const int32_t pcIncrement = (rs1Value == rs2Value) ? instructionArguments.imm : 4;
 
-        cpu.setPc(cpu.getPc() + pcIncrement);
+        if (rs1Value == rs2Value) {
+            cpu.setNextPc(cpu.getPc() + instructionArguments.imm);
+        }
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -81,9 +82,10 @@ namespace Instruction
     bool BNE::execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
         const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
         const uint32_t rs2Value = cpu.getRegister(instructionArguments.rs2);
-        const int32_t pcIncrement = (rs1Value != rs2Value) ? instructionArguments.imm : 4;
 
-        cpu.setPc(cpu.getPc() + pcIncrement);
+        if (rs1Value != rs2Value) {
+            cpu.setNextPc(cpu.getPc() + instructionArguments.imm);
+        }
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -100,9 +102,10 @@ namespace Instruction
     bool BLT::execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
         const int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(instructionArguments.rs1));
         const int32_t rs2Value = static_cast<int32_t>(cpu.getRegister(instructionArguments.rs2));
-        const int32_t pcIncrement = (rs1Value < rs2Value) ? instructionArguments.imm : 4;
 
-        cpu.setPc(cpu.getPc() + pcIncrement);
+        if (rs1Value < rs2Value) {
+            cpu.setNextPc(cpu.getPc() + instructionArguments.imm);
+        }
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -118,9 +121,10 @@ namespace Instruction
     bool BGE::execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
         const int32_t rs1Value = static_cast<int32_t>(cpu.getRegister(instructionArguments.rs1));
         const int32_t rs2Value = static_cast<int32_t>(cpu.getRegister(instructionArguments.rs2));
-        const int32_t pcIncrement = (rs1Value >= rs2Value) ? instructionArguments.imm : 4;
 
-        cpu.setPc(cpu.getPc() + pcIncrement);
+        if (rs1Value >= rs2Value) {
+            cpu.setNextPc(cpu.getPc() + instructionArguments.imm);
+        }
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -136,9 +140,10 @@ namespace Instruction
     bool BLTU::execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
         const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
         const uint32_t rs2Value = cpu.getRegister(instructionArguments.rs2);
-        const int32_t pcIncrement = (rs1Value < rs2Value) ? instructionArguments.imm : 4;
 
-        cpu.setPc(cpu.getPc() + pcIncrement);
+        if (rs1Value < rs2Value) {
+            cpu.setNextPc(cpu.getPc() + instructionArguments.imm);
+        }
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(
@@ -154,9 +159,10 @@ namespace Instruction
     bool BGEU::execute(InstructionArguments instructionArguments, RiscvCpu& cpu, InstructionOutput* instructionOutput) {
         const uint32_t rs1Value = cpu.getRegister(instructionArguments.rs1);
         const uint32_t rs2Value = cpu.getRegister(instructionArguments.rs2);
-        const int32_t pcIncrement = (rs1Value >= rs2Value) ? instructionArguments.imm : 4;
 
-        cpu.setPc(cpu.getPc() + pcIncrement);
+        if (rs1Value >= rs2Value) {
+            cpu.setNextPc(cpu.getPc() + instructionArguments.imm);
+        }
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format(

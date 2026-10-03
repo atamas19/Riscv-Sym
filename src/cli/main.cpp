@@ -10,11 +10,20 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <cstdlib>
+#include <signal.h>
 
 struct termios orig_termios;
 int orig_stdin_flags;
 
 static bool raw_mode_enabled = false;
+static volatile bool shutdown_requested = false;
+
+void signalHandler(int signum) {
+    if (signum == SIGINT) {
+        shutdown_requested = true;
+        spdlog::info("\nShutdown requested by user");
+    }
+}
 
 void disableRawMode() {
     if (!raw_mode_enabled) {
@@ -49,6 +58,7 @@ void enableRawMode() {
     }
     raw_mode_enabled = true;
     atexit(disableRawMode);
+    signal(SIGINT, signalHandler);
 }
 #else
 void enableRawMode() {
@@ -73,7 +83,7 @@ int main(int argc, char** argv) {
     spdlog::level::level_enum log_level = spdlog::level::info;
 
     app.add_option("-k,--kernel", kernel_path, "Path to the kernel binary")->required();
-    app.add_option("-d,--disk", disk_path, "Path to the filesystem disk image")->required();
+    app.add_option("-d,--disk", disk_path, "Path to the filesystem disk image");
     app.add_option("-l,--log-level", log_level, "Set the logging level")
        ->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
 
@@ -85,6 +95,9 @@ int main(int argc, char** argv) {
     spdlog::info("Starting RISC-V Emulator...");
     spdlog::info("Kernel: {}", kernel_path);
     spdlog::info("Disk: {}", disk_path);
+
+    // Make stdout unbuffered for immediate output
+    setvbuf(stdout, NULL, _IONBF, 0);
 
     enableRawMode();
     RiscvCpu& cpu = RiscvCpu::getInstance();

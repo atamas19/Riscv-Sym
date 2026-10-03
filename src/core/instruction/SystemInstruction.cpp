@@ -4,9 +4,145 @@
 #include <core/RiscvCpu.h>
 #include <core/CsrUnit.h>
 
+#include <cstdio>
+#include <string>
+
+#include <spdlog/spdlog.h>
 #include <spdlog/fmt/fmt.h>
 
 namespace System {
+
+namespace {
+    bool isSemihostingTrap(uint32_t pc) {
+        if (pc < 4) {
+            return false;
+        }
+
+        Memory& mem = Memory::getInstance();
+        const uint32_t previousInsn = mem.read32(pc - 4, true);
+        const uint32_t nextInsn = mem.read32(pc + 4, true);
+
+        return previousInsn == 0x01f01013u && nextInsn == 0x40705013u;
+    }
+
+    std::string readCStringFromMemory(Memory& mem, uint32_t address) {
+        std::string result;
+        if (address == 0) {
+            return result;
+        }
+
+        for (uint32_t offset = 0; ; ++offset) {
+            const uint8_t byte = mem.read8(address + offset);
+            if (byte == 0) {
+                break;
+            }
+            result.push_back(static_cast<char>(byte));
+        }
+        return result;
+    }
+
+    bool handleSemihostingTrap(RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        const uint32_t pc = cpu.getPc();
+        const uint32_t sysnum = cpu.getRegister(10);
+        const uint32_t arg = cpu.getRegister(11);
+        uint32_t ret = 0;
+        Memory& mem = Memory::getInstance();
+
+        switch (sysnum) {
+            case 0x01: { /* SYSOPEN */
+                if (arg == 0) {
+                    ret = static_cast<uint32_t>(-1);
+                    break;
+                }
+
+                const uint32_t fnameAddr = mem.read32(arg, false);
+                const uint32_t mode = mem.read32(arg + 4, false);
+                const std::string path = readCStringFromMemory(mem, fnameAddr);
+
+                if (path == ":tt") {
+                    ret = (mode == 0x4u) ? 1u : 0u;
+                } else {
+                    ret = static_cast<uint32_t>(-1);
+                }
+                break;
+            }
+            case 0x03: { /* SYSWRITEC */
+                if (arg != 0) {
+                    const char ch = static_cast<char>(mem.read8(arg));
+                    std::fputc(ch, stdout);
+                    std::fflush(stdout);
+                }
+                ret = 1u;
+                break;
+            }
+            case 0x05: { /* SYSWRITE */
+                if (arg == 0) {
+                    ret = static_cast<uint32_t>(-1);
+                    break;
+                }
+
+                const uint32_t fd = mem.read32(arg, false);
+                const uint32_t dataAddr = mem.read32(arg + 4, false);
+                const uint32_t len = mem.read32(arg + 8, false);
+                (void)fd;
+                if (dataAddr != 0 && len != 0) {
+                    std::string payload;
+                    payload.reserve(len);
+                    for (uint32_t i = 0; i < len; ++i) {
+                        payload.push_back(static_cast<char>(mem.read8(dataAddr + i)));
+                    }
+                    std::fwrite(payload.data(), 1, payload.size(), stdout);
+                    std::fflush(stdout);
+                }
+                ret = 0u;
+                break;
+            }
+            case 0x06: { /* SYSREAD */
+                if (arg == 0) {
+                    ret = static_cast<uint32_t>(-1);
+                    break;
+                }
+
+                const uint32_t fd = mem.read32(arg, false);
+                const uint32_t dataAddr = mem.read32(arg + 4, false);
+                const uint32_t len = mem.read32(arg + 8, false);
+                (void)fd;
+                if (dataAddr != 0 && len != 0) {
+                    int ch = std::fgetc(stdin);
+                    if (ch != EOF) {
+                        mem.write8(dataAddr, static_cast<uint8_t>(ch));
+                        ret = 0u;
+                    } else {
+                        ret = static_cast<uint32_t>(-1);
+                    }
+                } else {
+                    ret = 0u;
+                }
+                break;
+            }
+            case 0x07: { /* SYSREADC */
+                const int ch = std::fgetc(stdin);
+                ret = (ch == EOF) ? static_cast<uint32_t>(-1) : static_cast<uint32_t>(ch);
+                break;
+            }
+            case 0x13: { /* SYSERRNO */
+                ret = 0u;
+                break;
+            }
+            default:
+                ret = 0u;
+                break;
+        }
+
+        cpu.setRegister(10, ret);
+        cpu.setPc(pc + 4);
+
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "Semihosting trap handled";
+        }
+        return true;
+    }
+}
 
 namespace Instruction
 {
@@ -35,6 +171,7 @@ namespace Instruction
                 case EBREAK::getInstructionDescription(): return EBREAK::execute(cpu, instructionOutput);
                 case MRET::getInstructionDescription():   return MRET::execute(encodedInstruction, cpu, instructionOutput);
                 case SRET::getInstructionDescription():   return SRET::execute(encodedInstruction, cpu, instructionOutput);
+                case WFI::getInstructionDescription():    return WFI::execute(cpu, instructionOutput);
             }
         }
 
@@ -47,6 +184,8 @@ namespace Instruction
             case CSRRCI::getInstructionDescription() : return CSRRCI::execute(instructionArguments, encodedInstruction, cpu, instructionOutput);
         }
 
+        spdlog::warn("System instruction not recognized: funct3=0x{:x}, funct12=0x{:03x}, raw_insn=0x{:08x}",
+                     funct3, getBits(encodedInstruction, 20, 31), encodedInstruction);
         return false;
     }
 
@@ -71,7 +210,7 @@ namespace Instruction
             Memory::getInstance().setSATP(csr.read(CsrAddress::SATP));
         }
 
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format("CSRRW: CSR[0x{:03X}]", instructionArguments.csr_addr);
@@ -101,7 +240,7 @@ namespace Instruction
         }
 
         cpu.setRegister(instructionArguments.rd, old_val);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format("CSRRS: Read/Set CSR[0x{:03X}]", instructionArguments.csr_addr);
@@ -131,7 +270,7 @@ namespace Instruction
         }
 
         cpu.setRegister(instructionArguments.rd, old_val);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format("CSRRC: Read/Clear CSR[0x{:03X}]", instructionArguments.csr_addr);
@@ -159,7 +298,7 @@ namespace Instruction
             Memory::getInstance().setSATP(csr.read(CsrAddress::SATP));
         }
 
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format("CSRRWI: CSR[0x{:03X}]", instructionArguments.csr_addr);
@@ -189,7 +328,7 @@ namespace Instruction
         }
 
         cpu.setRegister(instructionArguments.rd, old_val);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format("CSRRSI: Read/Set CSR[0x{:03X}]", instructionArguments.csr_addr);
@@ -219,7 +358,7 @@ namespace Instruction
         }
 
         cpu.setRegister(instructionArguments.rd, old_val);
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = fmt::format("CSRRCI: Read/Clear CSR[0x{:03X}]", instructionArguments.csr_addr);
@@ -248,9 +387,16 @@ namespace Instruction
     }
 
     bool EBREAK::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput) {
-        if (instructionOutput) {
-            instructionOutput->consoleLog = "EBREAK triggered";
+        const uint32_t pc = cpu.getPc();
+
+        if (isSemihostingTrap(pc)) {
+            return handleSemihostingTrap(cpu, instructionOutput);
         }
+
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "EBREAK trap";
+        }
+
         cpu.takeTrap(ExceptionCause::Breakpoint);
         return true;
     }
@@ -295,10 +441,17 @@ namespace Instruction
             return true;
         }
         // If I'll implement a cache TLB, here I'll call mmu.flushTLB()
-        cpu.setPc(cpu.getPc() + 4);
+
 
         if (instructionOutput) {
             instructionOutput->consoleLog = "SFENCE.VMA: TLB Flushed";
+        }
+        return true;
+    }
+
+    bool WFI::execute(RiscvCpu& cpu, InstructionOutput* instructionOutput) {
+        if (instructionOutput) {
+            instructionOutput->consoleLog = "WFI: Wait For Interrupt";
         }
         return true;
     }

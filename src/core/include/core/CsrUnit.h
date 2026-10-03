@@ -29,6 +29,7 @@ namespace CsrAddress {
     constexpr uint16_t SSTATUS   = 0x100; // Supervisor Status
     constexpr uint16_t SIE       = 0x104; // Supervisor Interrupt Enable
     constexpr uint16_t STVEC     = 0x105; // Supervisor Trap Vector
+    constexpr uint16_t SSCRATCH  = 0x140; // Supervisor Scratch Register
     constexpr uint16_t SEPC      = 0x141; // Supervisor Exception PC
     constexpr uint16_t SCAUSE    = 0x142; // Supervisor Cause
     constexpr uint16_t STVAL     = 0x143; // Supervisor Trap Value
@@ -57,6 +58,9 @@ public:
 
     void setBit(uint16_t address, uint32_t bitMask);
     void clearBit(uint16_t address, uint32_t bitMask);
+
+    // Internal: set MIP register directly (used by simulator to signal hardware interrupts)
+    void setMIP(uint32_t value);
 
     bool canAccess(uint16_t address, PrivilegeMode currentMode, bool isWrite) const;
 

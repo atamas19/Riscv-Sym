@@ -1,5 +1,6 @@
 #include <core/RiscvCpu.h>
 #include <core/AssemblyCompiler.h>
+#include <core/instruction/CTypeInstruction.h>
 
 #include <spdlog/spdlog.h>
 
@@ -15,6 +16,11 @@ RiscvCpu& RiscvCpu::getInstance()
 uint32_t RiscvCpu::getPc() const {
     return _pc;
 }
+
+uint32_t RiscvCpu::getNextPc() const {
+    return _nextPc;
+}
+
 
 uint32_t RiscvCpu::getRegister(uint8_t registerIndex) const {
     return _regs.at(registerIndex);
@@ -32,6 +38,10 @@ void RiscvCpu::setPc(uint32_t pcValue) {
     _pc = pcValue;
 }
 
+void RiscvCpu::setNextPc(uint32_t val) {
+    _nextPc = val;
+}
+
 void RiscvCpu::setRegister(uint8_t registerIndex, uint32_t registerValue) {
     if (registerIndex == 0) {
         return ;
@@ -42,6 +52,14 @@ void RiscvCpu::setRegister(uint8_t registerIndex, uint32_t registerValue) {
 
 void RiscvCpu::setPrivilegeMode(PrivilegeMode mode) {
     _privilegeMode = mode;
+}
+
+void RiscvCpu::requestShutdown(bool shutdown) {
+    _shutdown_requested = shutdown;
+}
+
+bool RiscvCpu::isShutdownRequested() const {
+    return _shutdown_requested;
 }
 
 int RiscvCpu::executeAsmCommand(const std::string& command, InstructionOutput& instructionOutput) {
@@ -79,47 +97,123 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
     spdlog::info("Instructions have been loaded. Starting execution...");
 
     this->_pc = startAddr;
+    uint32_t prevSatp = getCsr().read(CsrAddress::SATP);
+    uint32_t prevStvec = getCsr().read(CsrAddress::STVEC);
+    uint32_t prevSepc = getCsr().read(CsrAddress::SEPC);
+    uint32_t prevSscratch = getCsr().read(CsrAddress::SSCRATCH);
+    uint32_t prevMstatus = getCsr().read(CsrAddress::MSTATUS);
+    uint32_t csrTransitionLogCount = 0;
+    auto logCsrTransitions = [&](const char* phase, uint32_t pc) {
+        if (csrTransitionLogCount >= 160) {
+            return;
+        }
+
+        const uint32_t satp = getCsr().read(CsrAddress::SATP);
+        const uint32_t stvec = getCsr().read(CsrAddress::STVEC);
+        const uint32_t sepc = getCsr().read(CsrAddress::SEPC);
+        const uint32_t sscratch = getCsr().read(CsrAddress::SSCRATCH);
+        const uint32_t mstatus = getCsr().read(CsrAddress::MSTATUS);
+
+        if (satp != prevSatp || stvec != prevStvec || sepc != prevSepc ||
+            sscratch != prevSscratch || mstatus != prevMstatus) {
+            spdlog::info(
+                "[CSR TRACE] {} pc=0x{:08X} satp=0x{:08X} stvec=0x{:08X}(mode={}) sepc=0x{:08X} sscratch=0x{:08X} mstatus=0x{:08X}",
+                phase, pc, satp, stvec, stvec & 0x3, sepc, sscratch, mstatus);
+            ++csrTransitionLogCount;
+        }
+
+        prevSatp = satp;
+        prevStvec = stvec;
+        prevSepc = sepc;
+        prevSscratch = sscratch;
+        prevMstatus = mstatus;
+    };
 
     for (int i{0}; true; ++i) {
-        if (i % 20000 == 0) {
+        // Check for shutdown request (e.g., from Ctrl+C)
+        if (_shutdown_requested) {
+            spdlog::info("Execution stopped by user");
+            break;
+        }
+
+        if (i % 100000 == 0) {
             _mem.pollKeyboard();
         }
 
-        if (_mem.getUartInputChar() != -1) {
-            PrivilegeMode currentMode = getPrivilegeMode();
-
-            if (currentMode != PrivilegeMode::Machine) {
-                uint32_t sstatus = getCsr().read(0x100);
-                uint32_t sieCsr = getCsr().read(0x104);
-
-                bool sieGlobal = (sstatus & 0x2) != 0;
-                bool seie = (sieCsr & (1u << 9)) != 0;
-
-                if (seie && (currentMode == PrivilegeMode::User ||
-                            (currentMode == PrivilegeMode::Supervisor && sieGlobal))) {
-                    uint32_t sipCsr = getCsr().read(0x144);
-                    sipCsr |= (1u << 9);
-                    getCsr().write(0x144, sipCsr);
-
-                    takeTrap(static_cast<ExceptionCause>((uint32_t)0x80000009), 0);
-                    continue;
-                }
-            }
-        }
-
         try {
-            uint32_t binaryInstruction = _mem.read32(this->_pc, true);
+            uint32_t rawInstruction = _mem.read32(this->_pc, true);
+            uint32_t binaryInstruction;
+            bool isCompressed = ((rawInstruction & 0x3) != 0x3);
 
-            if (binaryInstruction == 0 && this->_pc == 0) {
-                spdlog::info("Halted at PC=0");
-                break;
+            _nextPc = this->_pc + (isCompressed ? 2 : 4);
+
+            if (isCompressed) {
+                binaryInstruction = CType::decompress(rawInstruction & 0xFFFF);
+            } else {
+                binaryInstruction = rawInstruction;
             }
 
+            if (binaryInstruction == 0 && this->_pc == 0) break;
+
+            // 2. EXECUTĂM instrucțiunea (cele de salt vor suprascrie _nextPc)
             if (!Instruction::execute(binaryInstruction, *this)) {
-                takeTrap(ExceptionCause::IllegalInstruction, binaryInstruction);
+                takeTrap(ExceptionCause::IllegalInstruction, rawInstruction);
                 continue;
             }
 
+            this->_pc = _nextPc;
+            _mem.incrementTime(1);
+            uint32_t mip_csr = getCsr().read(CsrAddress::MIP);
+
+            if (_mem.getMtime() >= _mem.getMtimecmp()) mip_csr |= (1u << 7);
+            else mip_csr &= ~(1u << 7);
+
+            uint64_t stimecmp = static_cast<uint64_t>(getCsr().read(0x14D)) |
+                            (static_cast<uint64_t>(getCsr().read(0x15D)) << 32);
+            if (_mem.getMtime() >= stimecmp) mip_csr |= (1u << 5);
+            else mip_csr &= ~(1u << 5);
+
+            if (_mem.isUartIrqPending()) {
+                mip_csr |= (1u << 11); // MEIP
+                mip_csr |= (1u << 9);  // SEIP
+            } else {
+                mip_csr &= ~(1u << 11);
+                mip_csr &= ~(1u << 9);
+            }
+
+            getCsr().setMIP(mip_csr);
+
+            uint32_t mie_csr = getCsr().read(CsrAddress::MIE);
+            uint32_t mstatus = getCsr().read(CsrAddress::MSTATUS);
+            PrivilegeMode currentMode = getPrivilegeMode();
+
+            bool m_enabled = (currentMode < PrivilegeMode::Machine) ||
+                             ((currentMode == PrivilegeMode::Machine) && (mstatus & (1 << 3)));
+            bool s_enabled = (currentMode < PrivilegeMode::Supervisor) ||
+                             ((currentMode == PrivilegeMode::Supervisor) && (mstatus & (1 << 1)));
+
+            uint32_t pending = mip_csr & mie_csr;
+            uint32_t interrupt_cause = 0xFFFFFFFF;
+
+            if (m_enabled) {
+                if (pending & (1 << 11)) interrupt_cause = 11;      // MEI (External)
+                else if (pending & (1 << 3)) interrupt_cause = 3;   // MSI (Software)
+                else if (pending & (1 << 7)) interrupt_cause = 7;   // MTI (Timer)
+            }
+
+            if (interrupt_cause == 0xFFFFFFFF && s_enabled) {
+                if (pending & (1 << 9)) interrupt_cause = 9;        // SEI (External)
+                else if (pending & (1 << 1)) interrupt_cause = 1;   // SSI (Software)
+                else if (pending & (1 << 5)) interrupt_cause = 5;   // STI (Timer)
+            }
+
+            if (interrupt_cause != 0xFFFFFFFF) {
+                takeTrap(static_cast<ExceptionCause>(0x80000000 | interrupt_cause), 0);
+                logCsrTransitions("post-interrupt-trap", this->_pc);
+                continue;
+            }
+
+            logCsrTransitions("post-insn", this->_pc);
 
         } catch (const PageFaultException& e) {
             ExceptionCause cause;
@@ -131,7 +225,16 @@ bool RiscvCpu::executeFromBinFile(const std::string& filePath, uint32_t startAdd
                 cause = ExceptionCause::StorePageFault;
             }
 
+            static uint32_t pageFaultLogCount = 0;
+            if (pageFaultLogCount < 32) {
+                const uint32_t satp = getCsr().read(CsrAddress::SATP);
+                spdlog::info("[PAGE FAULT] pc=0x{:08X} vaddr=0x{:08X} accessType={} satp=0x{:08X}",
+                             this->_pc, e.faultingAddress, static_cast<int>(e.accessType), satp);
+                ++pageFaultLogCount;
+            }
+
             takeTrap(cause, e.faultingAddress);
+            logCsrTransitions("post-page-fault-trap", this->_pc);
         }
     }
 
@@ -158,21 +261,44 @@ void RiscvCpu::takeTrap(ExceptionCause cause, uint32_t trapValue) {
     }
 
     if (delegateToS) {
+        if (isInterrupt) {
+            _csrUnit.write(CsrAddress::SIP, (1u << causeIndex));
+        }
+
         _csrUnit.write(CsrAddress::SEPC, _pc);
         _csrUnit.write(CsrAddress::SCAUSE, rawCause);
         _csrUnit.write(CsrAddress::STVAL, trapValue);
 
+        static uint32_t trapDebugCount = 0;
+        if (trapDebugCount < 32 &&
+            (rawCause == static_cast<uint32_t>(ExceptionCause::InstructionPageFault) ||
+             rawCause == static_cast<uint32_t>(ExceptionCause::LoadPageFault) ||
+             rawCause == static_cast<uint32_t>(ExceptionCause::StorePageFault) ||
+             rawCause == static_cast<uint32_t>(ExceptionCause::Breakpoint))) {
+            uint32_t mstatus = _csrUnit.read(CsrAddress::MSTATUS);
+            uint32_t mie = _csrUnit.read(CsrAddress::MIE);
+            uint32_t mip = _csrUnit.read(CsrAddress::MIP);
+            uint32_t satp = _csrUnit.read(CsrAddress::SATP);
+            spdlog::info("[TRAP DEBUG] cause=0x{:08X} pc=0x{:08X} stvec=0x{:08X} satp=0x{:08X} mstatus=0x{:08X} mie=0x{:08X} mip=0x{:08X}",
+                         rawCause, _pc, _csrUnit.read(CsrAddress::STVEC), satp, mstatus, mie, mip);
+            ++trapDebugCount;
+        }
+
         uint32_t sstatus = _csrUnit.read(CsrAddress::SSTATUS);
         uint32_t spp = (static_cast<uint32_t>(_privilegeMode) & 1);
-        uint32_t sie = (sstatus >> 1) & 1;
+        uint32_t sie_bit = (sstatus >> 1) & 1;
 
-        sstatus = (sstatus & ~((1u << 1) | (1u << 5) | (1u << 8))) | (sie << 5) | (spp << 8);
+        sstatus = (sstatus & ~((1u << 1) | (1u << 5) | (1u << 8))) | (sie_bit << 5) | (spp << 8);
         _csrUnit.write(CsrAddress::SSTATUS, sstatus);
 
         _privilegeMode = PrivilegeMode::Supervisor;
         _pc = _csrUnit.read(CsrAddress::STVEC) & ~0x3;
 
+        _nextPc = _pc;
+
     } else {
+        spdlog::info("Trap 0x{:08X} handled in M-mode (pc=0x{:08X})", rawCause, _pc);
+
         _csrUnit.write(CsrAddress::MEPC, _pc);
         _csrUnit.write(CsrAddress::MCAUSE, rawCause);
         _csrUnit.write(CsrAddress::MTVAL, trapValue);
@@ -188,6 +314,8 @@ void RiscvCpu::takeTrap(ExceptionCause cause, uint32_t trapValue) {
 
         _privilegeMode = PrivilegeMode::Machine;
         _pc = _csrUnit.read(CsrAddress::MTVEC) & ~0x3;
+
+        _nextPc = _pc;
     }
 }
 
@@ -196,6 +324,7 @@ void RiscvCpu::returnFromTrap(PrivilegeMode retMode) {
 
     if (retMode == PrivilegeMode::Supervisor) {
         _pc = _csrUnit.read(CsrAddress::SEPC);
+        _nextPc = _pc;
 
         uint8_t previousPrivilege = (mstatus >> 8) & 1;
         _privilegeMode = static_cast<PrivilegeMode>(previousPrivilege);
@@ -208,6 +337,7 @@ void RiscvCpu::returnFromTrap(PrivilegeMode retMode) {
 
     } else if (retMode == PrivilegeMode::Machine) {
         _pc = _csrUnit.read(CsrAddress::MEPC);
+        _nextPc = _pc;
 
         uint8_t previousPrivilege = (mstatus >> 11) & 3;
         _privilegeMode = static_cast<PrivilegeMode>(previousPrivilege);
